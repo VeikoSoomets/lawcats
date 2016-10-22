@@ -10,7 +10,7 @@ pytz  *(use gaepytz, it is faster),
 feedparser
 
 
-*Instructions for new languages:*
+***Instructions for new languages:***
 ... first navigate to project folder in cmd or shell
 
 1) Extract strings (make sure all files in main.mapping are UTF-8 without BOM): 
