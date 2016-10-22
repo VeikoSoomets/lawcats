@@ -1,0 +1,82 @@
+.google_login {
+  display: block;
+  margin: 0;
+  width: 492px;
+  height: 108px;
+  background: url('/static/images/Red-signin_Long_base_44dp.png');
+}
+
+.divider-vertical {
+height: 50px;
+margin: 0 9px;
+border-left: 1px solid #F2F2F2;
+border-right: 1px solid #FFF;
+}
+
+.divider-horizontal {
+height: 1px;
+margin: 9px 0;
+border-top: 1px solid #F2F2F2;
+border-bottom: 1px solid #FFF;
+}
+
+.btn-group.btn {   border: 0;   padding: 0px; background: #fff; }
+.btn-group.btn > .btn { border-radius: 0; background: #fff; color: #000; }
+.btn-group.btn:focus {   border: 0;   padding: 2px; background: #fff; color: #000; }
+
+.btn-group.btn > .btn:focus { border-radius: 0; background: #428BCA; color: #fff; }
+.btn-group.btn > .btn:hover { border-radius: 0; background: #428BCA; color: #fff; }
+
+.btn-group.btn > .dropdown-menu {  text-align: left; padding-left: 5px; }
+.btn-group.btn:first-child > .btn {
+  -webkit-border-radius: 4px 0 0 4px;
+     -moz-border-radius: 4px 0 0 4px;
+          border-radius: 4px 0 0 4px;
+}
+
+.btn-group.btn:last-child > .btn {
+  -webkit-border-radius: 0 4px 4px 0;
+     -moz-border-radius: 0 4px 4px 0;
+          border-radius: 0 4px 4px 0;
+}
+
+.disabled {
+  cursor:not-allowed;
+}
+
+.nav-tabs > li > a:hover {
+    background: #428BCA;
+}
+
+.kohtutasand {
+ display: none;
+}
+.btn:focus {
+  outline: none;
+}
+
+/* Changes the width of the select wrapper - the menu, where you can choose how many entries you want to view. */
+.dataTables_wrapper .dataTables_length label {
+	width: 250px;
+  text-align: left;
+  font-weight: normal;
+}
+/* Changes the width of the select itself. */
+.dataTables_wrapper .dataTables_length select {
+	width: 4em;
+}
+/* Changes the search area width. */
+.dataTables_wrapper .dataTables_filter {
+	width: 250px;
+  font-weight: normal;
+}
+/* Changes the search area width. */
+.dataTables_wrapper .dataTables_filter label{
+	width: 250px;
+  font-weight: normal;
+}
+/* Changes the parameters of the search input field. */
+.dataTables_wrapper .dataTables_filter input {
+	width: 14em;
+	height: 2em;
+}

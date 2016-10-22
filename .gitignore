@@ -1,0 +1,14 @@
+#Ignore compiled python
+*.pyc
+parsers/*.pyc
+rudimentaries/*.pyc
+
+#Ignore list preparations related stuff
+list_preparations.py
+test.py
+static/lists/alt.csv
+static/lists/sdn.csv
+static/lists/EU_sanctions.csv
+
+#Ignore IDE stuff
+.idea/

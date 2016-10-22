@@ -1,0 +1,64 @@
+
+.landing-jumbo {
+	background-color: #37BC9B;
+	margin-top: -20px;
+	padding-top: 20vh;
+	padding-bottom: 20vh;
+}
+
+.landing-main-text {
+	color: white;
+}
+
+.landing-main-button {
+	background: none;
+	border-color: white;
+}
+
+.landing-main-button:hover {
+	background: none;
+	border-color: white;
+}
+
+.landing-main-button:target {
+	background: none;
+	border-color: white;
+}
+
+.landing-main-button:focus {
+	background: none;
+	border-color: white;
+}
+
+.padded-section {
+	padding-top: 15vh;
+	padding-bottom: 15vh;
+}
+
+.glyphicon-giant {
+	font-size: 1000%;
+	margin-top: 20px;
+}
+
+.landing-hr {
+	border-width: 3px;
+	margin-top: 0px;
+	margin-bottom: 0px;
+}
+
+.bottom-margin {
+	margin-bottom: 30px;
+}
+
+.landing-footer {
+	background-color: #434a54;
+}
+
+.top-padded-text {
+	padding-top: 15vh;
+}
+
+.landing-dark-section {
+	background-color: #434a54;
+	color: white;
+}
