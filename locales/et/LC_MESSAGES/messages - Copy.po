@@ -1,0 +1,1201 @@
+# Estonian translations for PROJECT.
+# Copyright (C) 2015 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2015-11-24 00:21+0200\n"
+"PO-Revision-Date: 2015-11-24 00:27+0200\n"
+"Last-Translator: \n"
+"Language-Team: et <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 1.3\n"
+"Language: et\n"
+"X-Generator: Poedit 1.7.5\n"
+
+#: admin_handlers.py:109
+msgid "Cannot request sources at this time. Extend your date limit to unlock this feature!"
+msgstr "Ei saa allikaid tellida. Allikate tellimise võimaldamiseks, pikenda oma tähtaja limiiti!"
+
+#: admin_handlers.py:116
+msgid "Please fill both fields!"
+msgstr "Palun täida mõlemad väljad!"
+
+#: admin_handlers.py:138
+#, python-format
+msgid "Link %s is not valid! Please make sure it begins with www or http:// and that it can be accessed by yourself."
+msgstr "Link %s ei toimi! Palun veendu, et see algaks kui www või http:// ning et saad sellele ise ligi."
+
+#: admin_handlers.py:146
+msgid "This link has already been requested by you."
+msgstr "Oled seda linki juba tellinud."
+
+#: admin_handlers.py:162 admin_handlers.py:175
+msgid "Could not implement source automatically! Engineers notified!"
+msgstr "Allika automaatne lisamine ei õnnestunud! Inseneridele teavitus saadetud!"
+
+#: admin_handlers.py:169
+msgid "New source has been implemented! You can test this source in the search page right now!"
+msgstr "Uus allikas lisatud! Saad seda allikat kohe otsingute lehel testida!"
+
+#: admin_handlers.py:304
+msgid "Agreed to terms!"
+msgstr "Tingimustega nõustutud!"
+
+#: admin_handlers.py:307
+msgid "Did not agree to terms!"
+msgstr "Ei nõustunud tingimustega!"
+
+#: admin_handlers.py:342
+msgid "Main category created!"
+msgstr "Peakategooria loodud!"
+
+#: admin_handlers.py:346
+msgid "Sub category created!"
+msgstr "Alamkategooria loodud!"
+
+#: admin_handlers.py:350
+msgid "Category created!"
+msgstr "Kategooria loodud!"
+
+#: admin_handlers.py:355
+msgid "Main category deleted!"
+msgstr "Peakategooria kustutatud!"
+
+#: admin_handlers.py:359
+msgid "Sub category deleted!"
+msgstr "Alamkategooria kustutatud!"
+
+#: admin_handlers.py:363
+msgid "Category deleted!"
+msgstr "Kategooria kustutatud"
+
+#: admin_handlers.py:483 admin_handlers.py:575
+#, python-format
+msgid "Tag %s added."
+msgstr "Silt %s lisatud."
+
+#: admin_handlers.py:496 admin_handlers.py:587
+#, python-format
+msgid "Tag '%s' removed."
+msgstr "Silt '%s' eemaldatud."
+
+#: admin_handlers.py:516 admin_handlers.py:606
+msgid "Result removed."
+msgstr "Tulemus eemaldatud."
+
+#: admin_handlers.py:539 admin_handlers.py:629
+msgid "Result archived."
+msgstr "Tulemus arhiveeritud."
+
+#: admin_handlers.py:542 admin_handlers.py:632
+msgid "Result un-archived."
+msgstr "Tulemus arhiivist eemaldatud."
+
+#: admin_handlers.py:742
+msgid "Changes will not be applied. If you want to use service without restriction, choose a paid package!"
+msgstr "Muudatusi ei rakendata. Kui soovid teenust piiranguteta kasutada, siis vali tasuline pakett!"
+
+#: admin_handlers.py:766
+msgid "Querywords limit is exceeded. Change search frequencies, remove categories or querywords, or extend limit."
+msgstr "Märksõnade limiit ületatud. Muuda otsingu sagedust, eemalda kategooriad või märksõnu, või pikenda limiiti."
+
+#: admin_handlers.py:772
+msgid "Please choose atleast one source!"
+msgstr "Palun vali vähemalt üks allikas!"
+
+#: admin_handlers.py:779
+#, python-format
+msgid "Number of querywords to add in one batch exceeds %s! If you would like to add more than %s querywords in a single operation, please refer to frequently asked questions!"
+msgstr "Otsingusõnade hulk ühe lisamisega ületab lubatud piiri '%s'! Juhul, kui soovite lisada rohkem kui '%s' otsingusõna, vaadake infoks sektsiooni Kergesti Kippuvad Küsimused"
+
+#: admin_handlers.py:806
+msgid "New querywords added!"
+msgstr "Uued otsingusõnad lisatud!"
+
+#: admin_handlers.py:820
+#, python-format
+msgid "Frequency changed for '%s'"
+msgstr "Sagedus muudetud märksõnale '%s'"
+
+#: admin_handlers.py:831
+#, python-format
+msgid "Request '%s' removed!"
+msgstr "Märksõna '%s' eemaldatud!"
+
+#: admin_handlers.py:844
+#, python-format
+msgid "Category '%s' removed!"
+msgstr "Kategooria '%s' eemaldatud!"
+
+#: admin_handlers.py:859
+msgid "Added categories"
+msgstr "Lisatud kategooriad"
+
+#: admin_handlers.py:976 templates/querywords.html:104
+#: templates/querywords.html:230 templates/results.html:126
+#: templates/results.html:258 templates/results.html:323
+msgid "All updates"
+msgstr "Kõik uuendused"
+
+#: admin_handlers.py:1167
+msgid "Payment processed and usage limit extended"
+msgstr "Makse töödeldud ja kasutuslimiit pikendatud"
+
+#: admin_handlers.py:1184
+msgid "Please type both passwords!"
+msgstr "Palun sisestage mõlemad salasõnad!"
+
+#: admin_handlers.py:1196
+msgid "Password successfully changed!"
+msgstr "Salasõna edukalt muudetud!"
+
+#: admin_handlers.py:1202
+msgid "Old password is wrong!"
+msgstr "Vana salasõna on vale!"
+
+#: admin_handlers.py:1215
+#, python-format
+msgid "Congratulations! You are now member of %s group."
+msgstr "Õnnitleme! Sa oled nüüd %s grupi liige."
+
+#: admin_handlers.py:1217
+#, python-format
+msgid "Declined joining group %s."
+msgstr "Grupiga %s ühinemisest loobutud."
+
+#: admin_handlers.py:1241
+msgid "User removed from usergroup"
+msgstr "Kasutaja on kasutajagrupist eemaldatud."
+
+#: admin_handlers.py:1245
+#, python-format
+msgid "You successfully left from usergroup %s"
+msgstr "Lahkusid edukalt %s kasutajagrupist."
+
+#: admin_handlers.py:1253
+msgid "Cannot apply changes at this time. Extend your date limit to unlock this feature!"
+msgstr "Muudatusi ei saa hetkel teha. Muudatuste tegemiseks pikenda oma kuupäeva limiiti!"
+
+#: admin_handlers.py:1278
+msgid "User group created"
+msgstr "Kasutajagrupp loodud"
+
+#: admin_handlers.py:1291
+msgid "User is already in your group!"
+msgstr "Kasutaja on juba sinu grupis!"
+
+#: admin_handlers.py:1303
+msgid "User invitation sent - user needs to accept invitation."
+msgstr "Kutse saadetud - kasutaja peab kutse aktsepteerima."
+
+#: admin_handlers.py:1313
+#, python-format
+msgid "lawcats - Invitation by %s!"
+msgstr "lawcats - kutse %s poolt!"
+
+#: admin_handlers.py:1315
+msgid "Invitation sent to this e-mail."
+msgstr "Kutse saadetud sellele e-posti aadressile."
+
+#: base_handler.py:215
+msgid "You have not verified your account yet! Please check your e-mail!"
+msgstr "Sa ei ole oma kontot  veel verifitseerinud! Palun kontrolli oma e-posti!"
+
+#: base_handler.py:373
+msgid "Your time limit has been exceeded! Automatic searches disabled! You can extend your limit on your account <a href=\"/app/settings\" class=\"alert-link\">settings</a> page!"
+msgstr "Sinu ajalimiit on ületatud! Automaatsed otsingud väljalülitatud! Automaatsete otsingute sisse lülitamiseks pikenda oma limiiti."
+
+#: base_handler.py:637
+msgid "This email is already using lawcats :) You can simply login."
+msgstr "See e-post juba kasutab lawcats :) saad lihtsalt sisse logida."
+
+#: base_handler.py:642
+msgid "Please fill all fields!"
+msgstr "Palun täida kõik väljad!"
+
+#: base_handler.py:647
+msgid "You have to agree to terms of use before using the service."
+msgstr "Enne teenuse kasutamist pead nõustuma kasutajatingimustega."
+
+#: base_handler.py:661
+msgid "e-mail address"
+msgstr "e-posti aadress"
+
+#: base_handler.py:663
+msgid "username"
+msgstr "kasutajanimi"
+
+#: base_handler.py:664
+#, python-format
+msgid "Unable to create user for user \"%s\" because there is already a user with same %s"
+msgstr "Ei saa luua kasutaja kasutaja \"%s\", sest kasutaja, kellel on sama %s on juba olemas"
+
+#: base_handler.py:677
+#, python-format
+msgid "%s - New user activation!"
+msgstr "%s - Uue kasutaja aktiveerimine!"
+
+#: base_handler.py:682
+msgid "We sent your e-mail address a link to activate your user account. When you have activated your account, you can login :)"
+msgstr "Saatsime sinu e-postile lingi sinu konto aktiveerimiseks. Saad sisse logida pärast oma konto aktiveerimast :)"
+
+#: base_handler.py:694
+msgid "Please enter email address"
+msgstr "Palun sisesta e-posti aadress"
+
+#: base_handler.py:700
+#, python-format
+msgid "Could not find any user entry for email %s"
+msgstr "E-postile %s ei leidnud ühtegi kasutaja registreeringut"
+
+#: base_handler.py:713
+msgid "Login with google sign in button"
+msgstr "Logi sisse google sign in nupu kaudu"
+
+#: base_handler.py:726
+#, python-format
+msgid "%s password recovery"
+msgstr "%s salasõna taastamine"
+
+#: base_handler.py:731
+msgid "We sent you an e-mail with instructions how to reset your password."
+msgstr "Saatsime teile e-kirja koos juhistega, kuidas lähtestada teie salasõna."
+
+#: base_handler.py:779
+msgid "User account has been verified"
+msgstr "Kasutajakonto on kontrollitud"
+
+#: base_handler.py:811 base_handler.py:830
+msgid "Passwords do not match!"
+msgstr "Salasõnad ei kattu!"
+
+#: base_handler.py:847
+msgid "Password changed"
+msgstr "Salasõna muudetud"
+
+#: base_handler.py:889
+msgid "Login failed! Wrong username or password."
+msgstr "Sisselogimine ebaõnnestus! Vale kasutajanimi või salasõna."
+
+#: handlers.py:89
+msgid "Answered to question!"
+msgstr "Küsimusele vastatud!"
+
+#: handlers.py:104
+msgid "New question posted! We will try to answer that ASAP!"
+msgstr "Uus küsimus postitatud! Püüame vastata teile nii kiiresti kui võimalik!"
+
+#: handlers.py:118
+msgid "Question removed!"
+msgstr "Küsimus eemaldatud!"
+
+#: handlers.py:179
+msgid "No search results"
+msgstr "Otsingu tulemused puuduvad"
+
+#: handlers.py:182
+msgid "Search successful"
+msgstr "Otsing edukas"
+
+#: handlers.py:299
+#, python-format
+msgid "Got %s results"
+msgstr "Sain %s tulemust"
+
+#: handlers.py:302
+msgid "Did not find any results - try changing your query or add more sources"
+msgstr "Ei leidnud ühtegi vastet - muutke päringut või lisage allikaid"
+
+#: templates/admin.html:75
+msgid "Create Maincategory"
+msgstr "Loo põhikategooria"
+
+#: templates/admin.html:83
+msgid "Delete Maincategory"
+msgstr "Kustuta põhikategooria"
+
+#: templates/admin.html:89
+msgid "Create Subcategory"
+msgstr "Loo alamkategooria"
+
+#: templates/admin.html:97
+msgid "Delete Subcategory"
+msgstr "Kustuta alamkategooria"
+
+#: templates/admin.html:104
+msgid "Create Category"
+msgstr "Loo kategooria"
+
+#: templates/admin.html:112
+msgid "Delete Category"
+msgstr "Kustuta kategooria"
+
+#: templates/base.html:58 templates/dashboard.html:2 templates/landing.html:53
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#: templates/base.html:61 templates/dashboard.html:106
+#: templates/landing.html:56 templates/landing.html:395
+#: templates/querywords.html:2 templates/querywords.html:32
+#: templates/querywords.html:138
+msgid "Querywords"
+msgstr "Otsingusõnad"
+
+#: templates/base.html:64 templates/landing.html:59 templates/results.html:2
+#: templates/results.html:3 templates/results.html:19
+msgid "Results"
+msgstr "Tulemused"
+
+#: templates/base.html:67 templates/landing.html:62 templates/landing.html:433
+msgid "Search"
+msgstr "Otsing"
+
+#: templates/base.html:93 templates/settings.html:2 templates/settings.html:3
+msgid "Settings"
+msgstr "Seaded"
+
+#: templates/base.html:94 templates/landing.html:71 templates/landing.html:74
+msgid "Logout"
+msgstr "Väljalogimine"
+
+#: templates/base.html:109
+msgid "You have disabled javascript. lawcats requires javascript to use."
+msgstr "Oled javascripti välja lülitanud. lawcats kasutamiseks on vaja javascripti."
+
+#: templates/dashboard.html:10 templates/dashboard.html:154
+msgid "Latest Results"
+msgstr "Viimased Tulemused"
+
+#: templates/dashboard.html:30 templates/dashboard.html:56
+#: templates/dashboard.html:76 templates/dashboard.html:174
+#: templates/results.html:171
+msgid "No results"
+msgstr "Tulemused puuduvad"
+
+#: templates/dashboard.html:42
+msgid "Overview"
+msgstr "Ülevaade"
+
+#: templates/dashboard.html:49 templates/dashboard.html:70
+msgid "Your browser doesn't support the canvas tag."
+msgstr "Sinu brauser ei toeta canvase tag`i."
+
+#: templates/dashboard.html:64
+msgid "Results distribution"
+msgstr "Tulemuste jaotamine."
+
+#: templates/dashboard.html:90
+msgid "Search Results"
+msgstr "Otsingu Tulemust"
+
+#: templates/dashboard.html:91 templates/dashboard.html:107
+#: templates/dashboard.html:123
+msgid "See more"
+msgstr "Vaata edasi"
+
+#: templates/dashboard.html:122
+msgid "Archived results"
+msgstr "Arhiveeritud tulemust"
+
+#: templates/dashboard.html:132
+msgid "Latest Notifications"
+msgstr "Viimased Sündmused"
+
+#: templates/dashboard.html:147
+msgid "No notifications."
+msgstr "Sündmused puuduvad."
+
+#: templates/faq.html:12 templates/faq.html:20
+msgid "Ask a question"
+msgstr "Esita küsimus"
+
+#: templates/faq.html:24
+msgid "Ask"
+msgstr "Küsi"
+
+#: templates/forgot.html:2
+msgid "Forgot Password"
+msgstr "Unustasite salasõna"
+
+#: templates/forgot.html:18
+msgid "Password Recovery"
+msgstr "Salasõna taastamine"
+
+#: templates/forgot.html:24
+msgid "Forgot your password? Enter your username and we will send you instructions how to recover it"
+msgstr "Unustasite salasõna? Palun sisestage oma kasutajanimi ja me saadame teile juhised salasõna taastamiseks"
+
+#: templates/forgot.html:27 templates/landing.html:266 templates/login.html:51
+#: templates/signup.html:28
+msgid "E-mail"
+msgstr "E-post"
+
+#: templates/forgot.html:30
+msgid "send password to e-mail"
+msgstr "saata parool meilile"
+
+#: templates/landing.html:41
+msgid "Toggle navigation"
+msgstr "Toggle navideerimine"
+
+#: templates/landing.html:83 templates/landing.html:249
+#: templates/landing.html:296 templates/login.html:35 templates/login.html:81
+msgid "Login"
+msgstr "Logi sisse"
+
+#: templates/landing.html:92 templates/landing.html:126 templates/signup.html:2
+#: templates/signup.html:63
+msgid "Register"
+msgstr "Registreeri"
+
+#: templates/landing.html:134
+msgid "or register lawcats user"
+msgstr "või registreeri lawcats kasutaja"
+
+#: templates/landing.html:145 templates/signup.html:21
+msgid "Username"
+msgstr "Kasutajanimi"
+
+#: templates/landing.html:161
+msgid "Email"
+msgstr "E-post"
+
+#: templates/landing.html:177 templates/landing.html:282
+#: templates/login.html:67 templates/resetpassword.html:11
+#: templates/signup.html:35
+msgid "Password"
+msgstr "Salasõna"
+
+#: templates/landing.html:193
+msgid "Name"
+msgstr "Nimi"
+
+#: templates/landing.html:205 templates/signup.html:42
+msgid "First Name"
+msgstr "Eesnimi"
+
+#: templates/landing.html:213 templates/signup.html:49
+msgid "Last Name"
+msgstr "Perekonnanimi"
+
+#: templates/landing.html:223 templates/signup.html:56
+msgid "I have read and agree to the <a href=\"https://docs.google.com/document/d/1UxuB6EgzQf0G7tiUY_pzlha3e9_okw-fz4KKmXohOrc/edit?usp=sharing\" target=\"_blank\">terms of use</a>"
+msgstr "Oled lugenud ja nõustun <a href=\"https://docs.google.com/document/d/1UxuB6EgzQf0G7tiUY_pzlha3e9_okw-fz4KKmXohOrc/edit?usp=sharing\" target=\"_blank\">kasutajatingimustega</a>"
+
+#: templates/landing.html:231
+msgid "Submit"
+msgstr "Esitama"
+
+#: templates/landing.html:257 templates/login.html:42
+msgid "or with lawcats user"
+msgstr "või lawcats kasutajaga"
+
+#: templates/landing.html:297 templates/login.html:82
+msgid "Don't remember password?"
+msgstr "Ei mäleta salasõna?"
+
+#: templates/landing.html:311
+msgid "Automated Search & Topic Tracking"
+msgstr "Automatiseeritud Otsing & Teema Jälgimine"
+
+#: templates/landing.html:312
+#, fuzzy
+msgid "Real-time & automated data mining and topic tracking"
+msgstr "Reaalajas ja automatiseeritud andmete kaevandamine ja teema jälgimine"
+
+#: templates/landing.html:319
+msgid "Sign up for a free trial"
+msgstr "Registreeru tasuta proovimiseks"
+
+#: templates/landing.html:323
+msgid "Continue"
+msgstr "Jätka"
+
+#: templates/landing.html:332
+msgid "Real-time data mining and topic tracking"
+msgstr "Reaalajas andmete kaevandamine ja teema jälgimine"
+
+#: templates/landing.html:333
+msgid "Utilizing amazing modern technologies, our robots can handle heavy workloads of user requests for scraping the web. It is all automated - you'd only have to schedule the search, and the platform does the rest."
+msgstr ""
+
+#: templates/landing.html:347
+msgid "How does it work?"
+msgstr "Kuidas see töötab?"
+
+#: templates/landing.html:352
+msgid "Set up a scheduled search"
+msgstr "Seadista plaanitud otsing"
+
+#: templates/landing.html:353
+#, fuzzy
+msgid "Set up search words, search frequencies and sources. You can also add your own sources. Custom sources will be added within seconds."
+msgstr "Määra otsingusõnad, otsingu sagedus ja vali olemasolevatest allikatest. Saad otsida ka oma tellitud allikatest. Sinu tellitud allikad lisatakse automaatselt sekundite jooksul."
+
+#: templates/landing.html:364
+msgid "Manage your results"
+msgstr "Halda tulemusi"
+
+#: templates/landing.html:366
+msgid "Your results are stored for you to explore, sort, archive and search from stored results. You can also tag your results to be easily found later."
+msgstr "Sinu tulemused on säilitatud sinule uurimiseks, sorteerimiseks, arhiveerimiseks ning säilitatud tulemuste seast otsimiseks. Saad tulemusi ka tagida, selleks et neid hiljem lihtsasti leida."
+
+#: templates/landing.html:371
+msgid "Stay informed"
+msgstr "Ole informeeritud"
+
+#: templates/landing.html:373
+msgid "Track and analyze your results and search results statistics in the dashboard, desktop or mobile."
+msgstr "Jälgi ja analüüsi oma tulemusi ja tulemuste statistikat dashboardil, desktopil või mobiilis."
+
+#: templates/landing.html:386
+msgid "Try a sample search!"
+msgstr "Proovi näidisotsingut!"
+
+#: templates/landing.html:387
+msgid "Registered members have access to over 100 pre-existing sources."
+msgstr ""
+
+#: templates/landing.html:403
+msgid "A comma-separated list of topics"
+msgstr "Koma - teemade eraldamiseks"
+
+#: templates/landing.html:410 templates/querywords.html:94
+#: templates/querywords.html:158 templates/querywords.html:247
+msgid "Sources"
+msgstr "Allikad"
+
+#: templates/landing.html:465
+msgid "No results found."
+msgstr "Tulemusi ei leitud."
+
+#: templates/landing.html:479
+msgid "Pricing"
+msgstr "Hinnastamine"
+
+#: templates/landing.html:487 templates/landing.html:503
+#: templates/settings.html:148 templates/settings.html:164
+msgid "per month"
+msgstr "kuus"
+
+#: templates/landing.html:491 templates/settings.html:152
+msgid "Translates to days worth of manual search"
+msgstr "Teisendatud päevadeks, mis kuluvad käsitsi otsimiseks"
+
+#: templates/landing.html:493
+msgid "automatic searches per month"
+msgstr "automaatset otsingut kuus"
+
+#: templates/landing.html:494 templates/landing.html:510
+#: templates/settings.html:155 templates/settings.html:171
+msgid "unlimited sources"
+msgstr "limiteerimata allikad"
+
+#: templates/landing.html:495 templates/landing.html:511
+#: templates/settings.html:156 templates/settings.html:172
+msgid "dashboard alerts"
+msgstr "dashboardi teavitused"
+
+#: templates/landing.html:507 templates/settings.html:168
+msgid "No need to worry about limits"
+msgstr "Pole põhjust limiitide pärast muretsemiseks"
+
+#: templates/landing.html:509 templates/settings.html:170
+msgid "unlimited automatic searches"
+msgstr "limiteerimata automaatsed otsingud"
+
+#: templates/landing.html:512 templates/settings.html:173
+msgid "e-mail reports"
+msgstr "e-posti raportid"
+
+#: templates/landing.html:513 templates/settings.html:174
+msgid "view a sample report"
+msgstr "vaata näidisraportit"
+
+#: templates/message.html:12
+msgid "Info"
+msgstr "Info"
+
+#: templates/message.html:21 templates/message2.html:21
+msgid "Proceed to site"
+msgstr "Jätka lehele"
+
+#: templates/message.html:25 templates/message2.html:25
+msgid "Back to changing password"
+msgstr "Tagasi salasõna muutmise juurde"
+
+#: templates/message2.html:12
+msgid "Message"
+msgstr "Sõnum"
+
+#: templates/modallogin.html:5
+msgid " login "
+msgstr "logi sisse"
+
+#: templates/modallogin.html:9
+msgid " Login with google "
+msgstr "Logi sisse Google'iga"
+
+#: templates/modallogin.html:14
+msgid " Username "
+msgstr "Kasutajanimi"
+
+#: templates/modallogin.html:18
+msgid " Password "
+msgstr "Salasõna"
+
+#: templates/modallogin.html:25
+msgid " Submit "
+msgstr "Esita"
+
+#: templates/modallogin.html:29
+msgid " Forgot password? "
+msgstr "Unustasite salasõna?"
+
+#: templates/modallogin.html:32
+msgid " Signup "
+msgstr "Registreeri"
+
+#: templates/querywords.html:11
+msgid "Querywords limit"
+msgstr "Otsingusõnade limiit"
+
+#: templates/querywords.html:42
+msgid "Add new"
+msgstr "Lisa uus"
+
+#: templates/querywords.html:60 templates/results.html:57
+#: templates/results.html:191 templates/results.html:320
+msgid "Queryword"
+msgstr "Otsingusõna"
+
+#: templates/querywords.html:72 templates/querywords.html:239
+msgid "Start Date"
+msgstr "Algus Kpv"
+
+#: templates/querywords.html:84
+msgid "Search Frequency"
+msgstr "Otsingu Sagedus"
+
+#: templates/querywords.html:97 templates/results.html:113
+#: templates/results.html:245
+msgid "Actions"
+msgstr "Tegevus"
+
+#: templates/querywords.html:111 templates/results.html:154
+#: templates/results.html:286
+msgid "Remove"
+msgstr "eemalda"
+
+#: templates/querywords.html:126
+msgid "No querywords"
+msgstr "Märksõnad puuduvad"
+
+#: templates/querywords.html:140
+msgid "You can add multiple querywords by separating them with a comma."
+msgstr ""
+
+#: templates/querywords.html:151
+msgid "topic, another topic"
+msgstr "teema, teine teema"
+
+#: templates/querywords.html:160
+msgid "Choose from which sources you'd like to start receiving updates."
+msgstr ""
+
+#: templates/querywords.html:167
+msgid "Request your own source here!"
+msgstr "Taotle oma allikat siin!"
+
+#: templates/querywords.html:172
+msgid "or search from existing sources"
+msgstr "või otsi olemasolevate allikate seast"
+
+#: templates/querywords.html:188
+msgid "Search frequency"
+msgstr "Otsingu sagedus"
+
+#: templates/querywords.html:190
+msgid "Choose how often you'd like our robots to search for your request."
+msgstr ""
+
+#: templates/querywords.html:208 templates/results.html:375
+#: templates/settings.html:271 templates/settings.html:366
+msgid "Add"
+msgstr "Lisa"
+
+#: templates/querywords.html:236
+msgid "Monthly Searches"
+msgstr "Kuised Otsingud"
+
+#: templates/querywords.html:242
+msgid "Search frequency: Every"
+msgstr "Otsingu sagedus: Iga"
+
+#: templates/querywords.html:244
+msgid "hours"
+msgstr "tundi"
+
+#: templates/querywords.html:260
+msgid "Change Frequency: Every "
+msgstr "Muuda sagedust: Iga"
+
+#: templates/querywords.html:262
+msgid " hours."
+msgstr "tundi."
+
+#: templates/querywords.html:265
+msgid "Update frequency"
+msgstr "Muuda sagedust"
+
+#: templates/querywords.html:272 templates/querywords.html:351
+msgid "Close"
+msgstr "Sulge"
+
+#: templates/querywords.html:287
+msgid "Request your own source"
+msgstr "Taotle oma allikat"
+
+#: templates/querywords.html:297
+msgid "URL for source"
+msgstr "URL allika jaoks"
+
+#: templates/querywords.html:299 templates/settings.html:390
+msgid "Make sure it begins with http or www"
+msgstr ""
+
+#: templates/querywords.html:316 templates/settings.html:402
+msgid "Brief description"
+msgstr "Lühikirjeldus"
+
+#: templates/querywords.html:318 templates/settings.html:404
+msgid "If our engine fails to implement your source automatically, this helps us understand what were you trying to search."
+msgstr ""
+
+#: templates/querywords.html:341
+msgid "Send request"
+msgstr "Saada päring"
+
+#: templates/resetpassword.html:5
+msgid "Password Change"
+msgstr "Salasõna muutmine"
+
+#: templates/resetpassword.html:16
+msgid "Confirm Password"
+msgstr "Kinnita salasõna"
+
+#: templates/resetpassword.html:20
+msgid "Update password"
+msgstr "Uuenda salasõna"
+
+#: templates/results.html:29 templates/results.html:149
+msgid "Archive"
+msgstr "Arhiveeri"
+
+#: templates/results.html:49
+msgid "Search results by tag, title, date or any other available feature"
+msgstr "Otsin tulemusi tagi, pealkirja, kuupäeva või mõne teise kättesaadava tunnuse järgi"
+
+#: templates/results.html:70 templates/results.html:204
+msgid "Date"
+msgstr "Kuupäev"
+
+#: templates/results.html:83 templates/results.html:217
+#: templates/results.html:341
+msgid "Source"
+msgstr "Allikas"
+
+#: templates/results.html:96 templates/results.html:230
+msgid "Title"
+msgstr "Pealkiri"
+
+#: templates/results.html:107 templates/results.html:241
+#: templates/results.html:346
+msgid "Tags"
+msgstr "Sildid"
+
+#: templates/results.html:109
+msgid "When adding tags, you can look up your results by searching only for the tags."
+msgstr ""
+
+#: templates/results.html:142 templates/results.html:274
+#: templates/results.html:349
+msgid "No tags"
+msgstr "Sildid puuduvad"
+
+#: templates/results.html:183
+msgid "Search archived results"
+msgstr "Otsi arhiveeritud tulemusi"
+
+#: templates/results.html:281
+msgid "Unarchive"
+msgstr "Eemalda arhiivist"
+
+#: templates/results.html:298
+msgid "No archived results"
+msgstr "Arhiveeritud tulemused puuduvad"
+
+#: templates/results.html:326
+msgid "Search Date"
+msgstr "Otsingu kuupäev"
+
+#: templates/results.html:330
+msgid "Result Date"
+msgstr "Tulemuse kuupäev"
+
+#: templates/results.html:370
+msgid "Add tags"
+msgstr "Lisa silte"
+
+#: templates/settings.html:22
+msgid "You have been invited to a usergroup. The creator of that group will be paying for your usage from now on. Do you want to join usergrup"
+msgstr "Sa oled kutsutud kasutajagruppi. Selle grupi looja maksab edaspidi sinu kasutustasu.  Kas soovid selle kasutajagrupiga ühineda"
+
+#: templates/settings.html:27
+msgid "Yes"
+msgstr "Jah"
+
+#: templates/settings.html:31
+msgid "No"
+msgstr "Ei"
+
+#: templates/settings.html:35
+msgid "Answer"
+msgstr "Vastus"
+
+#: templates/settings.html:45
+msgid "user usage"
+msgstr "kasutaja kasutus"
+
+#: templates/settings.html:55
+msgid "Searches will expire"
+msgstr "Otsingud aeguvad"
+
+#: templates/settings.html:58
+msgid "You can add"
+msgstr "Te võite lisada"
+
+#: templates/settings.html:58
+msgid "searches"
+msgstr "otsingut"
+
+#: templates/settings.html:61
+msgid "searches are being done every month"
+msgstr "otsingut tehakse iga kuu"
+
+#: templates/settings.html:65
+msgid "Your time limit has been exceeded! Automated searches disabled! Extend your limit to unlock automated searches."
+msgstr "Sinu ajalimiit on ületatud! Automaatsed otsingud väljalülitatud! Automaatsete otsingute sisse lülitamiseks pikenda oma limiiti."
+
+#: templates/settings.html:79 templates/settings.html:187
+msgid "Packet"
+msgstr "Pakett"
+
+#: templates/settings.html:85
+msgid "Custom sources"
+msgstr "Tellitud allikad"
+
+#: templates/settings.html:91
+msgid "Manage usergroups"
+msgstr "Redigeeri kasutajagruppi"
+
+#: templates/settings.html:97
+msgid "E-mail alerts"
+msgstr "e-posti teavitused"
+
+#: templates/settings.html:104
+msgid "Change password"
+msgstr "Muuda salasõna"
+
+#: templates/settings.html:122
+msgid "Your paid package is managed by the creator of your group. To be able to manage your personal package, you must leave from usergroup "
+msgstr "Sinu makstud paketti haldab sinu grupi looja. Isikliku paketi haldamise võimaldamiseks tuleb sul kasutajagrupist lahkuda"
+
+#: templates/settings.html:127 templates/settings.html:318
+msgid "Leave"
+msgstr "Lahku"
+
+#: templates/settings.html:136
+#, python-format
+msgid "You are a groupmaster for usergroup <b>%(user_group)s</b>. You will be billed for each user"
+msgstr "Sa oled kasutajagrupi <b>%(user_group)s</b> haldaja. Iga sinu grupis oleva kasutaja eest esitatakse arve sinule"
+
+#: templates/settings.html:141
+msgid "Your estimated charges for the month will be "
+msgstr "Arvestuslik tasu sinule selle kuu eest on"
+
+#: templates/settings.html:154
+msgid "automatic searches"
+msgstr "automaatset otsingud"
+
+#: templates/settings.html:195
+msgid "Basic"
+msgstr "Baas"
+
+#: templates/settings.html:202
+msgid "Premium"
+msgstr "Preemium"
+
+#: templates/settings.html:212
+msgid "Months"
+msgstr "Kuud"
+
+#: templates/settings.html:222
+msgid "Estimated price"
+msgstr "Prognoositud hind"
+
+#: templates/settings.html:228
+msgid "Extend"
+msgstr "Pikenda"
+
+#: templates/settings.html:236
+msgid "You can set up e-mail reports. E-mail reports are good for staying informed of recent activity and statistics. You can set up multiple e-mails where you would like to receive the reports (separate multiple addresses with a comma). View a sample report <a href=\"#\">here</a>"
+msgstr "Saad seadistada teavitused e-posti teel. E-posti raportid on head olemaks informeeritud viimastest sündmustest ja statistkast. Raporteid on võimalik saata mitmele e-postile (eralda erinevad aadressid komaga). Tutvu näidisraportiga siin <a href=\"#\">siin</a>"
+
+#: templates/settings.html:239
+#, python-format
+msgid "You are receiving reports to %(email_reports_mails)s every %(email_reports_frequency)s days"
+msgstr "Saad raporteid e-postile %(email_reports_mails)s iga %(email_reports_frequency)s päeva järel"
+
+#: templates/settings.html:241
+msgid "You are currently not receiving e-mail reports"
+msgstr "Hetkel sa ei saa raporteid e-posti teel"
+
+#: templates/settings.html:249
+msgid "E-mail addresses"
+msgstr "e-posti aadressid"
+
+#: templates/settings.html:261
+msgid "Frequency"
+msgstr "Sagedus"
+
+#: templates/settings.html:281
+msgid "You can create a usergroup to share same limits as you. If created, you can either invite existing users of the service, or invite new users by email."
+msgstr "Oma limiidi jagamiseks saad luua kasutajagrupi. Pärast kasutajagrupi loomist saad oma kasutajagruppi kutsuda nii olemasolevaid, kui ka uusi kasutajaid."
+
+#: templates/settings.html:288
+msgid "Usergroup name"
+msgstr "Kasutajagrupi nimi"
+
+#: templates/settings.html:300
+msgid "Create"
+msgstr "Loo"
+
+#: templates/settings.html:313
+msgid "You are a member of a paid group. You can only be in one group at a time. You can leave from"
+msgstr "Sa oled makstud kasutajagrupi liige. Saad olla vaid ühes grupis korraga. Sa saad lahkuda kasutajagrupist"
+
+#: templates/settings.html:340
+#, python-format
+msgid "Determine which users belong to your group \"%(group_master)s\". Those users will be having the same limits as you. Group master will be billed for all group members."
+msgstr "Määra, missugused kasutajad kuuluvad gruppi \"%(group_master)s\". Need kasutajad jagavad sinu limiiti. Grupi haldaja/omanik maksab kõikide grupi liikmete eest."
+
+#: templates/settings.html:344
+msgid "If a new user is not already using the service, we will send an invitation email!"
+msgstr "Kui uus kasutaja juba ei kasuta teenust, siis me saadame kutse e-postile!"
+
+#: templates/settings.html:350
+msgid "User"
+msgstr "Kasutaja"
+
+#: templates/settings.html:379
+msgid ""
+"You can request a source free of charge.\n"
+"            Sources will be implemented into the service within seconds to a few business days.\n"
+"            Just give us the link and a short description of what do you want our robots to look for."
+msgstr ""
+"Saad tasuta tellida uue allika.\n"
+"Allikad lisatakse sekundite kuni mõne tööpäeva jooksul.\n"
+"Lihtsalt anna meile link ja lühike kirjeldus, mida soovid, et meie robotid otsiksid sealt."
+
+#: templates/settings.html:388
+msgid "Link to Source"
+msgstr "Link allikale."
+
+#: templates/settings.html:419
+msgid "Request"
+msgstr "Päring"
+
+#: templates/settings.html:427
+msgid "Implemented Sources"
+msgstr "Lisatud allikad"
+
+#: templates/settings.html:450
+msgid "Old password"
+msgstr "Vana salasõna"
+
+#: templates/settings.html:465
+msgid "New password once"
+msgstr "Vana salasõna esimest korda"
+
+#: templates/settings.html:480
+msgid "New password twice"
+msgstr "vana salasõna teist korda"
+
+#: templates/settings.html:493
+msgid "Change"
+msgstr "Muuda"
+
+#: templates/signup.html:15
+msgid "Register a new user"
+msgstr "Registreeri uus kasutaja"
+
+#~ msgid "Frequency not changed! Error logged..."
+#~ msgstr "Sageduse muutmine ei õnnestunud! Viga logitud..."
+
+#~ msgid "Request '%s' not removed! Error logged."
+#~ msgstr "Päringute '%s' eemaldamine ebaõnnestus! Viga logitud."
+
+#~ msgid "Category '%s' not removed! Error logged."
+#~ msgstr "Kategooria '%s' eemaldamine ebaõnnestus! Viga logitud."
+
+#~ msgid "Did not remove category! Error logged"
+#~ msgstr "Kategooria eemaldamine ebaõnnestus. Viga logitud."
+
+#~ msgid "You have to agree to usage terms first."
+#~ msgstr "Teil on vaja nõustuda kasutajatingimustega."
+
+#~ msgid "Wrong old password!"
+#~ msgstr "Vale vana salasõna!"
+
+#~ msgid "FAQ"
+#~ msgstr "KKK"
+
+#~ msgid "This website needs javascript. You have disabled javascript."
+#~ msgstr "See leht vajab javascripti. Te olete javascripti välja lülitanud."
+
+#~ msgid "Search Results "
+#~ msgstr "Otsingu Tulemust"
+
+#~ msgid "Querywords "
+#~ msgstr "Otsingusõna"
+
+#~ msgid "Last events"
+#~ msgstr "Viimased sündmused"
+
+#~ msgid "No recent events"
+#~ msgstr "Viimased sündmused puuduvad"
+
+#~ msgid "Please Login"
+#~ msgstr "Palun logi sisse"
+
+#~ msgid "Update"
+#~ msgstr "Uuenda"
+
+#~ msgid "Add new querywords"
+#~ msgstr "Lisa uus märksõna"
+
+#~ msgid "querywords"
+#~ msgstr "otsingusõnad"
+
+#~ msgid "Recent news"
+#~ msgstr "Viimased uudised"
+
+#~ msgid "Queywords limit"
+#~ msgstr "Otsingusõnade limiit"
+
+#~ msgid "Change language"
+#~ msgstr "Muuda keelt"
+
+#~ msgid "Create Usergroup"
+#~ msgstr "Loo Kasutajagrupp"
+
+#~ msgid "choose a group name"
+#~ msgstr "vali grupi nimi"
+
+#~ msgid "You have not agreed with usage terms - changes will not be saved!"
+#~ msgstr "Teil on vaja nõustuda kasutustingimustega - muudatused ei salvestu!"
+
+#~ msgid "You have to first agree with usage terms!"
+#~ msgstr "Teil on vaja nõustuda kasutustingimustega!"
+
+#~ msgid "Language changed"
+#~ msgstr "Keel muudetud"
+
+#~ msgid "User put to group, user needs to accept request."
+#~ msgstr "Kasutaja lisatud gruppi, taotlus vajab kasutaja heakskiitu."
+
+#~ msgid "User already in a group. User can only be in one group."
+#~ msgstr "Kasutaja juba grupis. Kasutaja saab olla vaid ühes grupis."
+
+#~ msgid "User is now in group %s."
+#~ msgstr "Kasutaja on nüüd grupi %s."
+
+#~ msgid ""
+#~ msgstr ""
+
+#~ msgid "here"
+#~ msgstr "siin"
+
+#~ msgid "Error"
+#~ msgstr "Viga"
+
+#~ msgid "This user doesn't exist"
+#~ msgstr "Selline kasutaja puudub"
+
+#~ msgid "Change Frequency"
+#~ msgstr "Muuda Sagedust"
+
+#~ msgid "Do you want to join usergrup"
+#~ msgstr "Kas te soovite ühineda kasutajagrupiga"
+
+#~ msgid "usergroup usage"
+#~ msgstr "kasutajagrupi kasutus"
+
+#~ msgid "Leave Usergroup"
+#~ msgstr "Lahku kasutajagrupist"
+
+#~ msgid "Usergroup"
+#~ msgstr "Kasutajagrupp"
+
+#~ msgid "Separate multiple user emails with a comma."
+#~ msgstr "Eraldage mitme kasutaja e-posti aadressid komaga."
+
+#~ msgid "Datamining for the masses"
+#~ msgstr "Andmete kaevandamine massidele"
+
+#~ msgid "Brief description of what you need from the source"
+#~ msgstr "Lühike kirjeldus sellest, mida allikast vajad"
+
+#~ msgid "Translates to weeks worth of manual search"
+#~ msgstr "Teisendatud kuudeks, mis kuluvad käsitsi otsimiseks"
+
+#~ msgid "Unlimited"
+#~ msgstr "Limiteerimata"
+
+#~ msgid "Court Registries"
+#~ msgstr "Kohturegistrid"
+
+#~ msgid "Sanctions"
+#~ msgstr "Sanktsioonid"
+
+#~ msgid "News Archives"
+#~ msgstr "Uudiste Arhiivid"
+
+#~ msgid "Monitoring"
+#~ msgstr "Monitooring"
+
+#~ msgid "Custom"
+#~ msgstr "Minu Allikad"
+
+#~ msgid "Search date"
+#~ msgstr "Otsingu kuupäev"
+
+#~ msgid "name, another name"
+#~ msgstr "nimi, teine nimi"
+
+#~ msgid " Search "
+#~ msgstr "Otsi"
+
+#~ msgid "Search results"
+#~ msgstr "Otsi tulemusi"
+
+#~ msgid "Programs"
+#~ msgstr "Programmid"

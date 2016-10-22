@@ -1,0 +1,35 @@
+<form
+  action="/login"
+  method="post">
+  <div class="modal-content">
+    <h4>{% trans %} login {% endtrans %}</h4>
+    <div class="row">
+      <div class="input-field col s12">
+        <a href="{{url}}" class="waves-effect waves-green btn-flat">
+          {% trans %} Login with google {% endtrans %}
+        </a>
+      </div>
+      <div class="input-field col s12">
+        <input id="username-input" type="text" name="username">
+        <label for="username-input">{% trans %} Username {% endtrans %}</label>
+      </div>
+      <div class="input-field col s12">
+        <input id="password-input" name="password" type="password" class="validate">
+        <label for="password">{% trans %} Password {% endtrans %}</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button class="waves-effect waves-green btn-flat" type="submit" name="action">
+      {% trans %} Submit {% endtrans %}
+      <i class="mdi-content-send right"></i>
+    </button>
+    <a href="/forgot" class=" modal-action modal-close waves-effect waves-green btn-flat">
+      {% trans %} Forgot password? {% endtrans %}
+    </a>
+    <a href="/signup" class=" modal-action modal-close waves-effect waves-green btn-flat">
+      {% trans %} Signup {% endtrans %}
+    </a>
+  </div>
+</form>

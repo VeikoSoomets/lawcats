@@ -1,0 +1,444 @@
+﻿{% extends "base.html" %}
+{% block title %}{% trans %}Search{% endtrans %}{% endblock %}
+{% block content %}
+
+  <div class="row">
+    <div class="col-xs-12">
+      <ul class="nav nav-pills nav-justified" role="tablist"> <!-- top tabs area -->
+
+        <li role="presentation" class="active">
+          <a
+            href="#courts"
+            role="pill"
+            data-toggle="pill">
+            {% trans %}Court Registries{% endtrans %}
+          </a>
+        </li>
+
+        <li role="presentation">
+          <a
+            href="#sanctions"
+            role="pill"
+            data-toggle="pill">
+            {% trans %}Sanctions{% endtrans %}
+          </a>
+        </li>
+
+        <li role="presentation">
+          <a
+            href="#news"
+            aria-controls="querywords"
+            role="pill"
+            data-toggle="pill">
+            {% trans %}Archives{% endtrans %}
+          </a>
+        </li>
+
+        <li role="presentation">
+          <a
+            href="#monitoring"
+            role="pill"
+            data-toggle="pill">
+            {% trans %}Media & Government{% endtrans %}
+          </a>
+        </li>
+
+        <li role="presentation">
+          <a
+            href="#custom"
+            role="pill"
+            data-toggle="pill">
+            {% trans %}Custom{% endtrans %}
+          </a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+
+  <!-- tabs content -->
+  <div
+    class="row"
+    ng-app="searchApp"
+    ng-controller="SearchController as sc">
+
+    <div class="col-xs-12">
+      <div class="tab-content">
+
+        <div class="tab-pane fade in active" id="courts"> <!-- courts -->
+          <form class="form-horizontal">
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="courts-querywords-input">
+                {% trans %}Querywords{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input
+                  type="text"
+                  id="courts-querywords-input"
+                  class="form-control"
+                  ng-model="sc.querywords"
+                  placeholder="{% trans %}topic, another topic{% endtrans %}" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="courts-date-input">
+                {% trans %}Search date{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input
+                  type="date"
+                  id="courts-date-input"
+                  class="form-control"
+                  ng-model="sc.queryDate" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2">
+                {% trans %}Sources{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <ng-categories
+                  ng-model="sc.searchSources"
+                  categories="sc.sources"
+                  allowed-categories="['Kohturegistrid']">
+                </ng-categories>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-sm-10 col-sm-offset-2">
+                <button
+                  class="btn btn-primary"
+                  ng-click="sc.searchFrom('courts')">
+                  {% trans %}Search{% endtrans %}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="tab-pane fade" id="sanctions"> <!-- sanctions -->
+          <form class="form-horizontal">
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="courts-date-input">
+                {% trans %}Querywords{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input
+                  class="form-control"
+                  type="text"
+                  id="sanctions-queryword-input"
+                  ng-model="sc.querywords"
+                  placeholder="{% trans %}name, another name{% endtrans %}">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2">
+                {% trans %}Sources{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <ng-categories
+                  ng-model="sc.searchSources"
+                  categories="sc.sources"
+                  allowed-categories="['Sanktsioonid']">
+                </ng-categories>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-sm-10 col-sm-offset-2">
+                <button
+                  class="btn btn-primary"
+                  ng-click="sc.searchFrom('sanctions')">
+                  {% trans %} Search {% endtrans %}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="tab-pane fade" id="news"> <!-- archives -->
+          <form class="form-horizontal">
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="news-querywords-input">
+                {% trans %}Querywords{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input
+                  type="text"
+                  id="news-querywords-input"
+                  class="form-control"
+                  ng-model="sc.querywords"
+                  placeholder="{% trans %}topic, another topic{% endtrans %}" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="news-date-input">
+                {% trans %}Search date{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input
+                  type="date"
+                  id="news-date-input"
+                  class="form-control"
+                  ng-model="sc.queryDate" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2">
+                {% trans %}Sources{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <ng-categories
+                  ng-model="sc.searchSources"
+                  categories="sc.sources"
+                  allowed-categories="['Arhiivid']">
+                </ng-categories>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-sm-10 col-sm-offset-2">
+                <button
+                  class="btn btn-primary"
+                  ng-click="sc.searchFrom('news')">
+                  {% trans %}Search{% endtrans %}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="tab-pane fade" id="monitoring"> <!-- media monitoring -->
+          <form class="form-horizontal">
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="monitoring-querywords-input">
+                {% trans %}Querywords{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input
+                  type="text"
+                  id="monitoring-querywords-input"
+                  class="form-control"
+                  ng-model="sc.querywords"
+                  placeholder="{% trans %}topic, another topic{% endtrans %}" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="monitoring-date-input">
+                {% trans %}Search date{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input
+                  type="date"
+                  id="monitoring-date-input"
+                  class="form-control"
+                  ng-model="sc.queryDate" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2">
+                {% trans %}Sources{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <ng-categories
+                  ng-model="sc.searchSources"
+                  categories="sc.sources"
+                  forbidden-categories="['Arhiivid', 'Sanktsioonid', 'Kohturegistrid', 'Custom']">
+                </ng-categories>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-sm-10 col-sm-offset-2">
+                <button
+                  class="btn btn-primary"
+                  ng-click="sc.searchFrom('monitoring')">
+                  {% trans %}Search{% endtrans %}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+
+        <div class="tab-pane fade" id="custom"> <!-- custom sources -->
+          <form class="form-horizontal">
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="custom-querywords-input">
+                {% trans %}Querywords{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input
+                  type="text"
+                  id="custom-querywords-input"
+                  class="form-control"
+                  ng-model="sc.querywords"
+                  placeholder="{% trans %}topic, another topic{% endtrans %}" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2">
+                {% trans %}Sources{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <ng-categories
+                  ng-model="sc.searchSources"
+                  categories="sc.sources"
+                  allowed-categories="['Custom']">
+                </ng-categories>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-sm-10 col-sm-offset-2">
+                <button
+                  class="btn btn-primary"
+                  ng-click="sc.searchFrom('custom')">
+                  {% trans %}Search{% endtrans %}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- results area -->
+    <div class="col-xs-12" ng-show="sc.hasSearched">
+
+      <!-- results search field -->
+      <input
+        type="text"
+        class="form-control"
+        ng-model="resultSearchQuery"
+        placeholder="{% trans %}Search results{% endtrans %}" />
+
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th ng-hide="sc.searchedSanctions">
+            {% trans %}Queryword{% endtrans %}
+            </th>
+            <th ng-hide="sc.searchedSanctions">
+            {% trans %}Date{% endtrans %}
+            </th>
+            <th ng-hide="sc.searchedSanctions">
+            {% trans %}Source{% endtrans %}
+            </th>
+            <th ng-hide="sc.searchedSanctions">
+            {% trans %}Title{% endtrans %}
+            </th>
+
+            <th ng-show="sc.searchedSanctions">
+              {% trans %}Name{% endtrans %}
+            </th>
+            <th ng-show="sc.searchedSanctions">
+              {% trans %}Programs{% endtrans %}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            ng-repeat="result in sc.results |
+                       filter: resultSearchQuery
+                       track by $index">
+            <td
+              ng-bind="result.queryword ? result.queryword : '{% trans %}All updates{% endtrans %}'"
+              ng-hide="sc.searchedSanctions">
+            </td>
+            <td
+              ng-bind="result.result_date"
+              ng-hide="sc.searchedSanctions"></td>
+            <td
+              ng-bind="result.categories"
+              ng-hide="sc.searchedSanctions"></td>
+            <td ng-hide="sc.searchedSanctions">
+              {% raw %}
+                <a target="_blank" href="{{result.result_link}}" ng-bind="result.result_title"></a>
+              {% endraw %}
+            </td>
+
+            <td
+              ng-show="sc.searchedSanctions"
+              ng-bind="result.name">
+            </td>
+            <td
+              ng-show="sc.searchedSanctions"
+              ng-bind="result.programs">
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="progress progress-striped active" ng-show="sc.loading">
+        <div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+        </div>
+      </div>
+
+      <div
+        ng-hide="sc.loading || sc.results.length"
+        class="alert alert-info"
+        role="alert">
+        {% trans %}No results{% endtrans %}.
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+{% block footer %}
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+<script src="http://cdn.jsdelivr.net/webshim/1.12.4/extras/modernizr-custom.js"></script>
+<script src="http://cdn.jsdelivr.net/webshim/1.12.4/polyfiller.js"></script>
+<script>
+  // shim datepicker for firefox
+  webshims.setOptions('waitReady', false);
+  webshims.setOptions('forms-ext', {types: 'date'});
+  webshims.polyfill('forms forms-ext');
+</script>
+<script src="/static/js/controllers/search.js"></script>
+{% endblock %}

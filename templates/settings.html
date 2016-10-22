@@ -1,0 +1,510 @@
+{% extends "base.html" %}
+{% block page_title %} {% trans %}Settings{% endtrans %} {% endblock %}
+{% block title %}{% trans %}Settings{% endtrans %} {% endblock %}
+
+{% block content %}
+
+  {% if message %} <!-- Until answer_usergroup is in angular, this needs to be here  -->
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="alert alert-{{ message_type }} alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            {{ message }}
+          </div>
+        </div>
+      </div>
+  {% endif %}
+
+  {% if group_to_answer %}
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="alert alert-success">
+          <p> <strong>NB!</strong> {% trans %}You have been invited to a usergroup. The creator of that group will be paying for your usage from now on. Do you want to join usergrup{% endtrans %} "<b>{{ group_to_answer }}</b>"?</p>
+        <form action="/app/settings?action=answer_usergroup" method="post">
+            <input type="hidden" name="group_name" value="{{ group_to_answer }}" />
+            <p>
+              <input class="with-gap" name="group_answer" type="radio" id="yes" value="True" />
+              <label for="yes">{% trans %}Yes{% endtrans %}</label>
+            </p>
+            <p>
+              <input class="with-gap" name="group_answer" type="radio" id="no" value="False" />
+              <label for="no">{% trans %}No{% endtrans %}</label>
+            </p>
+          <input type="submit" value="Answer" class="btn" />
+        </form>
+        <!-- <span class="btn white-text" id="answer_usergroup">{% trans %}Answer{% endtrans %}</span> -->
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  
+  <!-- usage limit -->
+  <!-- <div class="row">
+    <div class="col-xs-12">
+      <div class="panel panel-info">
+        <div class="panel-heading"><strong>{{ user_name }}</strong> {% trans %}user usage{% endtrans %}</div>
+        <div class="panel-body">
+          {% if date_limit %}
+            <div class="progress">
+              <div class="progress-bar" role="progressbar" aria-valuenow="{% if limit_bar|int < 101 %} {{ limit_bar }}% {% else %} 100%{% endif %}" aria-valuemin="0" aria-valuemax="100" style="width: {% if limit_bar|int < 101 %} {{ limit_bar }}% {% else %} 100%{% endif %}">
+                <span> {% if limit_bar|int < 101 %} {{ limit_bar }}% {% else %} 100%{% endif %}</span>
+              </div>
+            </div>
+            <ul class="list-group">
+              <li class="list-group-item">
+                {% trans %}Searches will expire{% endtrans %} <b>{{ date_limit }}</b>
+              </li>
+              <li class="list-group-item">
+                {% trans %}You can add{% endtrans %} <b>{{q_word_limit}} </b>{% trans %}searches{% endtrans %}
+              </li>
+              <li class="list-group-item">
+                <b>{{ monthly_searches }}</b> {% trans %}searches are being done every month{% endtrans %}
+              </li>
+            </ul>
+          {% else %}
+            <p class="text-danger">{% trans %}Your time limit has been exceeded! Automated searches disabled! Extend your limit to unlock automated searches.{% endtrans %}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div> -->
+
+  <!-- top tabs -->
+  <div class="row">
+    <div class="col-xs-12">
+      <ul class="nav nav-pills nav-justified" role="tablist"> <!-- top tabs area -->
+
+        <!--<li role="presentation" class="active">
+          <a href="#package" role="pill" data-toggle="pill">
+            {% trans %}Packet{% endtrans %}
+          </a>
+        </li>-->
+
+        <li role="presentation" class="active">
+          <a href="#request-source" role="pill" data-toggle="pill">
+            {% trans %}Custom sources{% endtrans %}
+          </a>
+        </li>
+
+        <!--<li role="presentation">
+          <a href="#manage-usergroups" role="pill" data-toggle="pill">
+            {% trans %}Manage usergroups{% endtrans %}
+          </a>
+        </li>-->
+
+        <li role="presentation" class="disabled">
+          <a href="#" role="pill">
+            {% trans %}Account Settings{% endtrans %}
+          </a>
+        </li>
+
+        {% if not google_login %}
+        <li role="presentation">
+          <a href="#change-password" role="pill" data-toggle="pill">
+            {% trans %}Change password{% endtrans %}
+          </a>
+        </li>
+        {% endif %}
+
+      </ul>
+    </div>
+  </div>
+
+  <div class="row" ng-app="settingsApp" ng-controller="SettingsController as sc">
+    <div class="col-xs-12">
+      <div class="tab-content"> <!-- tabs inner content -->
+        <!-- package stuff -->
+        <!-- <div class="tab-pane fade in active" id="package">
+
+
+          {% if user_group and not group_master %}
+            <div class="alert alert-info alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              {% trans %}Your paid package is managed by the creator of your group. To be able to manage your personal package, you must leave from usergroup {% endtrans %} <b>{{ user_group }}</b>
+            </div>
+          <form action="/app/settings?action=remove_from_usergroup" method="post">
+          <div class="form-group">
+              <input type="hidden" name="group_name" value="{{ user_group }}">
+              <input type="submit" class="btn btn-danger" value="{% trans %}Leave{% endtrans %}">
+              </input>
+          </div>
+          </form>
+          {% else %}
+
+          {% if group_master %}
+          <div class="alert alert-info alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              {% trans %}You are a groupmaster for usergroup <b>{{ user_group }}</b>. You will be billed for each user{% endtrans %}
+          </div>
+          {% endif %}
+          <div class="alert alert-info alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            {% trans %}Your estimated charges for the month will be {% endtrans %}{ package_price } * { users_in_group } EUR
+          </div>
+          <div class="pricing text-center">
+            <ul>
+              <li class="unit price-primary">
+                <div class="price-title">
+                  <h3>€20</h3>
+                  <p>{% trans %}per month{% endtrans %}</p>
+                </div>
+                <div class="price-body">
+                  <h4>Basic</h4>
+                  <p>{% trans %}Translates to days worth of manual search{% endtrans %}</p>
+                  <ul>
+                    <li>50'000 {% trans %}automatic searches{% endtrans %}</li>
+                    <li>{% trans %}unlimited sources{% endtrans %}</li>
+                    <li>{% trans %}dashboard alerts{% endtrans %}</li>
+                    <li>&nbsp;</li>
+                  </ul>
+                </div>
+              </li>
+              <li class="unit price-success">
+                <div class="price-title">
+                  <h3>€99</h3>
+                  <p>{% trans %}per month{% endtrans %}</p>
+                </div>
+                <div class="price-body">
+                  <h4>Premium</h4>
+                  <p>{% trans %}No need to worry about limits{% endtrans %}</p>
+                  <ul>
+                    <li>{% trans %}unlimited automatic searches{% endtrans %}</li>
+                    <li>{% trans %}unlimited sources{% endtrans %}</li>
+                    <li>{% trans %}dashboard alerts{% endtrans %}</li>
+                    <li>{% trans %}e-mail reports{% endtrans %} -
+                        <span style="font-size: 11px;"><a href="#">{% trans %}view a sample report{% endtrans %}</a></span>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <form class="form-horizontal">
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="pakett1">
+                {% trans %}Packet{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <div class="radio">
+                  <label>
+                    <input type="radio" ng-model="sc.packets.packet" value="1"
+                    {% if active_packet == 1 %} checked {% endif %}/> 
+                    {% trans %}Basic{% endtrans %}
+                  </label>
+                </div>
+                <div class="radio">
+                  <label>
+                    <input type="radio" ng-model="sc.packets.packet" value="2"
+                    {% if active_packet == 2 %} checked {% endif %}/> 
+                    {% trans %}Premium{% endtrans %}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="months-range">
+                {% trans %}Months{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input type="range" class="form-control" ng-model="sc.packets.range" min="1" max="24" value=1 />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-sm-10 col-sm-offset-2">
+                {% trans %}Estimated price{% endtrans %}: <span ng-bind="sc.packets.prices[sc.packets.packet-1]*sc.packets.range"></span>€
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-sm-10 col-sm-offset-2">
+                <button class="btn btn-primary" ng-click="sc.extendPacket()">{% trans %}Extend{% endtrans %}</button>
+              </div>
+            </div>
+          </form>
+          {% endif %}
+        </div>-->
+
+        <div class="tab-pane fade" id="email-alerts"> <!-- set up email alerts-->
+          <p>{% trans %}You can set up e-mail reports. E-mail reports are good for staying informed of recent activity and statistics. You can set up multiple e-mails where you would like to receive the reports (separate multiple addresses with a comma). View a sample report <a href="#">here</a>{% endtrans %}.</p>
+          <p>
+          {% if email_reports %}
+          {% trans %}You are receiving reports to {{ email_reports_mails }} every {{ email_reports_frequency}} days{% endtrans %}.
+          {% else %}
+          {% trans %}You are currently not receiving e-mail reports{% endtrans %}
+          {% endif %}
+          </p>
+          <form action="#" class="form-horizontal">
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="email_address">
+                {% trans %}E-mail addresses{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input type="text" class="form-control" ng-model="sc.emailAlerts.email"/>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="mail-frequency-range">
+                {% trans %}Frequency{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input type="range" class="form-control" ng-model="sc.emailAlerts.range" min="1" max="30" value=1 />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-sm-10 col-sm-offset-2">
+                <button class="btn btn-primary" ng-click="sc.addEmailAlert()">{% trans %}Add{% endtrans %}</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="tab-pane fade" id="manage-usergroups">
+          {% if not group_master and not group_to_answer and not user_group %}
+          <div class="alert alert-info alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            {% trans %}You can create a usergroup to share same limits as you. If created, you can either invite existing users of the service, or invite new users by email.{% endtrans %}
+          </div>
+            <form class="form-horizontal">
+              <div class="form-group">
+                <label
+                  class="control-label col-sm-2"
+                  for="group_name">
+                  {% trans %}Usergroup name{% endtrans %}
+                </label>
+
+                <div class="col-sm-10">
+                  <input type="text" class="form-control" ng-model="sc.userGroup.name" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="col-sm-10 col-sm-offset-2">
+                  <input
+                    type="submit"
+                    value="{% trans %}Create{% endtrans %}"
+                    class="btn btn-primary"
+                    ng-click="sc.createUserGroup()">
+                  </input>
+                </div>
+              </div>
+            </form>
+          {% endif %}
+
+          <!-- leave usergroup -->
+          {% if user_group and not group_master %}
+            <div class="alert alert-info alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              {% trans %}You are a member of a paid group. You can only be in one group at a time. You can leave from{% endtrans %} <b>{{ user_group }}</b>
+            </div>
+          <form action="/app/settings?action=remove_from_usergroup" method="post">
+          <div class="form-group">
+              <input type="hidden" name="group_name" value="{{ user_group }}">
+              <input type="submit" class="btn btn-danger" value="{% trans %}Leave{% endtrans %}">
+              </input>
+          </div>
+          </form>
+          {% endif %}
+          <!-- ------------------ -->
+
+          <!-- edit usergroup -->
+          {% if group_master %}
+            <ul class="list-group" ng-show="sc.groupMembers.length">
+              <li ng-repeat="groupMember in sc.groupMembers" class="list-group-item">
+                <span ng-bind="groupMember.user_email + ' (' + groupMember.user_status + ')'"></span>
+                <button
+                  ng-click="sc.removeFromUserGroup(groupMember)"
+                  class="close pull-left"
+                  style="margin-right: 10px">
+                  &times;
+                </button>
+              </li>
+            </ul>
+            <div class="alert alert-warning alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              {% trans %}Determine which users belong to your group "{{ group_master }}". Those users will be having the same limits as you. Group master will be billed for all group members.{% endtrans %}
+            </div>
+            <div class="alert alert-info alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              {% trans %}If a new user is not already using the service, we will send an invitation email!{% endtrans %}
+            </div>
+            <form class="form-horizontal">
+              <input type="hidden" name="group_name" value="{{ group_master }}">
+              <div class="form-group">
+                <label for="member_email" class="control-label col-sm-2">
+                  {% trans %}User{% endtrans %} e-mail
+                </label>
+
+                <div class="col-sm-10">
+                  <input
+                    type="text"
+                    name="member_email"
+                    class="form-control"
+                    ng-model="sc.userGroup.new"
+                    placeholder="Separate multiple users with a comma">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="col-sm-10 col-sm-offset-2">
+                  <button class="btn btn-primary" ng-click="sc.addToUserGroup()">
+                    {% trans %}Add{% endtrans %}
+                  </button>
+                </div>
+              </div>
+            </form>
+          {% endif %}
+          <!-- ------------------ -->
+
+        </div>
+
+        <div class="tab-pane fade in active" id="request-source">
+          <div class="alert alert-info alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              {% trans %}You can add your own sources.
+            They will be tried to be implemented into the system automatically, and if that should succeed, it shouldn't take more
+            than a couple of seconds. Just give us the link and a short description of what do you want our robots to look for.
+            {% endtrans %}
+          </div>
+          <form action="#" class="form-horizontal">
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="src_request_link">
+                {% trans %}Link to Source{% endtrans %}
+                <a tabindex="0" class="badge" role="button" data-toggle="popover" data-trigger="focus"
+                 data-content="{% trans %}Make sure it begins with http or www{% endtrans %}">?</a>
+              </label>
+
+              <div class="col-sm-10">
+                <input type="text" class="form-control" ng-model="sc.newSource.link"/>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="src_request_desc">
+                {% trans %}Brief description{% endtrans %}
+                <a tabindex="0" class="badge" role="button" data-toggle="popover" data-trigger="focus"
+                 data-content="{% trans %}If our engine fails to implement your source automatically, this helps us understand what were you trying to search.{% endtrans %}">?</a>
+              </label>
+
+              <div class="col-sm-10">
+                <input type="text" class="form-control" ng-model="sc.newSource.description" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-sm-10 col-sm-offset-2">
+                <div class="progress progress-striped active" ng-show="sc.loading">
+                  <div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+                  </div>
+                </div>
+                <div ng-hide="sc.loading">
+                  <button class="btn btn-primary" ng-click="sc.addNewSource()">{% trans %}Request{% endtrans %}</button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <div>
+            <label class="control-label col-sm-2">
+              {% trans %}Implemented Sources{% endtrans %}
+            </label>
+
+            <div class="col-sm-10">
+              {% raw %}
+              <ul class="list-group">
+                <li class="list-group-item" ng-repeat="category in sc.sources">
+                  <a href="{{category.nice_link}}" target="_blank">{{category.category_name}}</a>
+                </li>
+              </ul>
+              {% endraw %}
+            </div>
+         </div>
+
+        </div>
+        
+        {% if not google_login %}
+        <div class="tab-pane fade" id="change-password">
+          <form action="#" class="form-horizontal">
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="old-password">
+                {% trans %}Old password{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input
+                  id="old-password"
+                  class="form-control"
+                  type="password"/>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="new-password">
+                {% trans %}New password once{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input
+                  id="new-password"
+                  class="form-control"
+                  type="password"/>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                class="control-label col-sm-2"
+                for="new-password-2">
+                {% trans %}New password twice{% endtrans %}
+              </label>
+
+              <div class="col-sm-10">
+                <input
+                  id="new-password-2"
+                  class="form-control"
+                  type="password"/>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-sm-10 col-sm-offset-1">
+                <button class="btn btn-primary" id="change-password">{% trans %}Change{% endtrans %}</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  
+{% endblock %}
+{% block footer %}
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+<script src="/static/js/controllers/settings.js"></script>
+{% endblock %}

@@ -1,0 +1,272 @@
+<meta http-equiv='Content-Type' content='Type=text/html; charset=utf-8'>
+{% extends "base.html" %}
+{% block head %}
+  <title>Andmekaevur</title>
+  
+<script type="text/javascript">
+    function stoppedTyping(){
+        if(this.value.length > 0) { 
+            document.getElementById('start_button').disabled = false; 
+        } else { 
+            document.getElementById('start_button').disabled = true;
+        }
+    }
+    function verify(){
+        if query2 is empty{
+            alert "Put some text in there!"
+            return
+        }
+        else{
+            do button functionality
+        }
+    }
+</script>
+{% endblock %}
+
+
+{% block sidebar %}
+
+
+ {% endblock %}
+
+
+ {% block content %}
+
+   <h2>Otsingu Demo</h2>
+
+    <p>&nbsp;</p>
+
+   <p>Loe <a target="_blank" href="/static/faq.html">korduma kippuvaid küsimusi</a> teenuse kohta.</p>
+
+  <p>&nbsp;</p>
+
+
+<div style="display: block; width: 30%; float: left; border: 1px solid #dadada; border-radius: 15px; margin: 10px;">
+    <h4>Kohtulahendite otsing</h4>
+    <form name="searchform" action="/lsearch" method="post">
+      <!--<input type="hidden" name="qtype" value="product"/>-->
+      <table>
+      <tr>
+      <td>
+       Otsingtermin: <input style="height:30px;" type="text" id="query" name="query" size="88" />
+      </td>
+        </tr>
+        <tr>
+        <td>
+        Alguskpv: <input type="text" class="datepicker" name="date_algus" style="height: 30px;" />
+        Lõppkpv: <input type="text" class="datepicker" name="date_lopp" style="height: 30px;" />
+        </td>
+        </tr>
+      <tr>
+      <td>
+       <input type="submit" class="btn primary"  name="psearchsub" value="Otsi"/>
+       <input type="reset" class="btn primary"  name="psearchreset" value="reset"/>
+      </td></tr>
+      </table>
+    </form>
+</div>
+
+<div style="display: block; width: 30%; float: left; border: 1px solid #dadada; border-radius: 15px; margin: 10px;">
+    <h4>Uudiste otsing</h4>
+    <form id="uudised" name="searchform" action="/usearch" method="post">
+      <!--<input type="hidden" name="qtype" value="product"/>-->
+      <table>
+      <tr>
+      <td>
+        <input type="radio" id="trigger" name="category" value="kohtuuudiste_otsingu_tulemused" checked >Kohtuuudised<br>
+        <div id='show-me' style='display:none'>
+          Kohtutasand: <select name="kohtutasand">
+          <option value="ringkonnakohtu">Ringkonnakohtu</option>
+          <option value="riigikohtu">Riigikohtu</option>
+          <option value="euro_inim_kohus">Euroopa Inimõigustekohus</option>
+          <option value="euro_kohus">Euroopa Kohus</option>
+          </select>
+        </div>
+        <input type="radio" name="category" value="otsiSeadusteUudised" checked >Seadusuudised<br>
+        <input type="radio" name="category" value="otsiMuuOigusuudised">Õigusuudised<br>
+        </tr>
+        <tr>
+        Otsingtermin: <input style="height:30px;" type="text" id="query" name="query" size="88" />
+      </td>
+        </tr>
+        <tr>
+        <td>
+        Alguskpv: <input type="text" class="datepicker" name="date_algus" style="height: 30px;" />
+        Lõppkpv: <input type="text" class="datepicker" name="date_lopp" style="height: 30px;" />
+        </td>
+        </tr>
+      <tr>
+      <td>
+       <input type="submit" class="btn primary"  name="psearchsub" value="Otsi"/>
+       <input type="reset" class="btn primary"  name="psearchreset" value="reset"/>
+      </td></tr>
+      </table>
+    </form>
+</div>
+
+<div style="display: block; width: 30%; float: left; border: 1px solid #dadada; border-radius: 15px; margin: 10px;">
+    <h4>Ilmumas/ilmunud otsing</h4>
+    <form name="searchform" action="/usearch2" method="post">
+      <!--<input type="hidden" name="qtype" value="ilmumas"/>-->
+      <table>
+      <tr>
+      <td>
+       <input style="height:30px;" type="text" id="query" name="query" size="88"/>
+      </td>
+        </tr>
+        <tr>
+      <td>
+      Ilmumiskuupäev: <input type="text" class="datepicker" name="date" style="height: 30px;" />
+      </td>
+        </tr>
+      <tr>
+      <td>
+       <input type="submit" class="btn primary"  name="psearchsub" value="Otsi"/>
+       <input type="reset" class="btn primary"  name="psearchreset" value="reset"/>
+      </td></tr>
+      </table>
+    </form>
+</div>
+
+<hr style="clear: both;" />
+
+<div style="display: block: width: 70%; border: 1px solid #dadada; border-radius: 15px; margin: 10px;">
+
+    {% if search_response %}
+    
+     <h2>Kohtulahendite otsingu tulemused</h2>
+
+      <p>
+        {% if prev_link %}
+          <a href="{{prev_link}}">Eelmised tulemused</a>
+        {% else %}
+          Previous Results
+        {% endif %}
+         |
+        {% if next_link %}
+          <a href="{{next_link}}">Järgmised tulemused</a>
+        {% else %}
+          Next Results
+        {% endif %}
+      </p>
+
+      <p>&nbsp;</p>
+      {% if returned_count > 0 %}
+      <p>
+       {{first_res}} - {{last_res}} of {{number_found}} {{qtype}}s shown for query: <i>{{print_query}}</i>.
+      </p>
+      <p>
+      <h4>Salvesta teavitused märksõnale {{print_query}}</h4>
+      </P>
+      {% endif %}
+
+      {% for result in search_response %}
+        <p>
+        <span style="color: #014C9D;"><i>Kuupäev</i></span>: {{result.0}}<br/>
+        <span style="color: #014C9D;"><i>Kohtuasja nr.</i></span>: {{result.1}}<br/>
+        <span style="color: #014C9D;"><i>Link</i></span>: {{result.2}}<br/>
+        <span style="color: #014C9D;"><i>Sisu</i></span>: {{result.3}}<br/>
+        
+        <br/>
+        </p>
+      {% endfor %}
+
+      <p>
+        {% if prev_link %}
+          <a href="{{prev_link}}">Previous Results</a>
+        {% else %}
+          Previous Results
+        {% endif %}
+         |
+        {% if next_link %}
+          <a href="{{next_link}}">Next Results</a>
+        {% else %}
+          Next Results
+        {% endif %}
+      </p>
+    
+    {% endif %}
+    
+    <!------------ Ilmumas/ilmunud -->
+    {% if usearch_response2 %}
+    
+     <h2>Ilmumas/ilmunud tulemused</h2>
+
+      {% for result in usearch_response2 %}
+        <p>
+        <span style="color: #014C9D;"><i>Tüüp</i></span>: {{result.2}}<br/>
+        <span style="color: #014C9D;"><i>Pealkiri</i></span>: {{result.0}}<br/>
+        <span style="color: #014C9D;"><i>Allikas</i></span>: {{result.1}}<br/>
+        <span style="color: #014C9D;"><i>Kehtivus</i></span>: {{result.3}}<br/>
+        <span style="color: #014C9D;"><i>Ilmub</i></span>: {{result.4}}<br/>
+        <span style="color: #014C9D;"><i>RT id</i></span>: {{result.5}}<br/>
+        <br/>
+        </p>
+      {% endfor %}
+    
+    {% endif %}
+    <!----------------------- -->
+    
+    <!------------ UUUUDISED -->
+    {% if usearch_response %}
+    
+     <h2>Uudiste otsingu tulemused</h2>
+
+      {% for result in usearch_response %}
+        <p>
+        <span style="color: #014C9D;"><i>Link</i></span>: <a href="{{result.2}}" target="_blank">{{result.2}}</a><br/>
+        <span style="color: #014C9D;"><i>Pealkiri</i></span>: {{result.1}}<br/>
+        <span style="color: #014C9D;"><i>Kuupäev</i></span>: {{result.0}}<br/>
+        <br/>
+        </p>
+      {% endfor %}
+    
+    {% endif %}
+    <!----------------------- -->
+    
+    <!------------ Seadused -->
+    {% if search_response2 %}
+    
+     <h2>Seaduste otsingu tulemused</h2>
+
+      <p>
+        {% if prev_link %}
+          <a href="{{prev_link}}">Eelmised tulemused</a>
+        {% else %}
+          Previous Results
+        {% endif %}
+         |
+        {% if next_link %}
+          <a href="{{next_link}}">Järgmised tulemused</a>
+        {% else %}
+          Next Results
+        {% endif %}
+      </p>
+
+      <p>&nbsp;</p>
+      {% if returned_count > 0 %}
+      <p>
+       {{first_res}} - {{last_res}} of {{number_found}} {{qtype}}s shown for query: <i>{{print_query}}</i>.
+      </p>
+      {% endif %}
+
+      {% for result in search_response2 %}
+        <p>
+        <span style="color: #014C9D;"><i>Link</i></span>: {{result.2}}<br/>
+        <span style="color: #014C9D;"><i>Seadus</i></span>: {{result.3}}<br/>
+        <span style="color: #014C9D;"><i>Paragrahv</i></span>: {{result.4}}<br/>
+        <span style="color: #014C9D;"><i>Sisu</i></span>: {{result.1}}<br/>
+        <br/>
+        </p>
+      {% endfor %}
+    
+    {% endif %}  
+    <!----------------------- -->
+
+</div>
+
+<script type="text/javascript" language="JavaScript">
+document.forms['searchform'].elements['query'].focus();
+</script>
+
+    {% endblock %}

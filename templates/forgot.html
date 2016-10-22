@@ -1,0 +1,40 @@
+<html><head>
+    <title>lawcats - {% trans %}Forgot Password{% endtrans %}</title>
+<!-- Bootstrap Core CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+
+ </head><body>
+
+{% if message %}
+<div class="alert alert-{{ message_type }}" role="alert"><strong>NB!</strong> {{ message }}</div>
+{% endif %}
+
+{% block content %}
+
+<div class="row">
+            <div class="col-md-4 col-md-offset-4">
+                <div class="login-panel panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans %}Password Recovery{% endtrans %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form role="form" action="/forgot" method="post">
+                            <fieldset>
+                            
+                            <p>{% trans %}Forgot your password? Enter your username and we will send you instructions how to recover it{% endtrans %}.</p>
+ 
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="{% trans %}E-mail{% endtrans %}" type="email" name="email" autofocus>
+                                </div>
+
+                                <input type="submit" class="btn btn-lg btn-success btn-block" value="{% trans %}send password to e-mail{% endtrans %}">
+
+                                
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% endblock %}

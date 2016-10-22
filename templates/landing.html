@@ -1,0 +1,366 @@
+﻿﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  _____ _             _       
+ / ____| |           (_)      
+| (___ | | ___ __ ___ _ _ __  
+ \___ \| |/ / '__/ _ \ | '_ \ 
+ ____) |   <| | |  __/ | |_) |
+|_____/|_|\_\_|  \___|_| .__/ 
+                       | |    
+                       |_|
+
+Copyright Imaginary Robots OÜ 2015
+-->
+<title>lawcats</title>
+
+<!-- Bootstrap css files -->
+<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="/static/vendor/Bootflat/bootflat/css/bootflat.css">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta charset="UTF-8"/>
+
+<!-- custom css -->
+<link type="text/css" rel="stylesheet" href="/static/css/main.css" />
+<link type="text/css" rel="stylesheet" href="/static/css/landing.css" />
+
+<link rel="stylesheet" href="/static/vendor/bootstrap-social/bootstrap-social.css">
+<link rel="stylesheet" href="/static/vendor/font-awesome/css/font-awesome.min.css">
+  
+</head>
+<body ng-app="landingApp" ng-controller="LandingController as lc">
+
+<!-- navbar -->
+<nav class="navbar navbar-default navbar-fixed-top navbar-landing">
+  <div class="container">
+
+    <div class="navbar-header"> <!-- navbar brand part -->
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar-collapse">
+        <span class="sr-only">{% trans %}Toggle navigation{% endtrans %}</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">lawcats</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="main-navbar-collapse">
+      {% if logged_in %}
+      <ul class="nav navbar-nav"> <!-- Left navbar part -->
+        <li>
+          <a href="/app/dashboard">{% trans %}Dashboard{% endtrans %}</a>
+        </li>
+        <li>
+          <a href="/app/querywords">{% trans %}Requests{% endtrans %}</a>
+        </li>
+        <li>
+          <a href="/app/results">{% trans %}Results{% endtrans %}</a>
+        </li>
+        <li>
+          <a href="/app/search">{% trans %}Search{% endtrans %}</a>
+        </li>
+      </ul>
+      {% endif %}
+
+      <ul class="nav navbar-nav navbar-right"> <!-- Right navbar part -->
+        {% if logged_in %}
+          <li>
+            <!--<a href="/auth/googleplus?destination_url={{ destination_url }}">
+              {% trans %}Logout{% endtrans %}
+            </a>-->
+            <a href="{{ url }}">
+              {% trans %}Logout{% endtrans %}
+            </a>
+          </li>
+        {% else %}
+          <li>
+            <a
+              href="#login-modal"
+              data-toggle="modal"
+              data-target="#login-modal">
+              {% trans %}Login{% endtrans %}
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#register-modal"
+              data-toggle="modal"
+              data-target="#register-modal">
+              {% trans %}Register{% endtrans %}
+            </a>
+          </li>
+        {% endif %}
+
+        <li>
+          <a href="/app/change_lang?lang=et_EE">
+            EST
+          </a>
+        </li>
+
+        <li>
+          <a href="/app/change_lang?lang=en_US">
+            ENG
+          </a>
+        </li>
+        {% if logged_in %}
+        <li>
+        <a href="/app/settings" style="margin-top: 8px; padding: 0;"><img src="{{ avatar }}" class="img-circle" style="height: 35px; width: auto;" /></a>
+        </li>
+        {% endif %}
+
+      </ul>
+
+    </div>
+  </div>
+</nav>
+
+<!-- Register modal -->
+<div class="modal fade" id="register-modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{% trans %}Register{% endtrans %}</h4>
+      </div>
+
+      <div class="modal-body">
+        <a class="btn btn-social btn-google" href="{{ url }}">
+          <i class="fa fa-google"></i> Sign in with Google
+        </a>
+
+        <h2> {% trans %}or register lawcats user{% endtrans %}</h2>
+
+        <hr />
+        <form
+          action="/signup"
+          method="POST"
+          class="form-horizontal">
+          <div class="form-group">
+            <label
+              class="control-label col-sm-2"
+              for="register-username-input">
+              {% trans %}Username{% endtrans %}
+            </label>
+        
+            <div class="col-sm-10">
+              <input
+                type="text"
+                id="register-username-input"
+                name="username"
+                class="form-control" />
+            </div>
+          </div>
+        
+          <div class="form-group">
+            <label
+              class="control-label col-sm-2"
+              for="register-email-input">
+              {% trans %}Email{% endtrans %}
+            </label>
+        
+            <div class="col-sm-10">
+              <input
+                type="email"
+                id="register-email-input"
+                name="email"
+                class="form-control" />
+            </div>
+          </div>
+        
+          <div class="form-group">
+            <label
+              class="control-label col-sm-2"
+              for="register-password-input">
+              {% trans %}Password{% endtrans %}
+            </label>
+        
+            <div class="col-sm-10">
+              <input
+                type="password"
+                id="register-password-input"
+                name="password"
+                class="form-control" />
+            </div>
+          </div>
+        
+          <div class="form-group">
+            <label
+              class="control-label col-sm-2"
+              for="register-firstname-input">
+              {% trans %}Name{% endtrans %}
+            </label>
+        
+            <div class="col-sm-10">
+
+              <div class="row">
+                <div class="col-xs-6">
+                  <input
+                    type="text"
+                    id="register-firstname-input"
+                    name="firstname"
+                    class="form-control"
+                    placeholder="{% trans %}First Name{% endtrans %}" />
+                </div>
+                <div class="col-xs-6">
+                  <input
+                    type="text"
+                    id="register-lastname-input"
+                    name="lastname"
+                    class="form-control"
+                    placeholder="{% trans %}Last Name{% endtrans %}" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="col-sm-10 col-sm-offset-2">
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" name="agreed_to_terms">{% trans %}I have read and agree to the <a href="#" target="_blank">terms of use</a>{% endtrans %} <!-- this could also be a modal -->
+              </label>
+            </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="col-sm-10 col-sm-offset-2">
+              <input type="submit" value="{% trans %}Submit{% endtrans %}" class="btn btn-primary">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Login modal -->
+<div
+  class="modal fade"
+  id="login-modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{% trans %}Login{% endtrans %}</h4>
+      </div>
+
+      <div class="modal-body">
+        <a class="btn btn-social btn-google" href="{{ url }}">
+          <i class="fa fa-google"></i> Sign in with Google
+        </a>
+
+        <h2> {% trans %}or with lawcats user{% endtrans %}</h2>
+
+        <hr />
+
+        <form class="form-horizontal" method="POST" action="/login">
+          <div class="form-group"> <!-- username -->
+            <label
+              class="control-label col-sm-2"
+              for="username-input">
+              {% trans %}E-mail{% endtrans %}
+            </label>
+
+            <div class="col-sm-10">
+              <input
+                type="text"
+                id="username-input"
+                name="username"
+                class="form-control" />
+            </div>
+          </div>
+
+          <div class="form-group"> <!-- password -->
+            <label
+              class="control-label col-sm-2"
+              for="password-input">
+              {% trans %}Password{% endtrans %}
+            </label>
+
+            <div class="col-sm-10">
+              <input
+                type="password"
+                id="password-input"
+                name="password"
+                class="form-control" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="col-sm-10 col-sm-offset-2">
+              <input type="submit" class="btn btn-primary" value="{% trans %}Login{% endtrans %}" />
+              <a href="/forgot">{% trans %}Don't remember password?{% endtrans %}</a>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer"></div>
+    </div>
+  </div>
+</div>
+
+<div class="landing-jumbo">
+  <div class="container">
+    <div class="text-center">
+      <h1 class="landing-main-text">{% trans %}lawcats{% endtrans %}</h1>
+      <p>{% trans %}cats{% endtrans %}</p>
+      {% if not logged_in %}<p>
+        <a
+          href="#register-modal"
+          data-toggle="modal"
+          data-target="#register-modal"
+          class="btn btn-lg landing-main-button">
+          {% trans %}Sign up{% endtrans %}
+        </a>
+      </p>
+      {% else %}
+      <a href="app/results" class="btn btn-lg landing-main-button">{% trans %}Continue{% endtrans %}</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<hr class="landing-hr" />
+
+<div class="landing-footer padded-section">
+  <div class="container">
+    <div class="row">
+        <div class="footer-logo text-left"><a href="#">lawcats</a></div>
+      <div class="footer-copyright text-center">Copyright &copy; 2016 lawcats. All rights reserved.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap -->
+<script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+
+<!-- Bootflat's JS files.-->
+<script src="/static/vendor/Bootflat/bootflat/js/icheck.min.js"></script>
+<script src="/static/vendor/Bootflat/bootflat/js/jquery.fs.selecter.min.js"></script>
+<script src="/static/vendor/Bootflat/bootflat/js/jquery.fs.stepper.min.js"></script>
+
+<!-- Base javascript file -->
+<script type="text/javascript" src="/static/js/main-operations.js"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+<script src="/static/js/controllers/landing.js"></script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-67433003-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</body>
+</html>

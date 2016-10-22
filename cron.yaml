@@ -1,0 +1,8 @@
+cron:
+- description: crawls valid user requests, saves results and maps with user requests every hour
+  url: '/sys/datastore_req'
+  schedule: every 60 mins
+
+- description: automatically archives old results every day
+  url: '/sys/auto_archive'
+  schedule: every 24 hours

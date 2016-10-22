@@ -1,0 +1,97 @@
+﻿{% extends "base.html" %}
+{% block title %}
+    {% trans %}Sysadmin{% endtrans %}
+{% endblock %}
+{% block page_title %}
+{% trans %}Sysadmin{% endtrans %}
+{% endblock %}
+{% block head %}
+ <script src="/static/js/operations.js"></script>
+{% endblock %}
+{% block content %}
+
+    {% if message %}
+    <div class="alert alert-{{ message_type }}" role="alert"><strong>NB!</strong> Please careful with admin actions! Do them only if you know what you are doing.</div>
+    {% endif %}
+    <div class="alert alert-info" role="alert"><strong>NB!</strong>
+        Newest users in the top. Users who don't have enough date limit are yellow. Users with enough date limit are green.
+    </div>
+
+<table style="padding: 5px; border: 1px solid #000; width: 100%;">
+     <tr style="border-bottom: 1px solid #000;">
+        <td><strong>Agreed to terms</strong><td>
+        <td><strong>Group name</strong></td>
+        <td><strong>Packet</strong></td>
+        <td><strong>Email</strong></td>
+        <td><strong>Expire Date</strong></td>
+        <td><strong>Monhtly Searches</strong></td>
+        <td><strong>New Results</strong></td>
+        <td><strong>Archived</strong></td>
+        <td><strong>Querywords</strong></td>
+        <td><strong>Actions</strong></td>
+     </tr>
+{% for user in users %}
+    <tr style="background-color: {% if not user.usage_expire_date %}#FEFFBD{% else %}#7AFF80{% endif %};">
+        <td>{{ user.agreed_to_terms }}<td>
+        <td>{{ user.group_name }}</td>
+        <td>{{ user.packet }}</td>
+        <td>{{ user.email_address }}</td>
+        <td>{{ user.usage_expire_date }}</td>
+        <td>{{ user.monthly_searches }}</td>
+        <td>{{ user.new_results }}</td>
+        <td>{{ user.old_results }}</td>
+        <td>{{ user.qword_count }}</td>
+        <td style="float: right;">
+            <a tabindex="0" class="badge" role="button" data-toggle="popover" data-trigger="focus"
+             data-content="billing automation coming soon...">send bill</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+    <br/>
+    <h3>Admin toimingud:</h3>
+    <ul>Cron jobs:
+    <li><a href="/sys/datastore_req" class="btn btn-info">Crawl</a> - generates a search and then maps found results for each valid request.</li><br/>
+    <li><a href="/sys/implement_src" class="btn btn-info">Implement Sources</a> - takes user custom source requests and tries to implement them automatically.</li><br/>
+    <li><a href="/sys/auto_archive" class="btn btn-info">Auto Archive</a> - takes old results and archives them automatically.</li>
+        <br/><br/>
+
+    </ul>
+    <ul>Delete stuff:
+    <li><a href="/sys/remove_last_crawl" class="btn btn-info">Delete last crawl</a></li><br/>
+    </ul>
+    <ul>Categories:
+    <li><a href="/sys/generate_categories" class="btn btn-info">Generate categories</a></li><br/>
+    <li><a href="/sys/delete_categories" class="btn btn-info">Delete categories</a></li><br/>
+    </ul>
+    </ul>
+    <ul>Sanctions:
+    <li><a href="/sys/add_sdn" class="btn btn-info">Add OFAC sanctions</a></li><br/>
+    <li><a href="/sys/add_eu" class="btn btn-info">Add EU sanctions</a></li><br/>
+        <li>TODO:<li>add updater job to get most recent list</li></li>
+    </ul>
+
+    <br/><br/>
+
+    <h3>Vasta küsimustele:</h3><br/>
+{% for q in faq %}
+<div class="card-panel">
+  <form method="post" action="/app/faq?action=remove_question">
+    <input type="hidden" name="question_id" value="{{ q.key.id() }}" />
+    <input type="submit" value="Remove" />
+  </form>
+<span style="color:  {% if not q.answered %}red{% else %}#000{% endif %};">
+<b>Q: </b> {{ q.question }}<br/>
+<b>A: </b> {{ q.answer }}<br/>
+</span>
+  <form method="post" action="/app/faq?action=answer_question">
+    <input type="text" name="answer" placeholder="" value="{% if q.answered %}{{ q.answer }}{% endif %}"/>
+    <input type="hidden" name="question_id" value="{{ q.key.id() }}" />
+    <input type="submit" value="{% if not q.answered %}Answer{% else %}Change Answer{% endif %}" />
+  </form>
+</div><br/>
+ {% endfor %}
+
+
+{% endblock %}

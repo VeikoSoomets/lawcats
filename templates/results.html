@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+{% block page_title %} {% trans %}Results{% endtrans %} {% endblock %}
+{% block title %}{% trans %}Results{% endtrans %}{% endblock %}
+{% block content %}
+
+<div ng-app="resultsApp" ng-controller="ResultsController as rc">
+
+  {% raw %}
+  <div class="row">
+    <div class="col-xs-12">
+      <ul class="nav nav-pills nav-justified" role="tablist"> <!-- top tabs area -->
+
+        <li role="presentation" class="active">
+          <a
+            href="#results"
+            aria-controls="results"
+            role="pill"
+            data-toggle="pill">
+            {% endraw %}{% trans %}Results{% endtrans %}{% raw %}
+          </a>
+        </li>
+
+        <li role="presentation">
+          <a
+            href="#archive"
+            aria-controls="archive"
+            role="pill"
+            data-toggle="pill"
+            ng-click="rc.pullArchiveDataIfNotPulled()">
+            {% endraw %}{% trans %}Archive{% endtrans %}{% raw %}
+          </a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="tab-content">
+
+        <!-- Results table -->
+        <div class="tab-pane fade in active" id="results">
+
+          <!-- results search field -->
+          <input
+            type="text"
+            class="form-control"
+            ng-model="resultSearchQuery"
+            placeholder="{% endraw %}{% trans %}Search results by tag, title, date or any other available feature{% endtrans %}{% raw %}" />
+
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th
+                  ng-click="rc.setResultOrder('queryword')"
+                  class="cursor-hoverable">
+                  {% endraw %}{% trans %}Queryword{% endtrans %}{% raw %}
+
+                  <span
+                    ng-show="rc.resultOrder === 'queryword'"
+                    class="glyphicon glyphicon-chevron-up"></span>
+                  <span
+                    ng-show="rc.resultOrder === '-queryword'"
+                    class="glyphicon glyphicon-chevron-down"></span>
+                </th>
+
+                <th
+                  ng-click="rc.setResultOrder('result_date')"
+                  class="cursor-hoverable">
+                  {% endraw %}{% trans %}Date{% endtrans %}{% raw %}
+
+                  <span
+                    ng-show="rc.resultOrder === 'result_date'"
+                    class="glyphicon glyphicon-chevron-up"></span>
+                  <span
+                    ng-show="rc.resultOrder === '-result_date'"
+                    class="glyphicon glyphicon-chevron-down"></span>
+                </th>
+
+                <th
+                  ng-click="rc.setResultOrder('categories')"
+                  class="cursor-hoverable">
+                  {% endraw %}{% trans %}Source{% endtrans %}{% raw %}
+
+                  <span
+                    ng-show="rc.resultOrder === 'categories'"
+                    class="glyphicon glyphicon-chevron-up"></span>
+                  <span
+                    ng-show="rc.resultOrder === '-categories'"
+                    class="glyphicon glyphicon-chevron-down"></span>
+                </th>
+
+                <th
+                  ng-click="rc.setResultOrder('result_title')"
+                  class="cursor-hoverable">
+                  {% endraw %}{% trans %}Title{% endtrans %}{% raw %}
+
+                  <span
+                    ng-show="rc.resultOrder === 'result_title'"
+                    class="glyphicon glyphicon-chevron-up"></span>
+                  <span
+                    ng-show="rc.resultOrder === '-result_title'"
+                    class="glyphicon glyphicon-chevron-down"></span>
+                </th>
+
+                <th>
+                  {% endraw %}{% trans %}Tags{% endtrans %}{% raw %}
+                  <a tabindex="0" class="badge" role="button" data-toggle="popover" data-trigger="focus"
+                 data-content="{% endraw %}{% trans %}When adding tags, you can look up your results by searching only for the tags.{% endtrans %}{% raw %}">?</a>
+                </th>
+
+                <th>
+                  {% endraw %}{% trans %}Actions{% endtrans %}{% raw %}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                class="modal-opener"
+                ng-repeat="result in rc.results |
+                           orderBy:rc.resultOrder:false |
+                           filter: resultSearchQuery
+                           track by $index"
+                ng-click="rc.openModal(result)">
+
+                <td ng-bind="result.queryword ? result.queryword : '{% endraw %}{% trans %}All updates{% endtrans %}{% raw %}'"></td>
+
+                <td ng-bind="result.result_date"></td>
+
+                <td ng-bind="result.categories"></td>
+
+                <td>
+                  <a target="_blank" href="{{result.result_link}}" ng-bind="result.result_title" ng-click="$event.stopPropagation()"></a>
+                </td>
+
+                <td>
+                  <ul
+                    class="list-unstyled"
+                    ng-show="result.tags">
+                    <li ng-bind="tag" ng-repeat="tag in result.tags"></li>
+                  </ul>
+                  <p ng-hide="result.tags.length" class="text-danger">{% endraw %}{% trans %}No tags{% endtrans %}{% raw %}.</p>
+                </td>
+
+                <td>
+                  <button
+                    class="btn btn-warning btn-sm"
+                    ng-click="rc.archiveResult(result);$event.stopPropagation()">
+                    {% endraw %}{% trans %}Archive{% endtrans %}{% raw %}
+                  </button>
+                  <button
+                    class="btn btn-danger btn-sm"
+                    ng-click="rc.removeResult(result);$event.stopPropagation()">
+                    {% endraw %}{% trans %}Remove{% endtrans %}{% raw %}
+                  </button>
+                </td>
+
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="progress progress-striped active" ng-hide="rc.loaded">
+            <div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+            </div>
+          </div>
+
+          <div
+            ng-show="rc.loaded && rc.results.length === 0"
+            class="alert alert-info"
+            role="alert">
+            {% endraw %}{% trans %}No results{% endtrans %}{% raw %}.
+          </div>
+        </div>
+
+        <!-- Archived table -->
+        <div class="tab-pane fade" id="archive">
+
+          <!-- results search field -->
+          <input
+            type="text"
+            class="form-control"
+            ng-model="archiveSearchQuery"
+            placeholder="{% endraw %}{% trans %}Search archived results{% endtrans %}{% raw %}" />
+
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th
+                  ng-click="rc.setArchiveOrder('queryword')"
+                  class="cursor-hoverable">
+                  {% endraw %}{% trans %}Queryword{% endtrans %}{% raw %}
+
+                  <span
+                    ng-show="rc.archiveOrder === 'queryword'"
+                    class="glyphicon glyphicon-chevron-up"></span>
+                  <span
+                    ng-show="rc.archiveOrder === '-queryword'"
+                    class="glyphicon glyphicon-chevron-down"></span>
+                </th>
+
+                <th
+                  ng-click="rc.setArchiveOrder('result_date')"
+                  class="cursor-hoverable">
+                  {% endraw %}{% trans %}Date{% endtrans %}{% raw %}
+
+                  <span
+                    ng-show="rc.archiveOrder === 'result_date'"
+                    class="glyphicon glyphicon-chevron-up"></span>
+                  <span
+                    ng-show="rc.archiveOrder === '-result_date'"
+                    class="glyphicon glyphicon-chevron-down"></span>
+                </th>
+
+                <th
+                  ng-click="rc.setArchiveOrder('categories')"
+                  class="cursor-hoverable">
+                  {% endraw %}{% trans %}Source{% endtrans %}{% raw %}
+
+                  <span
+                    ng-show="rc.archiveOrder === 'categories'"
+                    class="glyphicon glyphicon-chevron-up"></span>
+                  <span
+                    ng-show="rc.archiveOrder === '-categories'"
+                    class="glyphicon glyphicon-chevron-down"></span>
+                </th>
+
+                <th
+                  ng-click="rc.setArchiveOrder('result_title')"
+                  class="cursor-hoverable">
+                  {% endraw %}{% trans %}Title{% endtrans %}{% raw %}
+
+                  <span
+                    ng-show="rc.archiveOrder === 'result_title'"
+                    class="glyphicon glyphicon-chevron-up"></span>
+                  <span
+                    ng-show="rc.archiveOrder === '-result_title'"
+                    class="glyphicon glyphicon-chevron-down"></span>
+                </th>
+
+                <th>
+                  {% endraw %}{% trans %}Tags{% endtrans %}{% raw %}
+                </th>
+
+                <th>
+                  {% endraw %}{% trans %}Actions{% endtrans %}{% raw %}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                class="modal-opener"
+                ng-repeat="result in rc.archive |
+                           orderBy:rc.archiveOrder:false |
+                           filter: archiveSearchQuery
+                           track by $index"
+                ng-click="rc.openModal(result)">
+
+                <td ng-bind="result.queryword ? result.queryword : '{% endraw %}{% trans %}All updates{% endtrans %}{% raw %}'"></td>
+
+                <td ng-bind="result.result_date"></td>
+
+                <td ng-bind="result.categories"></td>
+
+                <td>
+                  <a target="_blank" href="{{result.result_link}}" ng-bind="result.result_title" ng-click="$event.stopPropagation()"></a>
+                </td>
+
+                <td>
+                  <ul
+                    class="list-unstyled"
+                    ng-show="result.tags">
+                    <li ng-bind="tag" ng-repeat="tag in result.tags"></li>
+                  </ul>
+                  <p ng-hide="result.tags.length" class="text-danger">{% endraw %}{% trans %}No tags{% endtrans %}{% raw %}.</p>
+                </td>
+
+                <td>
+                  <button
+                    class="btn btn-warning btn-sm"
+                    ng-click="rc.archiveResult(result);$event.stopPropagation()">
+                    {% endraw %}{% trans %}Unarchive{% endtrans %}{% raw %}
+                  </button>
+                  <button
+                    class="btn btn-danger btn-sm"
+                    ng-click="rc.removeResult(result);$event.stopPropagation()">
+                    {% endraw %}{% trans %}Remove{% endtrans %}{% raw %}
+                  </button>
+                </td>
+
+              </tr>
+            </tbody>
+          </table>
+
+          <div
+            ng-show="rc.loaded && rc.archive.length === 0"
+            class="alert alert-info"
+            role="alert">
+            {% endraw %}{% trans %}No archived results{% endtrans %}{% raw %}.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="result-modal" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <!-- close button -->
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <!-- Main header of modal -->
+          <h4
+            class="modal-title"
+            ng-bind="rc.modalResult.result_title"></h4>
+        </div>
+
+        <div class="modal-body">
+          <ul class="list-group">
+            <li class="list-group-item">
+              {% endraw %}{% trans %}Queryword{% endtrans %}{% raw %}:
+              <span
+                class="text-info"
+                ng-bind="rc.modalResult.queryword ? rc.modalResult.queryword : '{% endraw %}{% trans %}All updates{% endtrans %}{% raw %}'"></span>
+            </li>
+            <li class="list-group-item">
+              {% endraw %}{% trans %}Search Date{% endtrans %}{% raw %}:
+              <span class="text-info" ng-bind="rc.modalResult.load_dtime"> </span>
+            </li>
+            <li class="list-group-item">
+              {% endraw %}{% trans %}Result Date{% endtrans %}{% raw %}:
+              <span class="text-info" ng-bind="rc.modalResult.result_date"> </span>
+            </li>
+            <li class="list-group-item">
+              Link:
+              <a
+                class="text-info"
+                ng-bind="rc.modalResult.result_link"
+                href="{{rc.modalResult.result_link}}"></a>
+            </li>
+            <li class="list-group-item">
+              {% endraw %}{% trans %}Source{% endtrans %}{% raw %}:
+              <span class="text-info" ng-bind="rc.modalResult.categories"></span>
+            </li>
+            <li class="list-group-item">
+              <span ng-show="rc.modalResult.tags.length">
+                {% endraw %}{% trans %}Tags{% endtrans %}{% raw %}:
+              </span>
+              <span ng-hide="rc.modalResult.tags.length" class="text-danger">
+                {% endraw %}{% trans %}No tags{% endtrans %}{% raw %}.
+              </span>
+              <ul
+                class="list-unstyled"
+                ng-show="rc.modalResult.tags.length">
+                <li ng-repeat="tag in rc.modalResult.tags">
+                  <span ng-bind="tag" class="text-info"></span>
+                  <button
+                    class="btn btn-danger btn-sm"
+                    ng-click="rc.removeTag(tag)">
+                    &times;
+                  </button>
+                </li>
+              </ul>
+            </li>
+            <li class="list-group-item">
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  ng-model="rc.tags"
+                  placeholder="{% endraw %}{% trans %}Add tags{% endtrans %}{% raw %}" />
+                <span class="input-group-btn">
+                  <button
+                    ng-click="rc.addTags()"
+                    class="btn btn-primary">
+                    {% endraw %}{% trans %}Add{% endtrans %}{% raw %}
+                  </button>
+                </span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="modal-footer"></div>
+      </div>
+    </div>
+  </div>
+
+  {% endraw %}
+</div>
+{% endblock %}
+{% block footer %}
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+<script src="/static/js/controllers/results.js"></script>
+{% endblock %}
