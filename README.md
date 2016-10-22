@@ -3,14 +3,14 @@ lawcats
 http://www.oi.ut.ee/et/it-oigus/oigusrobootika-konkurss
 
 
-***Dependencies***:<br/>
+**Dependencies**:<br/>
 bs4,
 babel,
 pytz  *(use gaepytz, it is faster),
 feedparser
 
 
-***Instructions for new languages:***
+**Instructions for new languages:**<br/>
 ... first navigate to project folder in cmd or shell
 
 1) Extract strings (make sure all files in main.mapping are UTF-8 without BOM): 
