@@ -1,9 +1,9 @@
 lawcats
 
 http://www.oi.ut.ee/et/it-oigus/oigusrobootika-konkurss
-=======================================================
 
-*Dependencies*:
+
+***Dependencies***:<br/>
 bs4,
 babel,
 pytz  *(use gaepytz, it is faster),
