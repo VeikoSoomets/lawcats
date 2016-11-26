@@ -9,6 +9,8 @@ test.py
 static/lists/alt.csv
 static/lists/sdn.csv
 static/lists/EU_sanctions.csv
+/locales/messages.pot
+/locales/et/LC_MESSAGES/messages.po
 
 #Ignore IDE stuff
 .idea/

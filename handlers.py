@@ -23,6 +23,7 @@ from webapp2_extras.i18n import gettext as _
 
 from parsers.custom_source import *
 import models
+import constants
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -225,7 +226,11 @@ class WebSearch(BaseHandler):
     try:
       json_data = json.loads(self.request.body)
       query = json_data['queryword']
+      query_string = query.upper().encode('utf-8')
       querywords = set(query.split(','))
+      if query_string in constants.Lyhendid.get_constant_names(uppercase=True):
+        new_queryword = constants.Lyhendid.get_value_by_name(query_string).decode('utf-8')
+        querywords.update([new_queryword])
       categories = json_data['categories']
       action = json_data['action']
 
@@ -239,10 +244,7 @@ class WebSearch(BaseHandler):
     for cat in categories:
       
       if action == 'archive_search':
-        try:
-          date_algus = json_data['date_algus']
-        except Exception, e:
-          date_algus = '2008-01-01' # default date
+        date_algus = json_data.get('date_algus') if json_data.get('date_algus') else '2014-01-01'
         search_results1 = search_archive(querywords, cat, date_algus)
 
       elif action == 'list_search':

@@ -235,7 +235,8 @@ def parse_feed(querywords, category, date_algus='2016-01-01'): # kui kuupäeva e
                   pass
                 if b:
                   print "getting something"
-                  if result_date >= (date_algus if date_algus else result_date) and (all([x2.lower() in a['title'].lower()+a['description'].lower() for x2 in new_x]) ):
+                  if result_date >= (date_algus if date_algus else result_date) and a.get('description') and \
+                          (all([x2.lower() in a['title'].lower()+a['description'].lower() for x2 in new_x])):
                     result_title = a['title']
                     result_link = a['link']
                     results.append([result_link, result_title, str(result_date), x, category])

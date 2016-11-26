@@ -31,9 +31,9 @@ def search_kohtu(querywords,category,date_algus='2013-01-01'):
     date_algus_format  = date_algus.strftime("%d.%m.%Y")
     results=[]
     for query in querywords:
-      query=urllib.quote_plus(query.encode('utf-8')) # asendab tühiku +'iga, muudab mitte ascii'd formaati %C5%A1
+      query2=urllib.quote_plus(query.encode('utf-8')) # asendab tühiku +'iga, muudab mitte ascii'd formaati %C5%A1
       # ehitame otsinglingi
-      url="http://www.nc.ee/?id=11&lahendid[kohtuasjad.aasta]=&lahendid[kohtuasjad.kohtuasja_tyyp]=&lahendid[kohtuasjad.regnr]=&lahendid[kohtuasjad.otsuse_kuupaev]=&lahendid[kohtuasja_istungid.koosseisu_tunnus]=&lahendid[kohtuasjad.tyyp]=&lahendid[kohtuasja_marksonad.annotatsioon]=&lahendid[kohtuasjad.tekst]=" + query + "&lahendid[s1]=kohtuasjad.otsuse_kuupaev&lahendid[o1]=desc&lahendid[s4]=kohtuasjad.sisu"
+      url="http://www.nc.ee/?id=11&lahendid[kohtuasjad.aasta]=&lahendid[kohtuasjad.kohtuasja_tyyp]=&lahendid[kohtuasjad.regnr]=&lahendid[kohtuasjad.otsuse_kuupaev]=&lahendid[kohtuasja_istungid.koosseisu_tunnus]=&lahendid[kohtuasjad.tyyp]=&lahendid[kohtuasja_marksonad.annotatsioon]=&lahendid[kohtuasjad.tekst]=" + query2 + "&lahendid[s1]=kohtuasjad.otsuse_kuupaev&lahendid[o1]=desc&lahendid[s4]=kohtuasjad.sisu"
       #logging.error(url)
       src=urllib2.urlopen(url)
       result = parse_results_kohtu(src,query,category,date_algus)
