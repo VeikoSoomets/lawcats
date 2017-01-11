@@ -399,6 +399,7 @@ def do_search(querywords, category, date_algus):
     {'category': 'RSS allikad', 'results': rss_parse.parse_feed},
     {'category': 'ministeeriumid', 'results': ministry_parse.search_ministry},
     {'category': 'Ametlikud teadaanded', 'results': riigiteataja_parse.search_ametlikud_teadaanded},
+    {'category': 'Riigiteataja seadused', 'results': riigiteataja_parse.search_seadused},
     {'category': 'Maa- ja ringkonnakohtu lahendid', 'results': riigiteataja_parse.search_kohtu},  # to avoid duplicates, add space to source
 
     {'category': 'finantsinspektsioon', 'results': fi_parse.search_EU_supervision},
@@ -484,6 +485,17 @@ def do_search(querywords, category, date_algus):
           #logging.error(message)
           logging.error(e)
           pass
+
+    # Otsime riigiteataja seadustsers
+    if source['category'] == 'Riigiteataja seadused':
+      try:
+        search_results.extend(source['results'](querywords, category, date_algus))
+      except Exception, e:
+        logging.error('failed with riigiteataja seadused')
+        #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
+        #logging.error(message)
+        logging.error(e)
+        pass
 
     # Otsime RSS allikatest
     if source['category'] == 'RSS allikad':
