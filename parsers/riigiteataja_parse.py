@@ -46,6 +46,21 @@ def search_ametlikud_teadaanded(querywords, category, date_algus='2010-01-01'):
     return results
 
 
+def search_seadused(querywords, category, date_algus='2010-01-01'):
+    date_algus = datetime_object(date_algus)
+    date_algus_format = date_algus.strftime("%d.%m.%Y")
+    results = []
+    date_lopp = None
+    for query in querywords:
+      query2=urllib.quote_plus(query.encode('utf-8')) # asendab tühiku +'iga, muudab mitte ascii'd formaati %C5%A1
+      url = "https://www.riigiteataja.ee/akt/105122014039?leiaKehtiv"
+      result = parse_results_seadused(url, query, category, date_algus)
+      if result:
+        results.extend(result)
+
+    return results
+
+
 def search_kohtu(querywords, category, date_algus='2010-01-01'):
     date_algus = datetime_object(date_algus)
     date_algus_format = date_algus.strftime("%d.%m.%Y")
@@ -123,6 +138,47 @@ def search_riigiteataja_uudised(querywords,category,date_algus='2010-01-01'):
               results.extend(result)
 
     return results
+
+
+def parse_results_seadused(link, query=None, category=None, date_algus=None):
+    url_base=link
+    """hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+     'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+     'Accept-Encoding': 'none',
+     'Accept-Language': 'en-US,en;q=0.8',
+     'Connection': 'keep-alive'} """
+    req = urllib2.Request(link)  # , headers=hdr
+    src = urllib2.urlopen(req)
+    encoding = src.headers['content-type'].split('charset=')[-1]  # we have to use this fix or EE letters are causing trouble
+    soup = bs4.BeautifulSoup(src.read(), "html5lib", from_encoding=encoding)
+
+    # Get individual articles
+    articles = soup.find_all('div', attrs={'id': 'article-content'})
+    final_results = []
+    for article in articles:
+      article_link, title, content = None, None, None
+      # TODO! fix title
+      title = article.find('h1')
+      print "got here"
+      print "title=", title
+
+      # Get content
+      content = article.find_all('p')  #, attrs={'class': 'announcement-body'}
+      for c in content:
+        try:
+          article_link = c.find_next('a').get('name')
+          article_link = url_base + '#' + article_link
+        except:
+          pass
+
+        #content2 = [x.get_text() for x in c]
+        # TODO! datelimit -> datetime_object(sql_normalize_date(item_date))>=date_algus
+        if query in ''.join(c.get_text()):
+          content = c.get_text()
+          final_results.append([article_link, content, None, query, title])
+
+    return final_results
 
 
 def parse_results_teadaanded(link, query=None, category=None, date_algus=None):

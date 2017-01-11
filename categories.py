@@ -191,6 +191,7 @@ class GenerateCategories(BaseHandler):
       [u'Kooskõlastamiseks esitatud eelnõud','http://eelnoud.valitsus.ee/main#SKixD73F','eesti'],
       [u'Valitsusele esitatud eelnõud','http://eelnoud.valitsus.ee/main#SKixD73F','eesti'],
       [u'Riigiteataja ilmumas/ilmunud seadused','https://www.riigiteataja.ee/','eesti'],
+      ['Riigiteataja seadused','https://www.riigiteataja.ee/','eesti'],
     ]},
     {'subcategory_name': 'Kohtud ja kohtulahendid', 
       'categories': [
