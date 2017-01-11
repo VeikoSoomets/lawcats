@@ -1178,12 +1178,20 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       urllist.append(url)
     return urllist
 
-  #TODO: Empty datastore RiigiTeatajaURLs before adding new ones
+  @classmethod
+  @ndb.tasklet
+  def delete_async_(self, input_object):
+      # key = ndb.Key('UserRequest', input_key.id())
+      key = input_object.key
+      del_future = yield key.delete_async(use_memcache=False)  # faster
+      raise ndb.Return(del_future)
+
   @BaseHandler.logged_in2
   def get(self):
       urls = self.get_urls()
       text = urllib2.urlopen(urls[0])
       dbps_main = []
+      models.RiigiTeatajaURLs.query().map(self.delete_async_)
       for url in urls:
         dbp = models.RiigiTeatajaURLs(link=url, text=text.read())
         dbps_main.append(dbp)
