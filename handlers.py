@@ -231,6 +231,9 @@ class WebSearch(BaseHandler):
       if query_string in constants.Lyhendid.get_constant_names(uppercase=True):
         new_queryword = constants.Lyhendid.get_value_by_name(query_string).decode('utf-8')
         querywords.update([new_queryword])
+      if query_string in constants.Lyhendid.get_constant_values(uppercase=True):
+        new_queryword = constants.Lyhendid.get_name_by_value(query_string, uppercase=True).decode('utf-8')
+        querywords.update([new_queryword])
       categories = json_data['categories']
       action = json_data['action']
 

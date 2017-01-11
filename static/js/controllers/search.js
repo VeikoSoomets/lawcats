@@ -163,10 +163,6 @@ var SearchController = (function () {
         categories: sources
       }).success(function (response) {
         _this2.results = response.search_results;
-        _this2.querywords = '';
-        _this2.searchSources.forEach(function (source) {
-          source.checked = false;
-        });
         _this2.loading = false;
       }).error(function (err) {
         console.error(err);
