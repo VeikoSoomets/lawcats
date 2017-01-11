@@ -1178,6 +1178,7 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       urllist.append(url)
     return urllist
 
+  #TODO: Empty datastore RiigiTeatajaURLs before adding new ones
   @BaseHandler.logged_in2
   def get(self):
       urls = self.get_urls()
