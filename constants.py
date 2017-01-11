@@ -14,13 +14,19 @@ class TupleConstantsMixin(object):
                 for c in sorted(names, cls.compare_strings)]
 
     @classmethod
-    def get_constant_values(cls):
-        return ([getattr(cls, c)[1] for c in sorted([scope_value for scope_value in dir(cls)
+    def get_constant_values(cls, uppercase=False):
+        return ([getattr(cls, c)[1].upper() if uppercase else getattr(cls, c)[1] for c in sorted([scope_value for scope_value in dir(cls)
                                                  if scope_value[0].isupper()], cls.compare_strings)])
 
     @classmethod
     def get_constants_dict(cls, uppercase=False):
         return dict(zip(cls.get_constant_names(uppercase), cls.get_constant_values()))
+
+    @classmethod
+    def get_name_by_value(cls, value, uppercase=False):
+        for k, v in cls.get_constants_dict().iteritems():
+            if v.upper() == value:
+                return k
 
     @classmethod
     def get_value_by_name(cls, name):
