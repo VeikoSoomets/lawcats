@@ -84,7 +84,8 @@ class LawfirmParsers():
                     results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
             final_results.extend(results2)
           
-          except Exception:
+          except Exception, e:
+            print "didn't get results for cat %s with error %s" % (cat,e)
             pass
           
     return final_results
@@ -102,32 +103,37 @@ class LawfirmParsers():
         results=[]
         if soup2:
           #soup2 = soup2.find('content')
-          for result in soup2.findAll('div', attrs={'class' : 'news_latest_news'}):
-              #print result
-              cats=[]
-              linkitem=result.findNext('a', href=True) # leiame lingi
-              link = linkitem.get('href')
-              #print linkitem.get('href')
-              cats.append(link)
-              stringitem=result.findAll(text=True)
-              cats.append(stringitem) # date
-              results.append(cats)
 
-          results2=[]
-          for doc in results:
-            item=doc[1]
-            
-            item_link=doc[0]
-            item_title=item[0]
-            item_content=item[2]
-            #print repr(item_content)
-            item_date=item[1]
-            for query in querywords:
-              if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
-                if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                  results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
-              
-          final_results.extend(results2)
+          try:
+            for result in soup2.findAll('div', attrs={'class' : 'news_latest_news'}):
+                #print result
+                cats=[]
+                linkitem=result.findNext('a', href=True) # leiame lingi
+                link = linkitem.get('href')
+                #print linkitem.get('href')
+                cats.append(link)
+                stringitem=result.findAll(text=True)
+                cats.append(stringitem) # date
+                results.append(cats)
+
+            results2=[]
+            for doc in results:
+              item=doc[1]
+
+              item_link=doc[0]
+              item_title=item[0]
+              item_content=item[2]
+              #print repr(item_content)
+              item_date=item[1]
+              for query in querywords:
+                if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
+                  if datetime_object(sql_normalize_date(item_date))>=date_algus:
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
+
+            final_results.extend(results2)
+          except Exception, e:
+            print "didn't get results for cat %s with error %s" % (cat,e)
+            pass
     return final_results
   
   @classmethod
@@ -143,39 +149,43 @@ class LawfirmParsers():
         results=[]
         if soup2:
           #soup2 = soup2.find('content')
-          for result in soup2.findAll('div', attrs={'class' : 'events_item'}):
-              #print result
-              cats=[]
-              linkitem=result.findNext('a', href=True) # leiame lingi
-              link = linkitem.get('href')
-              #print linkitem.get('href')
-              cats.append(link)
-              stringitem=result.findAll(text=True)
-              cats.append(stringitem) # date
-              results.append(cats)
-
-          results2=[]
-          for doc in results:
-            item=doc[1]
-            
-            #print item[2]
-            
-            item_link=doc[0]
-            item_title=item[2]
-            item_title =  re.sub('\n', '', item_title.rstrip())
-            item_date=item[5]
-            item_date =  re.sub('\n', '', item_date.rstrip())
-            item_date =  re.sub('\t', '', item_date.rstrip())
-            item_content = item[7]
-            #print repr(item_content)
-            #print item_date
-            for query in querywords:
-              if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
-                #print sql_normalize_date(item_date)
-                if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                  results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
+          try:
+            for result in soup2.findAll('div', attrs={'class' : 'events_item'}):
+                #print result
+                cats=[]
+                linkitem=result.findNext('a', href=True) # leiame lingi
+                link = linkitem.get('href')
+                #print linkitem.get('href')
+                cats.append(link)
+                stringitem=result.findAll(text=True)
+                cats.append(stringitem) # date
+                results.append(cats)
+  
+            results2=[]
+            for doc in results:
+              item=doc[1]
               
-          final_results.extend(results2)
+              #print item[2]
+              
+              item_link=doc[0]
+              item_title=item[2]
+              item_title =  re.sub('\n', '', item_title.rstrip())
+              item_date=item[5]
+              item_date =  re.sub('\n', '', item_date.rstrip())
+              item_date =  re.sub('\t', '', item_date.rstrip())
+              item_content = item[7]
+              #print repr(item_content)
+              #print item_date
+              for query in querywords:
+                if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
+                  #print sql_normalize_date(item_date)
+                  if datetime_object(sql_normalize_date(item_date))>=date_algus:
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
+                
+            final_results.extend(results2)
+          except Exception, e:
+              print "didn't get results for cat %s with error %s" % (cat,e)
+              pass
     return final_results
   
   @classmethod
@@ -190,39 +200,44 @@ class LawfirmParsers():
         soup2 = bs4.BeautifulSoup(src)
         results=[]
         if soup2:
-          soup2 = soup2.find('div', attrs={'class' : 'frontpage-news'})
-          for result in soup2.findAll('p'):
-              #print result
-              cats=[]
-              linkitem=result.findNext('a', href=True) # leiame lingi
-              link = linkitem.get('href')
-              #print linkitem.get('href')
-              cats.append(link)
-              stringitem=result.findAll(text=True)
-              cats.append(stringitem) # date
-              results.append(cats)
-
-          results2=[]
-          for doc in results:
-            item=doc[1]
+          try:
+            soup2 = soup2.find('div', attrs={'class' : 'frontpage-news'})
+            for result in soup2.findAll('p'):
+                #print result
+                cats=[]
+                linkitem=result.findNext('a', href=True) # leiame lingi
+                link = linkitem.get('href')
+                #print linkitem.get('href')
+                cats.append(link)
+                stringitem=result.findAll(text=True)
+                cats.append(stringitem) # date
+                results.append(cats)
+  
+            results2=[]
+            for doc in results:
+              item=doc[1]
+              
+              #print item[2]
+              
+              item_link=doc[0]
+              item_title=item[2]
+              item_title =  re.sub('\n', '', item_title.rstrip())
+              item_date=item[5]
+              item_date =  re.sub('\n', '', item_date.rstrip())
+              item_date =  re.sub('\t', '', item_date.rstrip())
+              item_content = item[2] # this is not content, but title.. since you don't get access to this site with a robot anyway, let it be
+              #print repr(item_content)
+              
+              for query in querywords:
+                if query.lower() in str(item).lower():
+                  if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
             
-            #print item[2]
-            
-            item_link=doc[0]
-            item_title=item[2]
-            item_title =  re.sub('\n', '', item_title.rstrip())
-            item_date=item[5]
-            item_date =  re.sub('\n', '', item_date.rstrip())
-            item_date =  re.sub('\t', '', item_date.rstrip())
-            item_content = item[2] # this is not content, but title.. since you don't get access to this site with a robot anyway, let it be
-            #print repr(item_content)
-            
-            for query in querywords:
-              if query.lower() in str(item).lower():
-                if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
-                  results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
+            final_results.extend(results2)
+          except Exception, e:
+            print "didn't get results for cat %s with error %s" % (cat,e)
+            pass
           
-          final_results.extend(results2)
     return final_results
   
   @classmethod
@@ -237,83 +252,112 @@ class LawfirmParsers():
         soup2 = bs4.BeautifulSoup(src)
         results=[]
         if soup2:
-          #soup2 = soup2.find('content')
-          for result in soup2.findAll('article'):
-              #print result
-              cats=[]
-              linkitem=result.findNext('a', href=True) # leiame lingi
-              link = linkitem.get('href')
-              #print linkitem.get('href')
-              cats.append(link)
-              stringitem=result.findAll(text=True)
-              cats.append(stringitem) # date
-              results.append(cats)
-
-          results2=[]
-          for doc in results:
-            item=doc[1]
-            #print item[7]
-            
-            item_link=doc[0]
-            item_title=item[5]
-            item_date=item[7]
-            item_content=item[9]
-            #print repr(item_content)
-            for query in querywords:
-              if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
-                if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                  results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
-          
-          final_results.extend(results2)
-    return final_results
+          try:
+            #soup2 = soup2.find('content')
+            for result in soup2.findAll('article'):
+                #print result
+                cats=[]
+                linkitem=result.findNext('a', href=True) # leiame lingi
+                link = linkitem.get('href')
+                #print linkitem.get('href')
+                cats.append(link)
+                stringitem=result.findAll(text=True)
+                cats.append(stringitem) # date
+                results.append(cats)
   
-  @classmethod
-  def search_bureau(self,querywords,category,date_algus='2012-01-01'): # osadel büroodel täpselt sama kood (tõenäoliselt sama webmaster)
-    date_algus=datetime_object(date_algus)
-    final_results=[]
-
-    for cat in cat_dict['categories']:
-      search_from=cat[1]
-      if category==cat[0]:
-        src=urllib2.urlopen(search_from,timeout=60)
-        soup2 = bs4.BeautifulSoup(src)
-        results=[]
-        if soup2:
-          soup2 = soup2.find('div', attrs={"id": "content"})
-          for result in soup2.findAll():
-              #print result
-              cats=[]
-              linkitem=result.findNext('a', href=True) # leiame lingi
-              #print linkitem.get('href')
-              cats.append(linkitem.get('href'))
-              stringitem=result.findAll(text=True)
-              cats.append(stringitem) # date
-              results.append(cats)
-
-          results2=[]
-          for doc in results:
-            item=doc[1]
-            
-            if len(item)>8: # some messy checkup (that we do get a post, not navigational div or whatever)
-            
-              #print item[9]
-              item_date= item[3] # aivar pilv
-              if category=='borenius':
-                item_date= item[9] # borenius
-                
-              item_date =  re.sub('\n', '', item_date.rstrip())
-              item_date =  re.sub('\t', '', item_date.rstrip())
-              item_title=item[1]
-              item_content = item[8]
-              item_link=doc[0]
+            results2=[]
+            for doc in results:
+              item=doc[1]
+              #print item[7]
               
+              item_link=doc[0]
+              item_title=item[5]
+              item_date=item[7]
+              item_content=item[9]
+              #print repr(item_content)
               for query in querywords:
                 if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
-                #if query.lower() in str(item).lower(): # Kui leiame otsingusõna
                   if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
-          
-          final_results.extend(results2)
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
+            
+            final_results.extend(results2)
+          except Exception, e:
+            print "didn't get results for cat %s with error %s" % (cat,e)
+            pass
+    return final_results
+
+  @classmethod
+  def search_bureau(self,querywords,category,date_algus='2012-01-01'):
+    final_list = []
+    search_list = [
+        {'category': 'Aivar Pilv', 'results': LawfirmParsers.borenius},  # map async to tasklet
+        {'category': 'Borenius', 'results': LawfirmParsers.borenius},
+        {'category': 'Alterna', 'results': LawfirmParsers.search_alterna},
+        {'category': 'Concordia', 'results': LawfirmParsers.search_concordia},
+        {'category': 'Baltic Legal Solutions', 'results': LawfirmParsers.search_bls},
+        {'category': 'Glimstedt', 'results': LawfirmParsers.search_glimstedt},
+        #{'category' : 'Sorainen', 'results' :bureau_parse.search_lextal},
+        {'category': 'Tark Grunte Sutkiene', 'results': LawfirmParsers.search_tark},
+        {'category': 'Varul publikatsioonid', 'results': LawfirmParsers.search_varul_pub},
+        #{'category': 'Raidla, Lejins & Norcou', 'results': LawfirmParsers.search_raidla}, # BROKEN, FIX!
+    ]
+    for cat in search_list:
+      final_list.extend(cat['results'](querywords, cat['category'], date_algus))
+
+    print "final list: ", str(final_list)
+    return final_list
+
+  #TODO! Fix borenius
+  @classmethod
+  def borenius(self,querywords,category,date_algus='2012-01-01'): # osadel büroodel täpselt sama kood (tõenäoliselt sama webmaster)
+    date_algus = datetime_object(date_algus)
+    final_results = []
+
+    for cat in cat_dict['categories']:
+      if category == cat[0]:
+        search_from = cat[1]
+        src = urllib2.urlopen(search_from,timeout=60)
+        soup2 = bs4.BeautifulSoup(src)
+        results = []
+        if soup2:
+          try:
+            soup2 = soup2.find('div', attrs={"id": "content"})
+            for result in soup2.findAll():
+                cats=[]
+                linkitem=result.findNext('a', href=True) # leiame lingi
+                cats.append(linkitem.get('href'))
+                stringitem=result.findAll(text=True)
+                cats.append(stringitem) # date
+                results.append(cats)
+  
+            results2=[]
+            for doc in results:
+              item=doc[1]
+  
+              if len(item)>8: # some messy checkup (that we do get a post, not navigational div or whatever)
+  
+                #print item[9]
+                item_date= item[3] # aivar pilv
+                if category=='borenius':
+                  item_date= item[9] # borenius
+  
+                item_date = re.sub('\n', '', item_date.rstrip())
+                item_date = re.sub('\t', '', item_date.rstrip())
+                item_title = item[1]
+                item_content = item[8]
+                item_link = doc[0]
+  
+                for query in querywords:
+                  if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
+                  #if query.lower() in str(item).lower(): # Kui leiame otsingusõna
+                    if datetime_object(sql_normalize_date(item_date))>=date_algus:
+                      results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+  
+            final_results.extend(results2)
+          except Exception, e:
+            print "didn't get results for cat %s with error %s" % (cat,e)
+            pass
+            
     return final_results
   
   @classmethod
@@ -328,38 +372,42 @@ class LawfirmParsers():
         soup2 = bs4.BeautifulSoup(src)
         results=[]
         if soup2:
-          soup2 = soup2.find('div', attrs={"class": "news-list"})
-          for result in soup2.findAll('div', attrs={'class' : 'news-list-item'}):
-              #print result
-              cats=[]
-              linkitem=result.findNext('a', href=True) # leiame lingi
-              #print linkitem.get('href')
-              cats.append(linkitem.get('href'))
-              stringitem=result.findAll(text=True)
-              cats.append(stringitem) # date
-              results.append(cats)
-
-          results2=[]
-          for doc in results:
-            item=doc[1]
-            #print len(item)
-            if len(item)>10:
-              item_date=item[2][0:2] + '.' + item[4][0:2] + '.20' + item[4][-2:]
-              item_content=item[10]
-            else:
-              item_date='2014-12-31' # random past date, because only recent posting have dates in this site
-              item_content=item[4]
+          try:
+            soup2 = soup2.find('div', attrs={"class": "news-list"})
+            for result in soup2.findAll('div', attrs={'class' : 'news-list-item'}):
+                #print result
+                cats=[]
+                linkitem=result.findNext('a', href=True) # leiame lingi
+                #print linkitem.get('href')
+                cats.append(linkitem.get('href'))
+                stringitem=result.findAll(text=True)
+                cats.append(stringitem) # date
+                results.append(cats)
+  
+            results2=[]
+            for doc in results:
+              item=doc[1]
+              #print len(item)
+              if len(item)>10:
+                item_date=item[2][0:2] + '.' + item[4][0:2] + '.20' + item[4][-2:]
+                item_content=item[10]
+              else:
+                item_date='2014-12-31' # random past date, because only recent posting have dates in this site
+                item_content=item[4]
+                
+              item_title=item[8]
               
-            item_title=item[8]
-            
-            #print repr(item_content)
-            item_link=doc[0]
-            for query in querywords:
-              if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
-                if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                  results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
-              
-          final_results.extend(results2)
+              #print repr(item_content)
+              item_link=doc[0]
+              for query in querywords:
+                if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
+                  if datetime_object(sql_normalize_date(item_date))>=date_algus:
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+                
+            final_results.extend(results2)
+          except Exception, e:
+            print "didn't get results for cat %s with error %s" % (cat,e)
+            pass
     return final_results
   
   @classmethod
@@ -375,33 +423,37 @@ class LawfirmParsers():
         soup2 = bs4.BeautifulSoup(src)
         results=[]
         if soup2:
-          for result in soup2.findAll('tr'):
-              #print result
-              cats=[]
-              linkitem=result.findNext('a', href=True) # leiame lingi
-              #print linkitem.get('href')
-              cats.append(linkitem.get('href'))
-              stringitem=result.findAll(text=True)
-              cats.append(stringitem) # date
-              results.append(cats)
-
-          results2=[]
-          for doc in results:
-            item=doc[1]
-            
-            #print item[3]
-            item_date=item[3]
-            if item_date!='Aasta':
-              if len(item_date)==4:
-                item_date = '31.12.' + item_date
-              item_title=item[1]
-              item_link=doc[0]
-              for query in querywords:
-                if query.lower() in unicode(item_title).lower():
-                  if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+          try:
+            for result in soup2.findAll('tr'):
+                #print result
+                cats=[]
+                linkitem=result.findNext('a', href=True) # leiame lingi
+                #print linkitem.get('href')
+                cats.append(linkitem.get('href'))
+                stringitem=result.findAll(text=True)
+                cats.append(stringitem) # date
+                results.append(cats)
+  
+            results2=[]
+            for doc in results:
+              item=doc[1]
               
-          final_results.extend(results2)
+              #print item[3]
+              item_date=item[3]
+              if item_date!='Aasta':
+                if len(item_date)==4:
+                  item_date = '31.12.' + item_date
+                item_title=item[1]
+                item_link=doc[0]
+                for query in querywords:
+                  if query.lower() in unicode(item_title).lower():
+                    if datetime_object(sql_normalize_date(item_date))>=date_algus:
+                      results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+                
+            final_results.extend(results2)
+          except Exception, e:
+            print "didn't get results for cat %s with error %s" % (cat,e)
+            pass
     return final_results
   
   @classmethod
@@ -418,36 +470,40 @@ class LawfirmParsers():
         soup2 = bs4.BeautifulSoup(src)
         results=[]
         if soup2:
-          soup2 = soup2.find('table', attrs={"class": "news"})
-          for result in soup2.findAll('tr'):
-              #print result
-              cats=[]
-              linkitem=result.findNext('a', href=True) # leiame lingi
-              #print linkitem.get('href')
-              cats.append(linkitem.get('href'))
-              stringitem=result.findAll(text=True)
-              cats.append(stringitem) # date
-              results.append(cats)
-
-          results2=[]
-          for doc in results:
-            item=doc[1]
-            #print item[3]
-            item_date = item[1]
-            item_date =  re.sub('\n', '', item_date.rstrip())
-            item_date =  re.sub('\t', '', item_date.rstrip())
-            item_date = '28.' + item_date[0:2] + '.' + item_date[-4:]
-            
-            item_title=item[3]
-
-            item_link=urlbase + doc[0]
-            for query in querywords:
-              if query.lower() in unicode(item_title).lower():
-                #print repr(item_title)
-                if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                  results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+          try:
+            soup2 = soup2.find('table', attrs={"class": "news"})
+            for result in soup2.findAll('tr'):
+                #print result
+                cats=[]
+                linkitem=result.findNext('a', href=True) # leiame lingi
+                #print linkitem.get('href')
+                cats.append(linkitem.get('href'))
+                stringitem=result.findAll(text=True)
+                cats.append(stringitem) # date
+                results.append(cats)
+  
+            results2=[]
+            for doc in results:
+              item=doc[1]
+              #print item[3]
+              item_date = item[1]
+              item_date =  re.sub('\n', '', item_date.rstrip())
+              item_date =  re.sub('\t', '', item_date.rstrip())
+              item_date = '28.' + item_date[0:2] + '.' + item_date[-4:]
               
-          final_results.extend(results2)
+              item_title=item[3]
+  
+              item_link=urlbase + doc[0]
+              for query in querywords:
+                if query.lower() in unicode(item_title).lower():
+                  #print repr(item_title)
+                  if datetime_object(sql_normalize_date(item_date))>=date_algus:
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+                
+            final_results.extend(results2)
+          except Exception, e:
+            print "didn't get results for cat %s with error %s" % (cat,e)
+            pass
     return final_results
 
   

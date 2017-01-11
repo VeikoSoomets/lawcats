@@ -44,7 +44,6 @@ class GenerateCategories(BaseHandler):
     'subcategories': [
           'Kohtud ja kohtulahendid',
           'Ministeeriumid',
-          u'Advokaadi- ja õigusbürood',
           u'Õigusaktid',
           'Ametid ja inspektsioonid',
           'Muu'
@@ -161,23 +160,6 @@ class GenerateCategories(BaseHandler):
       #['Haridusministeerium','https://www.hm.ee','eesti'] # SSL block
       #['Majandusministeerium','https://www.mkm.ee','eesti'] # SSL block
     ]},
-    {'subcategory_name': u'Advokaadi- ja õigusbürood', 
-      'categories': [
-      ['Eversheds Ots & Co','http://www.eversheds.com','eesti'],
-      ['Lawin','http://www.lawin.ee','eesti'],
-      ['Redbaltic','http://www.redbaltic.com','eesti'],
-      ['Sorainen','http://www.sorainen.com','eesti'],
-      ['Varul','http://www.varul.com','eesti'],
-      ['Aivar Pilv','http://apilv.ee','eesti'],
-      ['Alterna','http://alternalaw.ee','eesti'],
-      ['Borenius','http://borenius.ee','eesti'],
-      ['Concordia','http://www.concordia.ee','eesti'],
-      ['Baltic Legal Solutions','http://www.blslawfirm.com','eesti'],
-      ['Glimstedt','http://www.glimstedt.ee','eesti'],
-      ['Tark Grunte Sutkiene','http://www.tarkgruntesutkiene.com','eesti'],
-      ['Varul Publikatsioonid','http://www.varul.com/publikatsioonid/','eesti'],
-      [u'Raidla, Lejins & Norcou','http://www.rln.ee','eesti'],
-    ]},
     {'subcategory_name': 'Eur-LEX', 
       'categories': [
       ['eurlex kohtuasjad','http://eur-lex.europa.eu','eesti'],
@@ -192,6 +174,8 @@ class GenerateCategories(BaseHandler):
       [u'Valitsusele esitatud eelnõud','http://eelnoud.valitsus.ee/main#SKixD73F','eesti'],
       [u'Riigiteataja ilmumas/ilmunud seadused','https://www.riigiteataja.ee/','eesti'],
       ['Riigiteataja seadused','https://www.riigiteataja.ee/','eesti'],
+      [u'Advokaadi- ja õigusbürood','/bureaus','eesti'], # TODO! make template for showing user the list of bureaus implemented and links to them
+
     ]},
     {'subcategory_name': 'Kohtud ja kohtulahendid', 
       'categories': [
