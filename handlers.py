@@ -406,16 +406,8 @@ def do_search(querywords, category, date_algus):
     {'category': 'FI juhendid', 'results': fi_parse.search_fi},
 
     # advokaadibürood (need, mida mainitud pole, on RSS allikate all)
-    {'category': 'Aivar Pilv', 'results': LawfirmParsers.search_bureau},  # map async to tasklet
-    {'category': 'Borenius', 'results': LawfirmParsers.search_bureau},
-    {'category': 'Alterna', 'results': LawfirmParsers.search_alterna},
-    {'category': 'Concordia', 'results': LawfirmParsers.search_concordia},
-    {'category': 'Baltic Legal Solutions', 'results': LawfirmParsers.search_bls},
-    {'category': 'Glimstedt', 'results': LawfirmParsers.search_glimstedt},
-    #{'category' : 'Sorainen', 'results' :bureau_parse.search_lextal},
-    {'category': 'Tark Grunte Sutkiene', 'results': LawfirmParsers.search_tark},
-    {'category': 'Varul publikatsioonid', 'results': LawfirmParsers.search_varul_pub},
-    #{'category': 'Raidla, Lejins & Norcou', 'results': LawfirmParsers.search_raidla}, # BROKEN, FIX!
+    {'category': u'Advokaadi- ja õigusbürood', 'results': LawfirmParsers.search_bureau},  # map async to tasklet
+
   ]
 
   for source in search_list:
@@ -516,7 +508,7 @@ def do_search(querywords, category, date_algus):
       try:
         search_results.extend(source['results'](querywords, category, date_algus))
       except Exception, e:
-        logging.error('failed with everything else')
+        logging.error('failed with singular category search')
         #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
         #logging.error(message)
         logging.error(e)
