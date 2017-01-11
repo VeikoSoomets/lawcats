@@ -1163,3 +1163,27 @@ class AdminSettings(BaseHandler):
       'catlist': catlist
       }
     self.render_template('settings.html', template_values)
+
+class RiigiTeatajaDownloadHandler(BaseHandler):
+
+  def get_urls(self):
+    src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=60)
+    urllist = []
+    soup = bs4.BeautifulSoup(src)
+    soup = soup.find('tbody')
+    for result in soup.findAll('tr'):
+      law = result.findAll('td')[0]
+      linkitem = law.findNext('a', href=True).get('href')
+      url = "https://www.riigiteataja.ee/%s?leiaKehtiv" % linkitem
+      urllist.append(url)
+    return urllist
+
+  @BaseHandler.logged_in2
+  def get(self):
+      urls = self.get_urls()
+      text = urllib2.urlopen(urls[0])
+      dbps_main = []
+      for url in urls:
+        dbp = models.RiigiTeatajaURLs(link=url, text=text.read())
+        dbps_main.append(dbp)
+      ndb.put_multi(dbps_main)

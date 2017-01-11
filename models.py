@@ -355,3 +355,10 @@ class Lahendid(ndb.Model):  # not in use
     queryword = yield comment.user.get_async()
     result['user'] = {'name': user.name, 'photo': user.photo_path}
     raise ndb.Return(result)
+
+# Alternative to saving files to filesystem
+class RiigiTeatajaURLs(ndb.Model):
+    url_id = ndb.StringProperty()
+    link = ndb.StringProperty()
+    text = ndb.TextProperty()
+
