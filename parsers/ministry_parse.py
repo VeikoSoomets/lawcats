@@ -94,7 +94,7 @@ def search_ministry(querywords, category, date_algus):
                 if datetime_object(sql_normalize_date(item_date))>=date_algus:
                   #print repr(item_title)
                   #print repr(item_title.encode('latin1'))
-                  results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+                  results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0]) # check this utf-8
               
           final_results.extend(results2)
         except Exception, e:

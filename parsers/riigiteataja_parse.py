@@ -23,10 +23,13 @@ sys.path.insert(0, new_path) # to get utils from root folder.. this might be obs
 
 from utils import *
     
-categories = {
+categories_uudised = {
         'Riigiteataja seadusuudised':'otsiSeadusteUudised',
         'Riigiteataja kohtuuudised':'kohtuuudiste_otsingu_tulemused',
         u'Riigiteataja õigusuudised':'otsiMuuOigusuudised'
+        }
+categories_seadused = {
+        'Riigiteataja seadused':''
         }
 
 
@@ -56,6 +59,7 @@ def search_seadused(querywords, category, date_algus='2010-01-01'):
       url = "https://www.riigiteataja.ee/akt/105122014039?leiaKehtiv"
       result = parse_results_seadused(url, query, category, date_algus)
       if result:
+        print results
         results.extend(result)
 
     return results
@@ -121,9 +125,9 @@ def search_riigiteataja_uudised(querywords,category,date_algus='2010-01-01'):
     date_algus=datetime_object(date_algus)
     date_algus_format  = date_algus.strftime("%d.%m.%Y")
     results=[]
-    if category in categories:
+    if category in categories_uudised:
       #logging.error(category)
-      for a,b in categories.iteritems(): # võtame dictionary'st väärtused
+      for a,b in categories_uudised.iteritems(): # võtame dictionary'st väärtused
         if a==category:
           for query in querywords:
             query = re.sub(' ', '+', query.rstrip()) # asenda tühik +'iga
@@ -160,8 +164,7 @@ def parse_results_seadused(link, query=None, category=None, date_algus=None):
       article_link, title, content = None, None, None
       # TODO! fix title
       title = article.find('h1')
-      print "got here"
-      print "title=", title
+      #print "title=", title
 
       # Get content
       content = article.find_all('p')  #, attrs={'class': 'announcement-body'}
@@ -174,9 +177,18 @@ def parse_results_seadused(link, query=None, category=None, date_algus=None):
 
         #content2 = [x.get_text() for x in c]
         # TODO! datelimit -> datetime_object(sql_normalize_date(item_date))>=date_algus
-        if query in ''.join(c.get_text()):
-          content = c.get_text()
-          final_results.append([article_link, content, None, query, title])
+        rank = 0
+        for space_separated in query.split():
+          if space_separated.lower() in ''.join(c.get_text().lower()):
+            rank += 1
+            if space_separated in c.get_text():
+              rank += 1
+
+            #print rank
+            content = c.get_text()
+            final_results.append([article_link, content, None, query, title, rank])
+            print rank
+
 
     return final_results
 
@@ -220,7 +232,7 @@ def parse_results_teadaanded(link, query=None, category=None, date_algus=None):
         content = [x.get_text() for x in content]
         # TODO! datelimit -> datetime_object(sql_normalize_date(item_date))>=date_algus
         if query in ''.join(content):
-          final_results.append([article_link, title, None, query, category])
+          final_results.append([article_link, title, None, query, category, 0])
 
       except Exception, e:
         print e
@@ -278,7 +290,7 @@ def parse_riigiteataja_uudised(url, query=None, category=None, date_algus=None):
           item_link = url_base+doc[0]
           #print doc[0]
           if datetime_object(sql_normalize_date(item_date))>=date_algus and "facebook" not in str(doc):
-            results2.append([item_link, item_title, sql_normalize_date(item_date), query, category])
+            results2.append([item_link, item_title, sql_normalize_date(item_date), query, category, 0])
       return results2
     
     except Exception:
@@ -311,7 +323,7 @@ def parse_results_kohtu(url, query=None, category=None, date_algus=None):
         item_link = url_base + doc[0]
         
         if datetime_object(sql_normalize_date(item_date)) >= date_algus:
-          results2.append([item_link, item_title, sql_normalize_date(item_date), query, category])
+          results2.append([item_link, item_title, sql_normalize_date(item_date), query, category, 0])
       
       return results2
     except Exception:
@@ -345,7 +357,7 @@ def parse_results_eelnou(url,query=None,category=None,date_algus=None):
         #print 'date_algus: ' + str(date_algus)
         #print str(datetime_object(sql_normalize_date(item_date)))
         if datetime_object(sql_normalize_date(item_date))>=date_algus:
-          results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+          results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0]) # check this utf-8
         #logging.error(results2)
       return results2
     except Exception:
@@ -377,7 +389,7 @@ def parse_results_oigusaktid(url, query=None, category=None, date_algus=None):
         item_link = url_base + doc[0]
         
         if datetime_object(sql_normalize_date(item_date)) >= date_algus:
-          results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+          results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0]) # check this utf-8
         #logging.error(results2)
       return results2
     except Exception:

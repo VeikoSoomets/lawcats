@@ -68,7 +68,7 @@ def search_EU_supervision(querywords,category, date_algus='2013-01-01'):
           for query in querywords:
             if query.lower() in item_title.lower(): # Kui leiame otsingusõna
               if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+                results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0]) # check this utf-8
             
         final_results.extend(results2)
   return final_results
@@ -143,7 +143,7 @@ def parse_results_fi(src,querywords=None,category=None,date_algus=None):
           for query in querywords:
             if query.lower() in item_title.lower() or query.lower() in item_link:
               #if datetime_object(sql_normalize_date(item_date))>=date_algus:
-              results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) 
+              results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0])
       #print item_title.encode('utf-8')
 
     return results2
