@@ -356,9 +356,28 @@ class Lahendid(ndb.Model):  # not in use
     result['user'] = {'name': user.name, 'photo': user.photo_path}
     raise ndb.Return(result)
 
+
+class UTF8BlobProperty(ndb.BlobProperty):
+    """
+    This is a custom blob property for storing unicode text as utf-8.
+    Later, we can add storing to GCS if text is too large.
+    """
+    def __init__(self):
+        super(UTF8BlobProperty, self).__init__(default="", compressed=True)
+
+    def _validate(self, text):
+        if not isinstance(text, basestring):
+            raise TypeError("Expected a basestring, got %s" % text)
+
+    """def _to_base_type(self, text):
+        return text.encode("utf-8")
+
+    def _from_base_type(self, text):
+        return text.decode("utf-8") """
+
 # Alternative to saving files to filesystem
 class RiigiTeatajaURLs(ndb.Model):
-    url_id = ndb.StringProperty()
+    title = ndb.StringProperty()
     link = ndb.StringProperty()
-    text = ndb.TextProperty()
+    text = UTF8BlobProperty()  # http://stackoverflow.com/questions/29148054/the-request-to-api-call-datastore-v3-put-was-too-large-using-objectify-datas
 
