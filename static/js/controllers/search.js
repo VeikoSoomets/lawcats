@@ -164,6 +164,18 @@ var SearchController = (function () {
       }).success(function (response) {
         _this2.results = response.search_results;
         _this2.loading = false;
+        setTimeout(function(){
+          $(".result-title-link").html(function(_, html) {
+            function capitalizeFirstLetter(string) {
+                return string.charAt(0).toUpperCase() + string.slice(1);
+            }
+            var queryword = _this2.querywords;
+            var querywordCapitalized = capitalizeFirstLetter(_this2.querywords);
+            var returnHtml = html.replace(queryword, '<span class="highlight-text">'+queryword+'</span>');
+            returnHtml = returnHtml.replace(querywordCapitalized , '<span class="highlight-text">'+querywordCapitalized+'</span>');
+            return returnHtml;
+          });
+        }, 1000);
       }).error(function (err) {
         console.error(err);
         _this2.loading = false;

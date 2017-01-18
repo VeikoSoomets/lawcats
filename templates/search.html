@@ -358,7 +358,7 @@
         ng-model="resultSearchQuery"
         placeholder="{% trans %}Search results{% endtrans %}" />
 
-      <table class="table table-hover">
+      <table class="table table-hover" id="results-table">
         <thead>
           <tr>
             <th ng-hide="sc.searchedSanctions">
@@ -399,7 +399,7 @@
               ng-hide="sc.searchedSanctions"></td>
             <td ng-hide="sc.searchedSanctions">
               {% raw %}
-                <a target="_blank" href="{{result.result_link}}" ng-bind="result.result_title"></a>
+                <a class="result-title-link" target="_blank" href="{{result.result_link}}" ng-bind="result.result_title"></a>
               {% endraw %}
             </td>
 
