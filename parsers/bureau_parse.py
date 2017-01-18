@@ -45,6 +45,28 @@ for listitem in categories:
 class LawfirmParsers():
   
   @classmethod
+  def search_bureau(self,querywords,category,date_algus='2012-01-01'):
+    final_list = []
+    search_list = [
+        {'category': 'Aivar Pilv', 'results': LawfirmParsers.borenius},  # map async to tasklet
+        {'category': 'Borenius', 'results': LawfirmParsers.borenius},
+        {'category': 'Alterna', 'results': LawfirmParsers.search_alterna},
+        {'category': 'Concordia', 'results': LawfirmParsers.search_concordia},
+        {'category': 'Baltic Legal Solutions', 'results': LawfirmParsers.search_bls},
+        {'category': 'Glimstedt', 'results': LawfirmParsers.search_glimstedt},
+        {'category': 'Tark Grunte Sutkiene', 'results': LawfirmParsers.search_tark},
+        {'category': 'Varul publikatsioonid', 'results': LawfirmParsers.search_varul_pub}
+        #{'category' : 'Sorainen', 'results' :bureau_parse.search_lextal},
+        #{'category': 'Raidla, Lejins & Norcou', 'results': LawfirmParsers.search_raidla}, # BROKEN, FIX!
+    ]
+    for cat in search_list:
+      print "search from ", cat['category']
+      final_list.extend(cat['results'](querywords, cat['category'], date_algus))
+
+    print "final list: ", str(final_list)
+    return final_list
+
+  @classmethod
   def search_alterna(self,querywords,category,date_algus='2012-01-01'): 
     date_algus=datetime_object(date_algus)
     final_results=[]
@@ -81,7 +103,7 @@ class LawfirmParsers():
               for query in querywords:
                 if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
                   if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0])
             final_results.extend(results2)
           
           except Exception, e:
@@ -128,7 +150,7 @@ class LawfirmParsers():
               for query in querywords:
                 if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
                   if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0])
 
             final_results.extend(results2)
           except Exception, e:
@@ -180,7 +202,7 @@ class LawfirmParsers():
                 if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
                   #print sql_normalize_date(item_date)
                   if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0])
                 
             final_results.extend(results2)
           except Exception, e:
@@ -231,7 +253,7 @@ class LawfirmParsers():
               for query in querywords:
                 if query.lower() in str(item).lower():
                   if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
-                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0])
             
             final_results.extend(results2)
           except Exception, e:
@@ -278,7 +300,7 @@ class LawfirmParsers():
               for query in querywords:
                 if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
                   if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0])
             
             final_results.extend(results2)
           except Exception, e:
@@ -286,26 +308,6 @@ class LawfirmParsers():
             pass
     return final_results
 
-  @classmethod
-  def search_bureau(self,querywords,category,date_algus='2012-01-01'):
-    final_list = []
-    search_list = [
-        {'category': 'Aivar Pilv', 'results': LawfirmParsers.borenius},  # map async to tasklet
-        {'category': 'Borenius', 'results': LawfirmParsers.borenius},
-        {'category': 'Alterna', 'results': LawfirmParsers.search_alterna},
-        {'category': 'Concordia', 'results': LawfirmParsers.search_concordia},
-        {'category': 'Baltic Legal Solutions', 'results': LawfirmParsers.search_bls},
-        {'category': 'Glimstedt', 'results': LawfirmParsers.search_glimstedt},
-        #{'category' : 'Sorainen', 'results' :bureau_parse.search_lextal},
-        {'category': 'Tark Grunte Sutkiene', 'results': LawfirmParsers.search_tark},
-        {'category': 'Varul publikatsioonid', 'results': LawfirmParsers.search_varul_pub},
-        #{'category': 'Raidla, Lejins & Norcou', 'results': LawfirmParsers.search_raidla}, # BROKEN, FIX!
-    ]
-    for cat in search_list:
-      final_list.extend(cat['results'](querywords, cat['category'], date_algus))
-
-    print "final list: ", str(final_list)
-    return final_list
 
   #TODO! Fix borenius
   @classmethod
@@ -351,7 +353,7 @@ class LawfirmParsers():
                   if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
                   #if query.lower() in str(item).lower(): # Kui leiame otsingusõna
                     if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                      results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+                      results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0]) # check this utf-8
   
             final_results.extend(results2)
           except Exception, e:
@@ -402,7 +404,7 @@ class LawfirmParsers():
               for query in querywords:
                 if query.lower() in unicode(item_title).lower() or query.lower() in unicode(item_content):
                   if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0]) # check this utf-8
                 
             final_results.extend(results2)
           except Exception, e:
@@ -448,7 +450,7 @@ class LawfirmParsers():
                 for query in querywords:
                   if query.lower() in unicode(item_title).lower():
                     if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                      results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+                      results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0]) # check this utf-8
                 
             final_results.extend(results2)
           except Exception, e:
@@ -498,7 +500,7 @@ class LawfirmParsers():
                 if query.lower() in unicode(item_title).lower():
                   #print repr(item_title)
                   if datetime_object(sql_normalize_date(item_date))>=date_algus:
-                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category]) # check this utf-8
+                    results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0]) # check this utf-8
                 
             final_results.extend(results2)
           except Exception, e:

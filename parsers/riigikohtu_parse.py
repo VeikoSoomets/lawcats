@@ -73,7 +73,7 @@ def parse_results_kohtu(src,query=None,category=None,date_algus=None):
         item_title=doc[3]
         item_link=url_base+doc[0]
         if datetime_object(sql_normalize_date(item_date))>=date_algus:
-          results2.append([item_link,item_title,sql_normalize_date(item_date),query,category])
+          results2.append([item_link,item_title,sql_normalize_date(item_date),query,category,0])
       
       return results2  
     except Exception:

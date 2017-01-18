@@ -255,6 +255,7 @@ class WebSearch(BaseHandler):
 
       elif action == 'search':
         date_algus = '2014-01-01'
+        print "category is ", repr(cat)
         search_results1 = do_search(querywords,cat,date_algus)
 
       elif action == 'custom_search':
@@ -468,7 +469,7 @@ def do_search(querywords, category, date_algus):
 
     # Otsime riigiteataja uudistest ( seadusuudised; kohtuuudised; õigusuudised )
     if source['category'] == 'Riigiteataja uudised':
-      if category in riigiteataja_parse.categories:  # mitu allikat
+      if category in riigiteataja_parse.categories_uudised:  # mitu allikat
         try:
           search_results.extend(source['results'](querywords, category, date_algus))
         except Exception, e:
@@ -478,16 +479,17 @@ def do_search(querywords, category, date_algus):
           logging.error(e)
           pass
 
-    # Otsime riigiteataja seadustsers
+    # Otsime riigiteataja seadustest
     if source['category'] == 'Riigiteataja seadused':
-      try:
-        search_results.extend(source['results'](querywords, category, date_algus))
-      except Exception, e:
-        logging.error('failed with riigiteataja seadused')
-        #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
-        #logging.error(message)
-        logging.error(e)
-        pass
+      if category in riigiteataja_parse.categories_seadused:
+        try:
+          search_results.extend(source['results'](querywords, category, date_algus))
+        except Exception, e:
+          logging.error('failed with riigiteataja seadused')
+          #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
+          #logging.error(message)
+          logging.error(e)
+          pass
 
     # Otsime RSS allikatest
     if source['category'] == 'RSS allikad':
@@ -513,7 +515,7 @@ def do_search(querywords, category, date_algus):
         #logging.error(message)
         logging.error(e)
         pass
-
+  print search_results
   return search_results  # link, title, date, qword, category
  
  
