@@ -142,6 +142,10 @@ def search_riigiteataja_uudised(querywords,category,date_algus='2010-01-01'):
 import models
 import time
 from operator import itemgetter
+
+"""def max_value(inputlist):
+    return ( max([sublist[-1] for sublist in inputlist]), min([sublist[-1] for sublist in inputlist if sublist[-1] > 0]) )
+"""
 def parse_results_seadused(query=None, category=None, date_algus=None):
 
     """hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -204,8 +208,13 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
               #print rank
               content = c.get_text()
               final_results.append([article_link, content, None, title, rank, rank])
-    print len(final_results)
-    final_results = sorted(final_results, key=itemgetter(5))
+              """max_rank, min_rank = max_value(final_results)
+              if max_rank - min_rank >= 3:
+                print "breaking loop 'cause we got enough results for now... """""
+
+
+    print "total results: %d", len(final_results)
+    final_results = sorted(final_results, key=itemgetter(5), reverse=True)
     return final_results
 
 
