@@ -1173,9 +1173,10 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
     soup = soup.find('tbody')
     for result in soup.findAll('tr'):
       law = result.findAll('td')[0]
-      linkitem = law.findNext('a', href=True).get('href')
-      url = "https://www.riigiteataja.ee/%s?leiaKehtiv" % linkitem
-      urllist.append(url)
+      link = law.findNext('a', href=True).get('href')
+      title = law.findNext('a', href=True).get_text()
+      url = "https://www.riigiteataja.ee/%s?leiaKehtiv" % link
+      urllist.append({'title': title, 'url': url})
     return urllist
 
   @classmethod
@@ -1189,10 +1190,13 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
   @BaseHandler.logged_in2
   def get(self):
       urls = self.get_urls()
-      text = urllib2.urlopen(urls[0])
       dbps_main = []
       models.RiigiTeatajaURLs.query().map(self.delete_async_)
       for url in urls:
-        dbp = models.RiigiTeatajaURLs(link=url, text=text.read())
+        text = urllib2.urlopen(url['url'])
+        dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.read())
         dbps_main.append(dbp)
-      ndb.put_multi(dbps_main)
+
+      future = ndb.put_multi_async(dbps_main)
+      ndb.Future.wait_all(future)
+      #ndb.put_multi(dbps_main)  # 1mb limit
