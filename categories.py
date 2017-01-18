@@ -13,10 +13,7 @@ class GenerateCategories(BaseHandler):
   @BaseHandler.logged_in2
   def get(self):
     main_categories = [
-    'Meedia',
     'Eesti',
-    'USA',
-    'Euroopa',
     'Arhiivid',
     'Sanktsioonid',
     'Kohturegistrid'

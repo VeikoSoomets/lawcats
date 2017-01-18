@@ -50,15 +50,6 @@ Copyright Imaginary Robots OÜ 2015
       {% if logged_in %}
       <ul class="nav navbar-nav"> <!-- Left navbar part -->
         <li>
-          <a href="/app/dashboard">{% trans %}Dashboard{% endtrans %}</a>
-        </li>
-        <li>
-          <a href="/app/querywords">{% trans %}Requests{% endtrans %}</a>
-        </li>
-        <li>
-          <a href="/app/results">{% trans %}Results{% endtrans %}</a>
-        </li>
-        <li>
           <a href="/app/search">{% trans %}Search{% endtrans %}</a>
         </li>
       </ul>
@@ -320,7 +311,7 @@ Copyright Imaginary Robots OÜ 2015
         </a>
       </p>
       {% else %}
-      <a href="app/results" class="btn btn-lg landing-main-button">{% trans %}Continue{% endtrans %}</a>
+      <a href="app/search" class="btn btn-lg landing-main-button">{% trans %}Continue{% endtrans %}</a>
       {% endif %}
     </div>
   </div>
