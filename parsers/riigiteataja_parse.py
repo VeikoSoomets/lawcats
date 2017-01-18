@@ -51,13 +51,10 @@ def search_ametlikud_teadaanded(querywords, category, date_algus='2010-01-01'):
 
 def search_seadused(querywords, category, date_algus='2010-01-01'):
     date_algus = datetime_object(date_algus)
-    date_algus_format = date_algus.strftime("%d.%m.%Y")
+    logging.error(querywords)
     results = []
-    date_lopp = None
     for query in querywords:
-      query2=urllib.quote_plus(query.encode('utf-8')) # asendab tühiku +'iga, muudab mitte ascii'd formaati %C5%A1
-      url = "https://www.riigiteataja.ee/akt/105122014039?leiaKehtiv"
-      result = parse_results_seadused(url, query, category, date_algus)
+      result = parse_results_seadused(query, category, date_algus)
       if result:
         results.extend(result)
 
@@ -143,7 +140,9 @@ def search_riigiteataja_uudised(querywords,category,date_algus='2010-01-01'):
     return results
 
 import models
-def parse_results_seadused(link, query=None, category=None, date_algus=None):
+import time
+from operator import itemgetter
+def parse_results_seadused(query=None, category=None, date_algus=None):
 
     """hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -151,12 +150,20 @@ def parse_results_seadused(link, query=None, category=None, date_algus=None):
      'Accept-Encoding': 'none',
      'Accept-Language': 'en-US,en;q=0.8',
      'Connection': 'keep-alive'} """
-    laws = models.RiigiTeatajaURLs.query().fetch_async()
-    itr = 0
-    for law in laws.get_result():
+    """print "fetching start"
+    start_time = time.time()
+    laws = models.RiigiTeatajaURLs.query().fetch()
+    print "fetching took %s seconds" % str(time.time() - start_time) """
 
+    laws = models.RiigiTeatajaURLs.query().fetch()
+    itr = 0
+    final_results = []
+    for law in laws:
       #  limit results by 5
-      itr += 1
+      """itr += 1
+      if itr > 5:
+        print "iteration limit 5, breaking loop here... "
+        break"""
 
       #req = urllib2.Request(law.link)  # , headers=hdr
       src = law.text
@@ -167,17 +174,14 @@ def parse_results_seadused(link, query=None, category=None, date_algus=None):
 
       # Get individual articles
       articles = soup.find_all('div', attrs={'id': 'article-content'})
-      final_results = []
+      article_cnt = 0
       for article in articles:
         article_link, title, content = None, None, None
-        # TODO! fix title
         title = law.title
-        #title = article.find('h1')
-        #print "title=", title
-
         # Get content
         content = article.find_all('p')  #, attrs={'class': 'announcement-body'}
         for c in content:
+          article_cnt += 1
           try:
             article_link = c.find_next('a').get('name')
             article_link = url_base + '#' + article_link
@@ -187,20 +191,21 @@ def parse_results_seadused(link, query=None, category=None, date_algus=None):
           #content2 = [x.get_text() for x in c]
           # TODO! datelimit -> datetime_object(sql_normalize_date(item_date))>=date_algus
           rank = 0
-          for space_separated in query.split():
-            if space_separated.lower() in ''.join(c.get_text().lower()):
+          for single_word in query.split():
+            if single_word.lower() in ''.join(c.get_text().lower()):
               rank += 1
-              if space_separated in c.get_text():
+
+              if single_word.lower() in c.get_text():
                 rank += 1
 
-              if space_separated in law.title.lower():
+              if single_word.lower() in law.title.lower():
                 rank += 1
 
               #print rank
               content = c.get_text()
               final_results.append([article_link, content, None, title, rank, rank])
-
-
+    print len(final_results)
+    final_results = sorted(final_results, key=itemgetter(5))
     return final_results
 
 

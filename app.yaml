@@ -65,6 +65,6 @@ libraries:
 - name: webob
   version: "1.2.3"
 
-inbound_services:
-- warmup
+#inbound_services:
+#- warmup
 

@@ -483,6 +483,7 @@ def do_search(querywords, category, date_algus):
     if source['category'] == 'Riigiteataja seadused':
       if category in riigiteataja_parse.categories_seadused:
         try:
+          logging.error("in riigiteataja seadused")
           search_results.extend(source['results'](querywords, category, date_algus))
         except Exception, e:
           logging.error('failed with riigiteataja seadused')
@@ -515,7 +516,7 @@ def do_search(querywords, category, date_algus):
         #logging.error(message)
         logging.error(e)
         pass
-  print search_results
+  #print search_results
   return search_results  # link, title, date, qword, category
  
  
