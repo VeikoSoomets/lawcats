@@ -200,10 +200,10 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
               rank += 1
 
               if single_word.lower() in c.get_text():
-                rank += 1
+                rank += 2
 
               if single_word.lower() in law.title.lower():
-                rank += 1
+                rank += 3
 
               #print rank
               content = c.get_text()
