@@ -124,7 +124,7 @@
                            track by $index"
                 ng-click="rc.openModal(result)">
 
-                <td ng-bind="result.queryword ? result.queryword : '{% endraw %}{% trans %}All updates{% endtrans %}{% raw %}'"></td>
+                <td ng-bind="result.queryword ? result.queryword : '{% endraw %}{% trans %}All keywords{% endtrans %}{% raw %}'"></td>
 
                 <td ng-bind="result.result_date"></td>
 
@@ -256,7 +256,7 @@
                            track by $index"
                 ng-click="rc.openModal(result)">
 
-                <td ng-bind="result.queryword ? result.queryword : '{% endraw %}{% trans %}All updates{% endtrans %}{% raw %}'"></td>
+                <td ng-bind="result.queryword ? result.queryword : '{% endraw %}{% trans %}All keywords{% endtrans %}{% raw %}'"></td>
 
                 <td ng-bind="result.result_date"></td>
 
@@ -321,7 +321,7 @@
               {% endraw %}{% trans %}Queryword{% endtrans %}{% raw %}:
               <span
                 class="text-info"
-                ng-bind="rc.modalResult.queryword ? rc.modalResult.queryword : '{% endraw %}{% trans %}All updates{% endtrans %}{% raw %}'"></span>
+                ng-bind="rc.modalResult.queryword ? rc.modalResult.queryword : '{% endraw %}{% trans %}All keywords{% endtrans %}{% raw %}'"></span>
             </li>
             <li class="list-group-item">
               {% endraw %}{% trans %}Search Date{% endtrans %}{% raw %}:

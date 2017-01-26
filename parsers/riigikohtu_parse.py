@@ -23,7 +23,7 @@ urlfetch.set_default_fetch_deadline(45)
 from utils import *
 
 categories = {
-        'Riigikohtu lahendid':'http://www.nc.ee/',
+        'Hiljutised Riigikohtu lahendid':'http://www.nc.ee/',
         }
 
 def search_kohtu(querywords,category,date_algus='2013-01-01'):

@@ -235,11 +235,11 @@ class StatsHandler(BaseHandler):
     conn = base_handler.get_connection()
     cursor = conn.cursor()
     email = self.get_user_email()
-    sql = 'SELECT case when queryword="None" then "All updates" else queryword end queryword, SUM(result_cnt) FROM Statistics WHERE user_id="%s" GROUP BY 1' % (email)
+    sql = 'SELECT case when queryword="None" then "All keywords" else queryword end queryword, SUM(result_cnt) FROM Statistics WHERE user_id="%s" GROUP BY 1' % (email)
     cursor.execute(sql)
     pie_chart = cursor.fetchall()
     # coalesce(result_date,CURRENT_DATE())
-    sql2 = 'SELECT date(load_dtime) as result_date, case when queryword="None" then "All updates" else queryword end queryword, SUM(result_cnt) FROM Statistics WHERE user_id="%s" AND date(load_dtime)>=DATE_ADD(CURRENT_DATE(), INTERVAL -30 DAY) GROUP BY 1,2 ORDER BY 1 DESC' % (email)
+    sql2 = 'SELECT date(load_dtime) as result_date, case when queryword="None" then "All keywords" else queryword end queryword, SUM(result_cnt) FROM Statistics WHERE user_id="%s" AND date(load_dtime)>=DATE_ADD(CURRENT_DATE(), INTERVAL -30 DAY) GROUP BY 1,2 ORDER BY 1 DESC' % (email)
     cursor.execute(sql2)
     line_chart = cursor.fetchall()
     conn.close()
@@ -785,7 +785,7 @@ class UserDashboard(BaseHandler):
           event_count = int(event[3])
           event_queryword = event[2]
           if event_queryword == 'None':
-            event_queryword = _('All updates')
+            event_queryword = _('All keywords')
           event_name = 'new results for "' + event_queryword + '"'
           params={
             'event_name': event_name,

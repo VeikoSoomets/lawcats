@@ -28,52 +28,14 @@ class GenerateCategories(BaseHandler):
     
     dbps_sub=[]
     sub_categories = [
-    {'maincategory_name':'Meedia',
-    'subcategories': [
-          'Eesti Meedia',
-          u'US & UK Meedia',
-          u'Saksa Meedia',
-          u'Soome Meedia',
-          u'Vene Meedia'
-           ]
-    },
     {'maincategory_name':'Eesti',
     'subcategories': [
           'Kohtud ja kohtulahendid',
           'Ministeeriumid',
           u'Õigusaktid',
-          'Ametid ja inspektsioonid',
-          'Muu'
-           ]
-    },
-    {'maincategory_name': 'USA',
-    'subcategories': [
-          'OFAC, FATF, FinCEN'
-          ]
-    },
-    {'maincategory_name': 'Euroopa',
-    'subcategories': [
           'Eur-LEX',
-          ]
-    },
-    {'maincategory_name': 'Arhiivid',
-    'subcategories': [
-          'Eesti meediaarhiivid',
-          'Vene meediaarhiivid',
-          'Ametite ja inspektsioonide arhiivid',
-          u'Õigusaktide arhiivid'
-          ]
-    }, 
-    {'maincategory_name': 'Sanktsioonid',
-    'subcategories': [
-          u'EU & USA',
-          ]
-    },
-    {'maincategory_name': 'Kohturegistrid',
-    'subcategories': [
-          'Eesti Kohtud',
-          'Euroopa Kohtud'
-          ]
+          'Eesti Meedia'
+           ]
     }
     ]
     count_sub=0
@@ -93,11 +55,6 @@ class GenerateCategories(BaseHandler):
     ndb.put_multi(dbps_sub)
     
     child_categories = [
-    {'subcategory_name': 'Muu', 
-      'categories': [
-        ['Riigihanked','https://riigihanked.riik.ee','eesti'],
-        ['Riigikogu pressiteated','http://www.riigikogu.ee/index.php?id=31549','eesti'],
-    ]},
     {'subcategory_name': 'Eesti Meedia',
       'categories': [
         ['ERR','http,//www.err.ee','eesti'],
@@ -113,36 +70,6 @@ class GenerateCategories(BaseHandler):
         ['raamatupidaja.ee','http,//www.raamatupidaja.ee/','eesti'],
         ['juura.ee','http,//juura.ee','eesti'],
     ]},
-    {'subcategory_name': 'US & UK Meedia',
-      'categories': [
-        ['Reuters','http,//feeds.reuters.com','english'],
-        ['BBC','http,//www.bbc.com','english'],
-        ['CNN','http,//edition.cnn.com/','english'],
-        ['Forbes','http,//www.forbes.com','english'],
-        ['TIME','http,//time.com/','english'],
-        ['New York Post','http,//nypost.com/','english'],
-        ['Wall Street Journal','http,//online.wsj.com','english'],
-        ['Marketwatch','http,//www.marketwatch.com','english'],
-        ['The Economist','http,//www.economist.com/','english'],
-        ['Financial Times','http,//www.ft.com','english'],
-        ['Business Insider','http,//www.businessinsider.com','english'],
-        ['Bloomberg','http,//www.bloomberg.com','english'],
-        ['The Guardian','http,//www.theguardian.com','english'],
-        ['MarketWatch','http,//www.marketwatch.com','english'],
-    ]},
-    {'subcategory_name': 'Soome Meedia',
-      'categories': [
-        ['Helsingin Sanomat','http://www.helsinkitimes.fi/','english'],
-    ]},
-    {'subcategory_name': 'Saksa Meedia', 
-      'categories': [
-        ['Deutche Welle','http://www.dw.de/','english'],
-    ]},
-    {'subcategory_name': 'Vene Meedia', 
-      'categories': [
-        [u'Деловное Деломости','http://www.dv.ee/',u'русский'], # venekeelne äripäev
-        [u'МК-Эстония','http://www.mke.ee/',u'русский'],
-    ]},
     {'subcategory_name': 'Ministeeriumid', 
       'categories': [
       ['Kaitseministeerium','http://www.kaitseministeerium.ee','eesti'],
@@ -157,7 +84,7 @@ class GenerateCategories(BaseHandler):
       #['Haridusministeerium','https://www.hm.ee','eesti'] # SSL block
       #['Majandusministeerium','https://www.mkm.ee','eesti'] # SSL block
     ]},
-    {'subcategory_name': 'Eur-LEX', 
+    {'subcategory_name': 'Eur-LEX',
       'categories': [
       ['eurlex kohtuasjad','http://eur-lex.europa.eu','eesti'],
       ['eurlex komisjoni ettepanekud','http://eur-lex.europa.eu','eesti'],
@@ -171,72 +98,15 @@ class GenerateCategories(BaseHandler):
       [u'Valitsusele esitatud eelnõud','http://eelnoud.valitsus.ee/main#SKixD73F','eesti'],
       [u'Riigiteataja ilmumas/ilmunud seadused','https://www.riigiteataja.ee/','eesti'],
       ['Riigiteataja seadused','https://www.riigiteataja.ee/','eesti'],
-      [u'Advokaadi- ja õigusbürood','/bureaus','eesti'], # TODO! make template for showing user the list of bureaus implemented and links to them
-
+      ['Riigikogu pressiteated','http://www.riigikogu.ee/index.php?id=31549','eesti'],
     ]},
     {'subcategory_name': 'Kohtud ja kohtulahendid', 
       'categories': [
       ['Riigiteataja kohtuuudised','https://www.riigiteataja.ee/oigusuudised/kohtuuudiste_nimekiri.html','eesti'],
       ['Riigikohtu uudised','http://www.nc.ee','eesti'],
-      ['Riigikohtu lahendid','http://www.nc.ee','eesti'],
-      ['Maa- ja ringkonnakohtu lahendid','https://www.riigiteataja.ee/kohtuteave/maa_ringkonna_kohtulahendid/otsi.html','eesti'],
-    ]},
-    # ######### Kohturegistrid
-    {'subcategory_name': 'Eesti Kohtud', 
-      'categories': [
+      ['Hiljutised Riigikohtu lahendid','http://www.nc.ee','eesti'],
       ['Riigikohtu lahendite arhiiv','http://www.nc.ee','eesti'],
-      ['Maa- ja ringkonnakohtu lahendid ','https://www.riigiteataja.ee/kohtuteave/maa_ringkonna_kohtulahendid/otsi.html','eesti'], # to avoid duplicates, add space here
-    ]},
-    {'subcategory_name': 'Euroopa Kohtud', 
-      'categories': [
-      ['Euroopa Inimõiguste Kohus','#','eesti'],
-    ]},
-    # ######### Arhiivid
-    {'subcategory_name': 'Eesti meediaarhiivid', 
-      'categories': [
-      ['Delfi arhiiv','http://www.delfi.ee/archive','eesti'],
-      [u'Äripäev arhiiv','http://www.aripaev.ee/mod/otsing/arhiiv','eesti'],
-      [u'raamatupidaja.ee otsing','http://www.raamatupidaja.ee/search','eesti'],
-      [u'Õhtuleht arhiiv','http://www.postimees.ee/search','eesti']
-    ]},
-    {'subcategory_name': 'Vene meediaarhiivid', 
-      'categories': [
-      [u'Деловное Деломости архив','http://www.dv.ee',u'русский'],
-      [u'МК-Эстония поиск','http://www.mke.ee',u'русский'],
-    ]},
-    {'subcategory_name': 'Ametite ja inspektsioonide arhiivid', 
-      'categories': [
-      ['Politsei uudiste arhiiv','http://www.politsei.ee','eesti'],
-    ]},
-    {'subcategory_name': u'Õigusaktide arhiivid',
-      'categories': [
-      [u'Eelnõude otsing','https://www.riigiteataja.ee/eelnoud/otsing.html','eesti'],
-      [u'Kehtivate õigusaktide otsing','https://www.riigiteataja.ee/tervikteksti_otsing.html','eesti'],
-      [u'Kehtivate KOV õigusaktide otsing','https://www.riigiteataja.ee/tervikteksti_otsing.html?kov=true','eesti'],
-    ]},
-    # ######### Sanctions
-    {'subcategory_name': 'EU & USA', 
-      'categories': [
-      ['OFAC Sanctions','#','english'],
-      ['EU Sanctions','#','english'],
-    ]},
-    # ######### Monitoring
-    {'subcategory_name': 'Ametid ja inspektsioonid', 
-      'categories': [
-      [u'euroopa pangandusjärelevalve EBA','http://www.fi.ee/index.php?id=13371&year=2014','eesti'],
-      ['EIOPA teated','http://www.fi.ee/index.php?id=13373&year=2015','eesti'],
-      ['ESMA teated','http://www.fi.ee/index.php?id=13375&year=2015','eesti'],
-      ['FI pressiteated','http://www.fi.ee/index.php?id=1080&year=2015','eesti'],
-      ['FI juhendite projektid',"http://www.fi.ee/index.php?id=2898",'eesti'],
-      ['FI kehtivad juhendid',"http://www.fi.ee/index.php?id=2897",'eesti'],
-      [u'ühtne pangandusjärelevalve SSM' ,'http://www.fi.ee/index.php?id=16881&year=2014','eesti'],
-      ['Politsei uudised','https://www.politsei.ee/et/uudised/','eesti'],
-      ['Ametlikud teadaanded', 'https://www.ametlikudteadaanded.ee/','eesti'],
-    ]},
-    {'subcategory_name': 'OFAC, FATF, FinCEN',
-      'categories': [
-      ['OFAC Recent Actions', 'http://www.treasury.gov/resource-center/sanctions/OFAC-Enforcement/Pages/OFAC-Recent-Actions.aspx','english'], 
-      ['FATF', 'http://www.fatf-gafi.org/','english'], 
+      ['Maa- ja ringkonnakohtu lahendid','https://www.riigiteataja.ee/kohtuteave/maa_ringkonna_kohtulahendid/otsi.html','eesti'],
     ]},
     ]
     
