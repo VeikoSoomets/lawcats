@@ -91,7 +91,7 @@ categories = [\
  #['Majandusministeerium' , 'https://www.mkm.ee/et/news/all/feed'], ssl fail \
  #['haridusministeerium' , 'https://www.hm.ee/et/news/all/feed' ]# ssl certificate - not allowed \
  #['lextal' , 'http://www.lextal.ee/feed/' ] # doesn't work, has robots.txt \
-['Riigikohtu lahendid','http://www.nc.ee/rss/?lahendid=1&tyyp=K'], # neid, mida muidu otsingust ei leia aga RSS'ist leiab, on dokument eemaldatud \
+['Hiljutised Riigikohtu lahendid','http://www.nc.ee/rss/?lahendid=1&tyyp=K'], # neid, mida muidu otsingust ei leia aga RSS'ist leiab, on dokument eemaldatud \
 [u'Kooskõlastamiseks esitatud eelnõud','http://eelnoud.valitsus.ee/main/mount/rss/home/review.rss' ], \
 [u'Valitsusele esitatud eelnõud','http://eelnoud.valitsus.ee/main/mount/rss/home/submission.rss' ] \
 # ['bbc','http://feeds.bbci.co.uk/news/rss.xml?edition=int' ] \
