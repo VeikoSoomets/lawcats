@@ -454,19 +454,6 @@ def do_search(querywords, category, date_algus):
           logging.error(e)
           pass
 
-    # Otsime riigiteataja seadustest
-    if source['category'] == 'Riigiteataja seadused':
-      if category in riigiteataja_parse.categories_seadused:
-        try:
-          logging.error("in riigiteataja seadused")
-          search_results.extend(source['results'](querywords, category, date_algus))
-        except Exception, e:
-          logging.error('failed with riigiteataja seadused')
-          #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
-          #logging.error(message)
-          logging.error(e)
-          pass
-
     # Otsime RSS allikatest
     if source['category'] == 'RSS allikad':
       #catlist = [key for key, value in rss_parse.categories2] rss_parse.categories2

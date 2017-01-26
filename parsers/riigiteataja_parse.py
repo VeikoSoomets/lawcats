@@ -51,7 +51,6 @@ def search_ametlikud_teadaanded(querywords, category, date_algus='2010-01-01'):
 
 def search_seadused(querywords, category, date_algus='2010-01-01'):
     date_algus = datetime_object(date_algus)
-    logging.error(querywords)
     results = []
     for query in querywords:
       result = parse_results_seadused(query, category, date_algus)
@@ -158,18 +157,18 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     start_time = time.time()
     laws = models.RiigiTeatajaURLs.query().fetch()
     print "fetching took %s seconds" % str(time.time() - start_time) """
-    print "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-    laws_titles = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo).fetch()
+
+    laws_titles = models.RiigiTeatajaMetainfo.query().fetch()
+    #print "BBBBBBBBBBBBBBBBB"  # TODO! for somereason, this gets logged twice, but should be logged once!!!
+    laws = None
     for law in laws_titles:
-      print law
       # search for "Lõhkematerjali seadus paragrahv 5"
       # title = Lõhkematerjaliseadus
       if (query.lower() in law.title.lower()
             or query.split()[0].lower() in law.title.lower()  # ["lõhkematerjali","seadus","paragrahv"][0]
             or law.title.lower() in query.lower()
             or query.replace(' ', '').lower() in law.title.lower().replace(' ', '')):
-        print law.title
-        laws = [models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title == law.title)]
+        laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title == law.title).fetch()
 
     if not laws:
       laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title==u'Lõhkematerjaliseadus').fetch()
@@ -186,7 +185,6 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
       src = law.text
 
       soup = bs4.BeautifulSoup(src, "html5lib")
-
       url_base = law.link
 
       # Get individual articles
@@ -205,36 +203,46 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
           except:
             pass
 
-          #content2 = [x.get_text() for x in c]
-          # TODO! datelimit -> datetime_object(sql_normalize_date(item_date))>=date_algus
           rank = 0
           for single_word in query.split():
             if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
                 paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
 
-            # check if paragraph number matches any numbers in the query that was passed
-            if any(['paragraaf','paragrahv',u'§']) in query.lower() \
-              and any([int(s) for s in query.split() if s.isdigit()]) == [int(s) for s in paragraph.split() if s.isdigit()][0]:
-                rank += 5
+            try:
+              para_nbr = paragraph.split()[1].replace('.','').replace(' ','')
+              # check if paragraph number matches any numbers in the query that was passed
+              if para_nbr == single_word:
+                  rank += 5
+                  cond = len([x for x in single_word.lower() if x in ['paragraaf','paragrahv',u'§']])
+                  if cond > 0:
+                      rank += 1
+            except Exception, e:
+              print e
+              pass
 
-            if single_word.lower() in ''.join(c.get_text().lower()):
-              rank += 1
-
-              if single_word.lower() in c.get_text().lower():
+            try:
+              if single_word.lower() in ''.join(c.get_text().lower()) or para_nbr > 0:
                 rank += 2
 
-              if single_word.lower() in law.title.lower():
-                rank += 3
+                if single_word.lower() in c.get_text().lower():
+                  rank += 3
 
-              #print rank
-              content = c.get_text()
-              final_results.append([article_link, content, paragraph, title, rank, rank])
-              """max_rank, min_rank = max_value(final_results)
-              if max_rank - min_rank >= 3:
-                print "breaking loop 'cause we got enough results for now... """""
+                if single_word.lower() in law.title.lower():
+                  rank += 3
+
+                #print rank
+                content = c.get_text()
+                final_results.append([article_link, content, paragraph, title, rank, rank])
+            except Exception, e:
+               print e
+               pass
+
+            """max_rank, min_rank = max_value(final_results)
+            if max_rank - min_rank >= 3:
+              print "breaking loop 'cause we got enough results for now... """""
 
 
-    print "total results: %d", len(final_results)
+    print "total results: %d" % len(final_results)
     final_results = sorted(final_results, key=itemgetter(5), reverse=True)
     return final_results
 
