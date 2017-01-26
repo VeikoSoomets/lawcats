@@ -159,7 +159,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     laws = models.RiigiTeatajaURLs.query().fetch()
     print "fetching took %s seconds" % str(time.time() - start_time) """
 
-    laws = models.RiigiTeatajaURLs.query().fetch()
+    laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title==u'Lõhkematerjaliseadus').fetch()
     itr = 0
     final_results = []
     for law in laws:
