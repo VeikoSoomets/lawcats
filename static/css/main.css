@@ -1,5 +1,5 @@
 body {
-	padding-top: 70px; /* margin for navbar */
+	padding-top: 50px; /* margin for navbar */
 }
 
 .dashboard-panel-icon {
@@ -107,7 +107,9 @@ h2:before {
 .highlight-text {
   background-color: yellow;
 }
-
+.mt20 {
+  margin-top: 20px;
+}
 /* Popover */
 /*
 .popover-title {

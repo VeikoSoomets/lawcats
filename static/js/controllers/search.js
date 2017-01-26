@@ -169,10 +169,14 @@ var SearchController = (function () {
             function capitalizeFirstLetter(string) {
                 return string.charAt(0).toUpperCase() + string.slice(1);
             }
-            var queryword = _this2.querywords;
-            var querywordCapitalized = capitalizeFirstLetter(_this2.querywords);
-            var returnHtml = html.replace(queryword, '<span class="highlight-text">'+queryword+'</span>');
-            returnHtml = returnHtml.replace(querywordCapitalized , '<span class="highlight-text">'+querywordCapitalized+'</span>');
+            var words = _this2.querywords.split(" ");
+            var returnHtml = html;
+            for (var querywordIndex in words){
+              var queryword = words[querywordIndex];
+              var querywordCapitalized = capitalizeFirstLetter(_this2.querywords);
+              returnHtml = returnHtml.replace(queryword, '<span class="highlight-text">'+queryword+'</span>');
+              returnHtml = returnHtml.replace(querywordCapitalized , '<span class="highlight-text">'+querywordCapitalized+'</span>');
+            }
             return returnHtml;
           });
         }, 1000);

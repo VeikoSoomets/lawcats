@@ -159,7 +159,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     laws = models.RiigiTeatajaURLs.query().fetch()
     print "fetching took %s seconds" % str(time.time() - start_time) """
 
-    laws = models.RiigiTeatajaURLs.query().fetch()
+    laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title==u'Lõhkematerjaliseadus').fetch()
     itr = 0
     final_results = []
     for law in laws:
@@ -196,6 +196,8 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
           # TODO! datelimit -> datetime_object(sql_normalize_date(item_date))>=date_algus
           rank = 0
           for single_word in query.split():
+            if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
+                paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
             if single_word.lower() in ''.join(c.get_text().lower()):
               rank += 1
 
@@ -207,7 +209,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
               #print rank
               content = c.get_text()
-              final_results.append([article_link, content, None, title, rank, rank])
+              final_results.append([article_link, content, paragraph, title, rank, rank])
               """max_rank, min_rank = max_value(final_results)
               if max_rank - min_rank >= 3:
                 print "breaking loop 'cause we got enough results for now... """""
