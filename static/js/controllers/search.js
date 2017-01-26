@@ -185,6 +185,24 @@ var SearchController = (function () {
         _this2.loading = false;
       });
     }
+  }, {
+    value: function addNewSource() {
+      if (this.newSource.link.trim() && this.newSource.description.trim()) {
+        this.apiRequest('request_source', {
+          url: this.newSource.link,
+          description: this.newSource.description
+        }, '/app/request_source');
+        this.newSource.link = '';
+        this.newSource.description = '';
+      } else {
+        const msg = 'Please add a link and description to your new source.';
+        this.MessagingService.danger(msg);
+      }
+    }
+  }, {
+    value: function () {
+
+    }
   }]);
 
   return SearchController;

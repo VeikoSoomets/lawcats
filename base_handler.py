@@ -50,7 +50,7 @@ from simpleauth import SimpleAuthHandler
 import secrets
 import webob.multidict
 
-DEFAULT_AVATAR_URL = '/static/images/missing-avatar.png'
+DEFAULT_AVATAR_URL = '/static/images/default-avatar.jpg'
 
 def get_connection():
   # Get SQL connection. Check if we have to connect remotely or not.  
@@ -374,6 +374,7 @@ class BaseHandler(webapp2.RequestHandler):
       # agreed_to_terms = user_query.agreed_to_terms
       avatar = user_query.avatar if user_query.avatar else DEFAULT_AVATAR_URL
     else:
+      avatar = DEFAULT_AVATAR_URL
       logging.error('User logged in (via google), but no data in cloudstore.')
 
     messages = []
@@ -599,10 +600,10 @@ class AuthHandler(BaseHandler, SimpleAuthHandler):
     self.session.add_flash({'extra': extra}, 'extra')
 
     # user profile page
-    destination_url = '/app/dashboard'
+    destination_url = '/app/search'
     if extra is not None:
       params = webob.multidict.MultiDict(extra)
-      destination_url = str(params.get('destination_url', '/app/dashboard'))
+      destination_url = str(params.get('destination_url', '/app/search'))
     return self.redirect(destination_url)
 
   def logout(self):
