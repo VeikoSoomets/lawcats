@@ -375,6 +375,11 @@ class UTF8BlobProperty(ndb.BlobProperty):
     def _from_base_type(self, text):
         return text.decode("utf-8") """
 
+
+class RiigiTeatajaMetainfo(ndb.Model):  # consider the value of having more metainfo about a law, and showing
+    title = ndb.StringProperty()
+
+
 # Alternative to saving files to filesystem
 class RiigiTeatajaURLs(ndb.Model):
     title = ndb.StringProperty()

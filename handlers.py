@@ -363,30 +363,6 @@ def custom_search(querywords, category, date_algus, email=None):
     return search_results  # link, title, date, qword, category
 
 
-def search_archive(querywords, category, date_algus='2014-01-01'):
-    """ Searches from archives and registries. """
-    search_results = []
-    search_list = [
-        {'category': 'Politsei uudiste arhiiv', 'results': politsei_parse.search_politsei},  # test if two same names work in front
-        {'category': 'Maa- ja ringkonnakohtu lahendid ', 'results': riigiteataja_parse.search_kohtu},  # leht tihti maas
-        {'category': 'Riigikohtu lahendite arhiiv', 'results': riigikohtu_parse.search_kohtu},  # test if two same names work in front
-        {'category': 'Meedia', 'results': archive_search.search_media},
-        {'category': 'Eur-Lex', 'results': eurlex_parse.search_eurlex},
-        {'category': u'Eelnõude otsing', 'results': riigiteataja_parse.search_eelnou},
-        ]
-        
-    for source in search_list:
-      # Otsime meedia arhiividest
-      if source['category'] == 'Meedia':  # mitu allikat
-        if category in [x[0] for x in archive_search.categories]:  # mitu allikat
-          search_results.extend(source['results'](querywords, category, date_algus))
-
-      # Everything else 
-      if category == source['category']:
-        # logging.error(date_algus) # TODO! Reformat date
-        search_results.extend(source['results'](querywords, category, date_algus))
-        
-    return search_results  # link, title, date, qword, category
     
     
 def do_search(querywords, category, date_algus):
@@ -405,6 +381,7 @@ def do_search(querywords, category, date_algus):
 
     {'category': 'finantsinspektsioon', 'results': fi_parse.search_EU_supervision},
     {'category': 'FI juhendid', 'results': fi_parse.search_fi},
+    {'category': 'Eur-Lex eestikeelsete dokumentide otsing', 'results': eurlex_parse.search_eurlex},
 
     # advokaadibürood (need, mida mainitud pole, on RSS allikate all)
     {'category': u'Advokaadi- ja õigusbürood', 'results': LawfirmParsers.search_bureau},  # map async to tasklet
@@ -417,18 +394,6 @@ def do_search(querywords, category, date_algus):
     if source['category'] == 'finantsinspektsioon':
       if category in [x[0] for x in fi_parse.categories]:
         search_results.extend(source['results'](querywords, category, date_algus))
-
-    # Otsime FI juhenditest
-    if source['category'] == 'FI juhendid':  # mitu allikat
-      if category in ['FI juhendite projektid','FI kehtivad juhendid']:
-        try:
-          search_results.extend(source['results'](querywords, category, date_algus))
-        except Exception, e:
-          logging.error('failed with FI juhendid')
-          #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
-          #logging.error(message)
-          logging.error(e)
-          pass
 
     # Otsime ministeeriumitest (mis ei ole RSS)
     if source['category'] == 'ministeeriumid':
@@ -452,6 +417,16 @@ def do_search(querywords, category, date_algus):
           logging.error('failed with FI teated')
           #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
           #logging.error(message)
+          logging.error(e)
+          pass
+
+    # Otsime FI juhenditest
+    if source['category'] == 'FI juhendid':  # mitu allikat
+      if category in ['FI juhendite projektid','FI kehtivad juhendid']:
+        try:
+          search_results.extend(source['results'](querywords, category, date_algus))
+        except Exception, e:
+          logging.error('failed with FI juhendid')
           logging.error(e)
           pass
 

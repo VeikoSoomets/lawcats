@@ -158,9 +158,22 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     start_time = time.time()
     laws = models.RiigiTeatajaURLs.query().fetch()
     print "fetching took %s seconds" % str(time.time() - start_time) """
+    print "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    laws_titles = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo).fetch()
+    for law in laws_titles:
+      print law
+      # search for "Lõhkematerjali seadus paragrahv 5"
+      # title = Lõhkematerjaliseadus
+      if (query.lower() in law.title.lower()
+            or query.split()[0].lower() in law.title.lower()  # ["lõhkematerjali","seadus","paragrahv"][0]
+            or law.title.lower() in query.lower()
+            or query.replace(' ', '').lower() in law.title.lower().replace(' ', '')):
+        print law.title
+        laws = [models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title == law.title)]
 
-    laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title==u'Lõhkematerjaliseadus').fetch()
-    itr = 0
+    if not laws:
+      laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title==u'Lõhkematerjaliseadus').fetch()
+
     final_results = []
     for law in laws:
       #  limit results by 5
@@ -198,10 +211,16 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
           for single_word in query.split():
             if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
                 paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
+
+            # check if paragraph number matches any numbers in the query that was passed
+            if any(['paragraaf','paragrahv',u'§']) in query.lower() \
+              and any([int(s) for s in query.split() if s.isdigit()]) == [int(s) for s in paragraph.split() if s.isdigit()][0]:
+                rank += 5
+
             if single_word.lower() in ''.join(c.get_text().lower()):
               rank += 1
 
-              if single_word.lower() in c.get_text():
+              if single_word.lower() in c.get_text().lower():
                 rank += 2
 
               if single_word.lower() in law.title.lower():

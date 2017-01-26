@@ -33,7 +33,7 @@ class GenerateCategories(BaseHandler):
           'Kohtud ja kohtulahendid',
           'Ministeeriumid',
           u'Õigusaktid',
-          'Eur-LEX',
+          'Eur-Lex',
           'Eesti Meedia'
            ]
     }
@@ -84,11 +84,12 @@ class GenerateCategories(BaseHandler):
       #['Haridusministeerium','https://www.hm.ee','eesti'] # SSL block
       #['Majandusministeerium','https://www.mkm.ee','eesti'] # SSL block
     ]},
-    {'subcategory_name': 'Eur-LEX',
+    {'subcategory_name': 'Eur-Lex',
       'categories': [
-      ['eurlex kohtuasjad','http://eur-lex.europa.eu','eesti'],
-      ['eurlex komisjoni ettepanekud','http://eur-lex.europa.eu','eesti'],
-      [u'eurlex parlament ja nõukogu','http://eur-lex.europa.eu','eesti'],
+      ['Eur-Lex kohtuasjade rss','http://eur-lex.europa.eu','eesti'],
+      ['Eur-Lex Komisjoni ettepanekute rss','http://eur-lex.europa.eu','eesti'],
+      [u'Eur-Lex Parlamendi ja Nõukogu rss','http://eur-lex.europa.eu','eesti'],
+      ['Eur-Lex eestikeelsete dokumentide otsing','http://eur-lex.europa.eu/advanced-search-form.html','eesti'],
     ]},
     {'subcategory_name': u'Õigusaktid', 
       'categories': [

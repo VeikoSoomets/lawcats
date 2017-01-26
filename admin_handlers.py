@@ -1190,13 +1190,18 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
   @BaseHandler.logged_in2
   def get(self):
       urls = self.get_urls()
+      dbps_meta = []
       dbps_main = []
       models.RiigiTeatajaURLs.query().map(self.delete_async_)
+      models.RiigiTeatajaMetainfo.query().map(self.delete_async_)
       for url in urls:
         text = urllib2.urlopen(url['url'])
         dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.read())
+        dbp_meta = models.RiigiTeatajaMetainfo(title=url['title'])
         dbps_main.append(dbp)
+        dbps_meta.append(dbp_meta)
 
       future = ndb.put_multi_async(dbps_main)
+      future_meta = ndb.put_multi_async(dbps_meta)
+      ndb.Future.wait_all(future_meta)
       ndb.Future.wait_all(future)
-      #ndb.put_multi(dbps_main)  # 1mb limit
