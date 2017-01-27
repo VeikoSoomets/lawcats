@@ -2,7 +2,7 @@ cron:
 
 - description: craws laws from riigiteataja (we don't want to do 350 http calls on each search
   url: '/app/download_riigihtml'
-  schedule: every 24h
+  schedule: every 24 hours
 
 #- description: crawls valid user requests, saves results and maps with user requests every hour
 #  url: '/sys/datastore_req'

@@ -1165,7 +1165,7 @@ class AdminSettings(BaseHandler):
     self.render_template('settings.html', template_values)
 
 class RiigiTeatajaDownloadHandler(BaseHandler):
-
+  # TODO! instead of cron jobs running this, switch to task queues instead
   def get_urls(self):
     src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=60)
     urllist = []
