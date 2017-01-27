@@ -139,6 +139,5 @@ class GenerateCategories(BaseHandler):
     ndb.put_multi(dbps)
             
     message="Operation successful, added %s categories, %s subcategories and %s maincategories!" % ( str(count), str(count_sub), str(count_main))
-    self.render_template('admin.html',{'message_type':'success','message':message})
+    self.render_template('sys.html',{'message_type':'success','message':message})
     
-  

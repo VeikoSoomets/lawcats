@@ -49,29 +49,6 @@ def datetime_object(date):
     return date
 
 
-class AutoArchive(BaseHandler):
-
-  def get(self):
-    self.archive_results()
-
-  @classmethod
-  @ndb.tasklet
-  def archive_async_(self, input_object):
-    if input_object.load_dtime < datetime.datetime.now() - datetime.timedelta(days=7) and input_object.archived is None:
-      input_object.archived = True
-      archived_future = yield input_object.put_async(use_memcache=False)
-      raise ndb.Return(archived_future)
-
-  def archive_results(self):
-    archive_date = datetime.datetime.now() + datetime.timedelta(days=30)
-    #print "archive_date, ", str(archive_date)
-    models.UserResult.query().map(self.archive_async_)
-    user_emails = models.User.query().fetch_async()
-    memcache.delete_multi([x.email_address + '_archived_cnt' for x in user_emails.get_result()])
-    memcache.delete_multi([x.email_address + '_new_results' for x in user_emails.get_result()])
-    #self.render_template('admin.html',{'message_type':'success','message':'Operation successful, archived old results!'})
-
-
 class DeleteLastCrawl(BaseHandler):
 
   def get(self):
@@ -115,9 +92,9 @@ class DeleteRequests(BaseHandler):
             i.key.delete_async() """
     users = models.UserRequest.query().fetch()
     if not users:
-      self.render_template('admin.html',{'message_type':'success','message':'Operation successful, deleted requests async!'})
+      self.render_template('sys.html',{'message_type':'success','message':'Operation successful, deleted requests async!'})
     else:
-      self.render_template('admin.html',{'message_type':'danger','message':'Failed!'})
+      self.render_template('sys.html',{'message_type':'danger','message':'Failed!'})
 
 
 class DeleteCategories(BaseHandler):
@@ -138,7 +115,7 @@ class DeleteCategories(BaseHandler):
     maincat = models.MainCategories.query().map(self.delete_async_)
     subcat = models.SubCategories.query().map(self.delete_async_)
 
-    self.render_template('admin.html',{'message_type':'success','message':'Operation successful, deleted all maincats, subcats and childcats!'})
+    self.render_template('sys.html',{'message_type':'success','message':'Operation successful, deleted all maincats, subcats and childcats!'})
 
 
 class DeleteUserResults(BaseHandler):
@@ -159,9 +136,9 @@ class DeleteUserResults(BaseHandler):
 
     users = models.UserResult.query().fetch(1)
     if not users:
-      self.render_template('admin.html',{'message_type':'success','message':'Operation successful, deleted all userresults async!'})
+      self.render_template('sys.html',{'message_type':'success','message':'Operation successful, deleted all userresults async!'})
     else:
-      self.render_template('admin.html',{'message_type':'danger','message':'Failed!'})
+      self.render_template('sys.html',{'message_type':'danger','message':'Failed!'})
 
 
 class AddSDN(BaseHandler):
@@ -220,7 +197,7 @@ class AddSDN(BaseHandler):
 
     search_length=str(time.time() - start_time)
     message='Success! SDN list to datastore took '+search_length+' seconds!'
-    self.render_template('admin.html',{'message_type':'success','message': message})
+    self.render_template('sys.html',{'message_type':'success','message': message})
 
 
 class Add_EU_Sanctions(BaseHandler):
@@ -278,194 +255,7 @@ class Add_EU_Sanctions(BaseHandler):
 
     search_length=str(time.time() - start_time)
     message='Success! EU list to datastore took '+search_length+' seconds!'
-    self.render_template('admin.html',{'message_type':'success','message': message})
-
-
-class SearchDatastoreRequests(BaseHandler):
-  """ Gets requests from datastores and puts resultsto datastore """
-  def get(self):
-    start_time = time.time()
-
-    # TODO! IMPLEMENT QUERYWORD LIMITS OF A USER
-    datelimit=datetime.datetime.now().date()
-    # TODO! Make sure that when user is a member of usergroup, then he will still be in the "good" list
-    user_list = [x.email_address for x in models.User.query(models.User.usage_expire_date>=datelimit,projection=['email_address']).fetch()]  # only take users who don't have expired usage
-    datastore_results = models.UserRequest.query(models.UserRequest.user_id.IN(user_list)).fetch() # find a way to make this more optimal
-    try:
-      datadict=dict()
-      querywords_crawled=[]
-      crawled_keys=[]
-      data = [p.to_dict() for p in datastore_results]  # put individual datastore results to dictionary
-
-      for line_index, line in enumerate(data):
-        if not line['queryword']:
-          line['queryword']=''
-
-        time_to_crawl = datetime.datetime.now() - datetime.timedelta(minutes=line['request_frequency']) # find if enough time has passed by set freq.
-        last_crawl=line['last_crawl']
-
-        if not line['last_crawl']:
-          last_crawl= datetime.datetime(2012,12,15,10,14,51,1) # , '%Y-%m-%d %H:%M:%S') # if hasn't been searched, then add random past date
-          #print line['last_crawl'], datetime.datetime.now() - datetime.timedelta(hours=24)
-
-        if last_crawl< time_to_crawl: # last crawl is before time to crawl by schedule or request hasn't been crawled at all
-          crawled_keys.append(line['key'])
-          for category in line['categories']:
-            params2={'queryword':line['queryword'],'user_id':line['user_id'],'key':line['key']}
-            datadict.setdefault(category, []).append(line['queryword']) # GENERATE SEARCH LIST
-            querywords_crawled.append(params2) # get info what to update (last_crawl datetime needs to be updated for condition to work)
-
-      message=str(len(querywords_crawled)) + ' querywords to searchlist took ' + str(time.time() - start_time) + ' seconds.'
-      logging.error(message)
-
-      """ Update last crawl date async """
-      for key in crawled_keys:
-        qry = models.UserRequest.add_last_crawl(key)
-        qry.get_result()
-
-      #ndb.Future.wait_all(futures) # don't even have to wait when updating is done  """
-      self.do_search(datadict) # lets do a search with the results
-
-    except Exception, e:
-      #logging.error('otsimisel tekkis probleem')
-      logging.error(e)
-      #self.render_template('admin.html',{'message_type':'danger','message':str(e)})
-
-  def do_search(self,datadict):
-    start_time = time.time()
-    resultlist=[]
-
-    # get custom categories
-    custom_cats = []
-    datastore_custom_cats = models.CustomCategory.query().fetch_async()
-    if datastore_custom_cats:
-      data = [p.to_dict() for p in datastore_custom_cats.get_result()]
-      for line in data:
-        custom_cats.append(line['category_name'])
-
-    for category, querywords in datadict.iteritems():
-      date_algus=datetime.datetime.now().date() - datetime.timedelta(days=1)  # search from current date (for developing we take past)
-      date_algus = str(date_algus) # why make transitions - use datetime object when searching... fix it later!
-      # print "searching for '", str(querywords), "' from ", category
-
-      # if we get errors from individual searches, catch them, but continue
-      try:
-        if category in custom_cats:
-          search_results = handlers.custom_search(set(querywords), category, date_algus, None)
-        else:
-          search_results = handlers.do_search(set(querywords), category, date_algus)  # put querywords in set, else you get duplicate searches
-      except Exception, e:
-        logging.error(e)
-        #message = 'error while querying for "%" from "%s"' % (str(set(querywords)), category)
-        #logging.error(message)
-        pass
-
-      if search_results:
-        resultlist.extend(search_results)
-
-    # Add results to database
-    if resultlist:
-      message='Found %s results. I will only add new ones to database.' % (str(len(resultlist)))
-      message_type='success'
-      logging.error(message)
-
-      for result in resultlist:
-        params={
-                'queryword': result[3],
-                'result_title': result[1],
-                'result_link': result[0],
-                'result_date': datetime_object(result[2]), # NB! some dates need to be normalized, FI kehtivad juhendid for example
-                'category': result[4]
-              }
-        qry = models.Results.create_async(params)
-        qry.get_result()
-
-    else:
-      message=u'Did not find any results!'
-      message_type='info'
-      logging.error(message)
-
-    search_length = str(time.time() - start_time)
-    logging.error('search took '+search_length+' seconds')
-
-    mapping_length = DatastoreUserResults.init_mapping()
-
-    message = message + '. Search took ' + search_length + 's.' + ' Mapping took ' + mapping_length + 's.'
-    #self.render_template('admin.html',{'message_type':message_type,'message':message})
-
-
-class DatastoreUserResults(BaseHandler):
-  """ Map results and user requests  (by queryworda and category) and add them to datastore.
-  """
-  # TODO! try tasklets or batches
-  @classmethod
-  def init_mapping(self):
-    start_time = time.time()
-    # NB! you also have to check date expiration for each user! Result date needs to be later than request date! Also, limit results by load_dtime!
-    # result load_dtime must be > request start date ... what if "FI juhendid" has been put to database (by old user request), and wont be put again beacuse it already exists, and new user wont find results because load_dtime of existing result is < request_stat_date? This might not matter if users are interested in new content anyway (not old info)
-    datelimit=datetime.datetime.now().date()
-    user_list = [x.email_address for x in models.User.query(models.User.usage_expire_date>=datelimit,projection=['email_address']).fetch()] # only take users who don't have expired usage
-
-    timelimit = datetime.datetime.now() - datetime.timedelta(hours=2)  # don't take full history of results (cron is 1h)
-    datastore_requests=models.UserRequest.query(models.UserRequest.user_id.IN(user_list)).fetch_async() # , projection=('queryword', 'categories','user_id') # cannot use projection when there's an equality filter (IN also qualifies for that)
-    datastore_results=models.Results.query(models.Results.load_dtime>timelimit,projection=('queryword','categories', 'result_date')).fetch_async() # models.Results.queryword==datastore_requests.queryword
-
-    #events=[]
-    #counter=[]
-
-    puts=[]
-    charts=[]
-    for result in datastore_results.get_result():
-      for request in datastore_requests.get_result():
-
-        if (request.queryword==result.queryword or (not request.queryword and not result.queryword)) and result.categories in request.categories:
-          exists = models.UserResult.query(ndb.AND(models.UserResult.user_id==request.user_id, models.UserResult.result_key==result.key)).get_async(keys_only=True)
-          if not exists.get_result():
-            params= { 'user_id' : request.user_id,
-                      'result_key' : result.key
-                      }
-            puts.append(models.UserResult.create_async(params)) # add result and user id pair to user results model
-
-            #event_params = {'count' : 1, 'user_id' : request.user_id} # iniate event counting
-            #counter.append(event_params)
-
-            chart_params={ 'user_id' : request.user_id, 'queryword' : request.queryword, 'result_date' : result.result_date} # iniate queryword counting
-            charts.append(chart_params)
-            # test get_or_insert again! doesn't insert duplicates + checks if same key has existed before, doesn't add it again (good when user has deleted results, so less work for us ensuring not to remap deleted results)
-            """a=models.UserResult.get_or_insert_async(request.user_id+result.key.id().decode('utf8'), user_id=request.user_id, result_key=result.key)
-            puts.append(a)
-            """
-
-    # Insert statistics to SQL, because it is easier to aggregate in any possible way
-    conn = base_handler.get_connection()
-    if isinstance(conn, basestring):
-      logging.error(conn)
-      self.render_template('message.html',{'message_type':'danger','message': conn})
-      return
-
-    cursor = conn.cursor()
-    for result in charts:
-      sql = 'INSERT INTO Statistics (queryword, result_date, user_id, result_cnt, load_dtime) VALUES ("%s", "%s", "%s", 1, CURRENT_TIMESTAMP)' % (result['queryword'], result['result_date'], result['user_id'])
-      cursor.execute(sql)
-      conn.commit()
-    conn.close()
-
-    """# Count user events
-    results = []
-    for key, val in itertools.groupby(counter, lambda v: v['user_id']):
-      count = sum(item['count'] for item in val)
-      params2={'user_id': key, 'event_type': 1, 'event_count': count} # 1 = "new results found"
-      events.append(models.UserEvents.create_async(params2)) # create statistics for user """
-
-    ndb.Future.wait_all(puts)
-    #ndb.Future.wait_all(events)
-
-    search_length=str(time.time() - start_time)
-    logging.error('requests and results mapping took '+search_length+' seconds')
-    user_emails = models.User.query().fetch_async()
-    memcache.delete_multi([x.email_address + '_new_results' for x in user_emails.get_result()])
-
-    return search_length
+    self.render_template('sys.html',{'message_type':'success','message': message})
 
 
 class AutoAddSource(BaseHandler):

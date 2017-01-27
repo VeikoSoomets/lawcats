@@ -38,99 +38,11 @@ class JSONEncoder(json.JSONEncoder):
             return str(o)  # Or whatever other date format you're OK with...
 
 
-class LandingCats(BaseHandler):
-  """Searches from the web (from implemented sources) """  
-  def get(self):
-    if 'application/json' in self.request.headers['Accept']:
-
-      data = memcache.get('landing_cats')
-      if not data:
-        catlist = models.Category.query(models.Category.category_name.IN(['Business Insider','Postimees',u'Äripäev','EU Sanctions','OFAC Sanctions','Maa- ja ringkonnakohtu lahendid',u'Eelnõude otsing'])).fetch()
-        resultsdict = {'sources': catlist}
-        data = JSONEncoder().encode(resultsdict)
-        memcache.set('landing_cats', data, 84400)
-
-      self.response.out.write(data)
-
 
 class IndexHandler(BaseHandler):
   """Displays front page."""
   def get(self):
     self.render_template('landing.html',{})
-
-
-class TermsOfUse(BaseHandler):
-  """Displays terms of use page."""
-  def get(self):
-    self.render_template('terms.html',{})
-    
-    
-class Admin_FAQ(BaseHandler):
-  """Displays frequently asked questions page."""
-  def get(self):
-    faq = memcache.get('faq')
-    if faq is None:
-      faq = models.FAQ.query(models.FAQ.answered==True).fetch()
-      if faq:
-        memcache.set('faq',faq)
-
-    template_values = {
-        'faq': faq
-        }
-    self.render_template('faq.html',template_values)
-    
-  def post(self):
-    question = self.request.get('question')
-    question_id = self.request.get('question_id')
-    answer = self.request.get('answer')
-    action = self.request.get('action')
-    
-    if action=='answer_question':
-      qry = models.FAQ.get_by_id(int(question_id))
-      qry.answer = answer
-      qry.answered = True
-      qry.put()
-      memcache.delete('faq')
-      
-      message=_('Answered to question!')
-      message_type="success"
-      data = {'message' : message, 'type' : message_type}
-      self.response.out.write(json.dumps((data)))
-      params = {
-      'message': message,
-      'message_type': 'success'
-      }
-      #self.render_template('message2.html', params)
-      
-    elif action=='ask_question':
-      qry = models.FAQ(question=question,answered=False)
-      qry.put()
-      memcache.delete('faq')
-      
-      message=_('New question posted! We will try to answer that ASAP!')
-      message_type="success"
-      data = {'message' : message, 'type' : message_type}
-      self.response.out.write(json.dumps((data)))
-      params = {
-      'message': message,
-      'message_type': 'success'
-      }
-      #self.render_template('message2.html', params)
-      
-    elif action == 'remove_question':
-      ndb.Key(models.FAQ, int(question_id)).delete()
-      memcache.delete('faq')
-      
-      message=_("Question removed!")
-      message_type='success'
-      
-      data = {'message' : message, 'type' : message_type}
-      self.response.out.write(json.dumps((data)))
-      params = {
-      'message': message,
-      'message_type': 'success'
-      }
-      #self.render_template('message2.html', params)
 
 
 class List_Search(BaseHandler):

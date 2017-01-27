@@ -10,7 +10,7 @@
 
 from admin_handlers import *
 from auto_handlers import *
-from handlers import WebSearch, Admin_FAQ, List_Search
+from handlers import WebSearch, List_Search
 from categories import GenerateCategories
 from secrets import SESSION_KEY
 
@@ -36,30 +36,23 @@ app_config = {
 
 application = webapp2.WSGIApplication(
     [
-        ('/admin/manage', AdminHandler),
         ('/app/terms', TermsHandler),
         ('/app/results', ResultsHandlerCursor),  # Cursor
         ('/app/results/data', ResultsHandlerCursor),
         ('/app/querywords', RequestsHandler),
         ('/app/querywords/data', RequestsHandler),
-        ('/app/dashboard', UserDashboard),
         ('/app/custom_cats', CustomCats),
-        ('/app/settings', AdminSettings),
-        ('/app/settings/data', AdminSettings),
         ('/app/search', WebSearch),
         ('/app/list_search', List_Search),
         ('/app/search/data', WebSearch),
-        ('/app/faq', Admin_FAQ), 
         ('/app/request_source', RequestSource), 
         ('/app/charts', StatsHandler),  # show statistics
-        ('/sys/datastore_req', SearchDatastoreRequests),  # search datastore requests and put to results table
         ('/sys/delete_user_results', DeleteUserResults),  # delete userresults
         ('/sys/delete_user_requests', DeleteRequests),  # delete requests
         ('/sys/delete_categories', DeleteCategories),  # delete categories
         ('/sys/remove_last_crawl', DeleteLastCrawl),  # delete events
         ('/sys/generate_categories', GenerateCategories),  # generate categories
         ('/sys/implement_src', AutoAddSource),  # automatic implementation of sources
-        ('/sys/auto_archive', AutoArchive),  # automatic archive
         ('/sys/add_sdn', AddSDN),  # add OFAC sanctions
         ('/sys/add_eu', Add_EU_Sanctions),  # add EU sanctions
         ('/app/admin', SiteAdmin),

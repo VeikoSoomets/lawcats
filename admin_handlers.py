@@ -105,8 +105,6 @@ class RequestSource(BaseHandler):
     description = json_data['description']
     email = self.get_user_email()
     implemented = False
-    limit = self.get_limit(email)
-    date_limit = limit[3]
     src = None
 
     """if not date_limit or date_limit < datetime.now().date():
@@ -334,7 +332,7 @@ class SiteAdmin(BaseHandler): # not really used for now (planned for site admin(
   @BaseHandler.logged_in2
   def post(self):
     email = self.get_user_email()
-    if email not in ['kasparg@gmail.com', 'amltoomas@gmail.com']:
+    if email not in ['kasparg@gmail.com', 'veiko.soomets@gmail.com']:
       template_values = {
       'message_type': 'danger',
       'message': 'No admin rights!'
@@ -345,96 +343,16 @@ class SiteAdmin(BaseHandler): # not really used for now (planned for site admin(
 
   @BaseHandler.logged_in2
   def get(self):
-      action = self.request.get('action')
       message=None
-
       self.buildAdminPage(message=message, message_type='success')
 
   def buildAdminPage(self, message=None, message_type=None):
-    users = models.User.query().order(-models.User.created).fetch()
-    faq = models.FAQ.query().fetch()
-
-    new_users = []
-    for user in users:
-      limit = self.get_limit(user.email_address)
-      user.monthly_searches = limit[1]
-      dashboard = self.get_dashboard_stats(user.email_address)
-      user.new_results = dashboard[0]
-      user.old_results = dashboard[1]
-      user.qword_count = dashboard[2]
-      user.qword_count = dashboard[2]
-
-      if user.usage_expire_date:
-        if user.usage_expire_date < datetime.now().date():
-          user.usage_expire_date = None
-
-      new_users.append(user)
-
     template_values = {
       'message_type': message_type,
-      'message': message,
-      'users': new_users,
-      'faq': faq
+      'message': message
       }
     self.render_template('sys.html', template_values)
 
-
-class AdminHandler(BaseHandler): # not really used for now (planned for site admin(
-  """Displays the admin page."""
-
-  @BaseHandler.logged_in2
-  def post(self):
-    self.get()
-
-  @BaseHandler.logged_in2
-  def get(self):
-      action = self.request.get('action')
-      cat_name = str(self.request.get('cat_name'))
-      cat_link = self.request.get('cat_link')
-      parent_cat = str(self.request.get('parent_cat'))
-      message=None
-      #print parent_cat
-
-      if action=='create_main':
-        cat = models.MainCategories(maincategory_name=cat_name, id=cat_name)
-        cat.put()
-        message=_('Main category created!')
-      elif action=='create_sub':
-        cat = models.SubCategories(subcategory_name=cat_name, id=cat_name, parent=ndb.Key('MainCategories', parent_cat))
-        cat.put()
-        message=_('Sub category created!')
-      elif action=='create_cat':
-        cat = models.Category(category_name=cat_name, category_link=cat_link, id=cat_name, subcategory_name=parent_cat)
-        cat.put()
-        message=_('Category created!')
-
-      elif action=='delete_main':
-        cat = models.MainCategories.query(models.MainCategories.maincategory_name==cat_name).get(keys_only=True)
-        cat.delete()
-        message=_('Main category deleted!')
-      elif action=='delete_sub':
-        cat = models.SubCategories.query(models.SubCategories.subcategory_name==cat_name).get(keys_only=True)
-        cat.delete()
-        message=_('Sub category deleted!')
-      elif action=='delete_cat':
-        cat = models.Category.query(models.Category.category_name==cat_name).get(keys_only=True)
-        cat.delete()
-        message=_('Category deleted!')
-
-      self.buildAdminPage(message=message, message_type='success')
-
-  def buildAdminPage(self, message=None,message_type=None):
-
-    catlist = get_categories()
-    faq = models.FAQ.query().fetch()
-
-    template_values = {
-      'message_type': message_type,
-      'message' : message,
-      'catlist' : catlist,
-      'faq' : faq
-      }
-    self.render_template('admin.html', template_values)
 
 
 PAGE_SIZE = 10
@@ -621,10 +539,6 @@ class RequestsHandler(BaseHandler):
   @ndb.toplevel
   def post(self):
     email = self.get_user_email()
-    limit = self.get_limit(email)
-    monthly_searches_limit_pct = limit[0]
-    monthly_searches = limit[1]
-    date_limit = limit[3]
 
     """if not date_limit:
       message = _("Changes will not be applied. If you want to use service without restriction, choose a paid package!")
@@ -650,12 +564,6 @@ class RequestsHandler(BaseHandler):
       categories = json_data['categories']
       splitted_queryword=queryword.split(',')
       # TODO! Search frequency in querywords page to show hours or days
-
-      if monthly_searches_limit_pct>=100:
-        message = _('Querywords limit is exceeded. Change search frequencies, remove categories or querywords, or extend limit.')
-        data = {'message': message, 'type': 'danger'}
-        self.response.out.write(json.dumps((data)))
-        return
 
       if not categories:
         message = _('Please choose atleast one source!')
@@ -684,7 +592,6 @@ class RequestsHandler(BaseHandler):
         future = ndb.put_multi_async(dbps) # put asyncronously (doesn check if exists)
         ndb.Future.wait_all(future)
         memcache.delete_multi([email+'_requests',email+'_dashboard',email+'_get_limit']) # we now have different requests, remove cache
-        AdminSettings.groupmember_monthly_searches(email,monthly_searches) # add monthly search values to usergroup
         message=_('New querywords added!')
         data = {'message' : message, 'type': 'success'}
         self.response.out.write(json.dumps((data)))
@@ -697,7 +604,6 @@ class RequestsHandler(BaseHandler):
       qry6.request_frequency=request_frequency
       qry6.put()
       memcache.delete_multi([email+'_requests',email+'_get_limit']) # we now have different results, so remove from cache
-      AdminSettings.groupmember_monthly_searches(email,monthly_searches)  # add monthly search values to usergroup
       
       message=_("Frequency changed for '%s'") % (queryword)
       message_type='success'
@@ -708,7 +614,6 @@ class RequestsHandler(BaseHandler):
       qry6 = models.UserRequest.query(ndb.AND(models.UserRequest.user_id == email, models.UserRequest.queryword==queryword)).get(keys_only=True)
       qry6.delete()
       memcache.delete_multi([email+'_requests',email+'_dashboard',email+'_get_limit']) # we now have different results, remove cache
-      AdminSettings.groupmember_monthly_searches(email,monthly_searches)  # add monthly search values to usergroup
       
       message=_("Request '%s' removed!")  % (queryword)
       message_type='success'
@@ -721,8 +626,7 @@ class RequestsHandler(BaseHandler):
       qry6.categories.remove(single_cat) # remove tag
       qry6.put()
       memcache.delete_multi([email+'_requests',email+'_get_limit']) # we now have different results, so remove from cache
-      AdminSettings.groupmember_monthly_searches(email,monthly_searches) # add monthly search values to usergroup
-      
+
       message=_("Category '%s' removed!")  % (single_cat)
       message_type='success'
       data = {'message' : message, 'type' : message_type}
@@ -736,75 +640,11 @@ class RequestsHandler(BaseHandler):
           qry6.categories.append(cat)
           qry6.put() # put to datastore object
       memcache.delete(email + '_get_limit')
-      AdminSettings.groupmember_monthly_searches(email,monthly_searches) # add monthly search values to usergroup
       
       message=_('Added categories')
       message_type='success'
       data = {'message': message, 'type': message_type}
       self.response.out.write(json.dumps((data)))
-
-
-class UserDashboard(BaseHandler):
-  """Displays the dashboard page."""
-  @BaseHandler.logged_in2
-  def get(self):
-    if self.logged_in:
-      self.build_dashboard()
-
-  def days_hours_minutes(self, td):
-    if td.days>1:
-      date_text=str(td.days) + ' days ago'
-    if td.days==1:
-      date_text=str(td.days) + ' day ago'
-    if td.days<1:
-      date_text=str(td.seconds//3600) + ' hours, ' + str((td.seconds//60)%60) + ' minutes ago'
-    return date_text
-
-  def build_dashboard(self):
-    email = self.get_user_email()
-    dashboard = self.get_dashboard_stats(email)
-
-    events = memcache.get(email + '_events')
-    if not events:
-      # TODO! Add back!
-      """
-      conn = base_handler.get_connection()
-      if isinstance(conn, basestring):
-        self.render_template('message.html', {'message-type': 'danger', 'message': conn})
-        return
-      cursor = conn.cursor()
-      sql3 = 'SELECT load_dtime, date(load_dtime) as date, queryword, SUM(result_cnt) FROM Statistics WHERE user_id="%s" group by 2,3 order by load_dtime desc limit 10' % (email)
-      cursor.execute(sql3)
-      user_events = cursor.fetchall()
-      conn.close()
-
-      events = []
-      if user_events:
-        for event in user_events:
-          minutes_ago = self.days_hours_minutes(datetime.now() - event[0])
-          event_count = int(event[3])
-          event_queryword = event[2]
-          if event_queryword == 'None':
-            event_queryword = _('All keywords')
-          event_name = 'new results for "' + event_queryword + '"'
-          params={
-            'event_name': event_name,
-            'minutes_ago': minutes_ago,
-            'event_count': event_count
-          }
-          events.append(params)
-        memcache.set(email + '_events', events, 900)  # 15min """
-
-    user_events = []
-    # render template
-    template_values = {
-      'new_results': dashboard[0],
-      'old_results': dashboard[1],
-      'qword_count': dashboard[2],
-      'user_events': events,
-      'current_page': 'dashboard'
-      }
-    self.render_template('dashboard.html', template_values)
 
 
 class CustomCats(BaseHandler):
@@ -1163,3 +1003,52 @@ class AdminSettings(BaseHandler):
       'catlist': catlist
       }
     self.render_template('settings.html', template_values)
+
+from google.appengine.api import urlfetch
+urlfetch.set_default_fetch_deadline(300)
+class RiigiTeatajaDownloadHandler(BaseHandler):
+  # TODO! instead of cron jobs running this, switch to task queues instead
+  def get_urls(self):
+
+    src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=60)
+    urllist = []
+    soup = bs4.BeautifulSoup(src)
+    soup = soup.find('tbody')
+    for result in soup.findAll('tr'):
+      law = result.findAll('td')[0]
+      link = law.findNext('a', href=True).get('href')
+      title = law.findNext('a', href=True).get_text()
+      url = "https://www.riigiteataja.ee/%s?leiaKehtiv" % link
+      urllist.append({'title': title, 'url': url})
+    return urllist
+
+  @classmethod
+  @ndb.tasklet
+  def delete_async_(self, input_object):
+      # key = ndb.Key('UserRequest', input_key.id())
+      key = input_object.key
+      del_future = yield key.delete_async(use_memcache=False)  # faster
+      raise ndb.Return(del_future)
+
+  @BaseHandler.logged_in2
+  def get(self):
+      urls = self.get_urls()
+      dbps_meta = []
+      dbps_main = []
+      models.RiigiTeatajaURLs.query().map(self.delete_async_)
+      models.RiigiTeatajaMetainfo.query().map(self.delete_async_)
+      for url in urls:
+        text = urlfetch.fetch(url['url'], method=urlfetch.GET)  # replaced because of timeouts
+        #text = urllib2.urlopen(url['url'])
+        dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.content)
+        dbp_meta = models.RiigiTeatajaMetainfo(title=url['title'])
+        dbps_main.append(dbp)
+        dbps_meta.append(dbp_meta)
+
+      future = ndb.put_multi_async(dbps_main)
+      future_meta = ndb.put_multi_async(dbps_meta)
+      ndb.Future.wait_all(future_meta)
+      ndb.Future.wait_all(future)
+
+      message="Operation successful, added %s law files to datastore!" % str(len(dbps_meta))
+      self.render_template('sys.html',{'message_type':'success','message':message})
