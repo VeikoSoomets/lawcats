@@ -42,8 +42,6 @@ from datetime import datetime
 from google.appengine.api import mail
 from google.appengine.api import memcache # for user model related stuff
 
-from config import mysql_connectors as mc
-
 from webapp2_extras.i18n import lazy_gettext as _
 
 from simpleauth import SimpleAuthHandler
@@ -51,20 +49,6 @@ import secrets
 import webob.multidict
 
 DEFAULT_AVATAR_URL = '/static/images/default-avatar.jpg'
-
-def get_connection():
-  # Get SQL connection. Check if we have to connect remotely or not.  
-  if (os.getenv('SERVER_SOFTWARE') and
-        os.getenv('SERVER_SOFTWARE').startswith('Google App Engine/')):
-    db2 = MySQLdb.connect(unix_socket='/cloudsql/directed-cove-374:dwh', db=mc['db'], user=mc['user'],passwd=mc['passwd'],charset='utf8')
-  else:
-    try:
-      db2 = MySQLdb.connect(host=mc['host'], port=mc['port'], db=mc['db'], user=mc['user'], passwd=mc['passwd'], charset='utf8')
-    except Exception, e:
-      logging.error(e)
-      logging.error('MySQL login failed. Your IP or CIDR range needs to be authorized!')
-      db2 = 'MySQL login failed. Your IP or CIDR range needs to be authorized!'
-  return db2
 
 
 def sendmail(mailto,subject_,*args):
@@ -199,15 +183,7 @@ class BaseHandler(webapp2.RequestHandler):
   def logged_in2(cls, handler_method):
     """
     This decorator requires a logged-in user, and returns 403 otherwise.
-    """  
-    #check_login(self)  
-    """def auth_required(self, *args, **kwargs):
-      if (users.get_current_user() or
-          self.request.headers.get('X-AppEngine-Cron')):
-        handler_method(self, *args, **kwargs)
-      else:
-        check_login(self) """
-        
+    """
     def check_login(self, *args, **kwargs):
       login_sess = self.auth.get_user_by_session()
       if login_sess:
@@ -348,11 +324,9 @@ class BaseHandler(webapp2.RequestHandler):
     user_name = users.get_current_user().nickname() if users.get_current_user() else None
     email = users.get_current_user().email().lower() if users.get_current_user() else None
 
-    # agreed_to_terms = None
-    limit_exceeded = True
-    user_group = None
+
     avatar = None
-    destination_url = '/app/dashboard'
+    destination_url = '/app/search'
     logged_in = False
     date_limit = False
     is_admin = False
@@ -363,36 +337,20 @@ class BaseHandler(webapp2.RequestHandler):
 
     if email:
       logged_in = True
-      limit = self.get_limit(email)
-      date_limit = limit[3]
       if email in ['kasparg@gmail.com','amltoomas@gmail.com']:
         is_admin = True
 
     user_query = models.User.query(models.User.email_address == email).get()
     if user_query:
-      user_group = user_query.group_name
-      # agreed_to_terms = user_query.agreed_to_terms
       avatar = user_query.avatar if user_query.avatar else DEFAULT_AVATAR_URL
     else:
       avatar = DEFAULT_AVATAR_URL
       logging.error('User logged in (via google), but no data in cloudstore.')
 
     messages = []
-    if date_limit:
-      if date_limit >= datetime.now().date():
-        limit_exceeded = False
-
-    """if limit_exceeded:
-      message = _('Your time limit has been exceeded! Automatic searches disabled! You can extend your limit on your account <a href="/app/settings" class="alert-link">settings</a> page!')
-      messages.append({'message': message, 'message_type': 'danger'})"""
-
-    """ if not agreed_to_terms:
-      message=_('You are not using a paid package! Some activities are blocked. Choose a package <a target="_blank" href="/app/settings" class="alert-link">here</a>')
-      messages.append({'message':message,'message_type':'info'}) """
 
     return {
       'user_name': user_name,
-      'user_group': user_group,
       'messages': messages,
       'avatar': avatar,
       'destination_url': destination_url,
@@ -420,72 +378,6 @@ class BaseHandler(webapp2.RequestHandler):
     except Exception:
       user_query=None
     return user_query
-    
-  @classmethod
-  def get_user_group(self,email):
-    """ For all kinds of user group requests, provide a query from Usergroup model. NB! You might need to list(self.get_user_group(email)), because memcache might _BaseValue.
-         Used in AdminStettings and RequestsHandler. """
-    try:
-      user_group_query = memcache.get(email + '_user_group_query')
-      if user_group_query is None:
-        user_group_query = models.Usergroup.query(models.Usergroup.users.user_email == email).get()  # query Usergroup model
-        memcache.set(email + '_user_group_query', user_group_query)  # no expire... if expiration needed, add ,86400 to arguments
-    except Exception:
-      user_group_query = None
-    return user_group_query
-
-  @classmethod
-  def get_dashboard_stats(self, email):
-    dashboard = memcache.get(email + '_dashboard')
-    if not dashboard:
-      old_results = models.UserResult.query(models.UserResult.user_id == email, models.UserResult.archived==True).count()
-      if not old_results:
-        old_results = '0'
-      new_results = models.UserResult.query(models.UserResult.user_id == email, models.UserResult.archived==None).count()
-      if not new_results:
-        new_results = '0'
-      qword_count = models.UserRequest.query(models.UserResult.user_id == email).count()
-      if not qword_count:
-        qword_count = '0'
-      dashboard = (new_results, old_results, qword_count)
-      memcache.set(email + '_dashboard', dashboard, 900)  # expire every 15min
-    return dashboard
-
-  @classmethod
-  def get_limit(self,email):
-    """ Get limit statistics for users. Used in settings and querywords page. """
-    return_tuple = memcache.get(email + '_get_limit')
-    if not return_tuple:
-      monthly_searches, q_word_limit, date_limit, user_group = None, None, None, None
-      active_packet = 0
-      user_query = self.get_user(email)
-      user_group_query = self.get_user_group(email)
-
-      if user_query:
-        q_word_limit = user_query.search_count_limit if user_query.search_count_limit else 1
-        date_limit = user_query.usage_expire_date
-        active_packet = user_query.packet if user_query.packet else 0
-        user_group = user_query.group_name  # not needed
-        # agreed_to_terms = user_query.agreed_to_terms
-
-      monthly_searches = int(sum([x.monthly_searches for x in models.UserRequest.query(models.UserRequest.user_id == email,projection=['monthly_searches']).fetch()]))
-
-      if user_group_query:
-        for user in user_group_query.users:
-          if user.user_email == email and user.agreed:
-            q_word_limit = user_group_query.q_word_limit if user_group_query.q_word_limit else 1
-            date_limit = user_group_query.group_date_limit
-            active_packet = user_group_query.packet
-
-      if monthly_searches:
-        monthly_searches_limit_pct = monthly_searches / float(q_word_limit) * 100  # get percentage
-      else:
-        monthly_searches_limit_pct = 0
-
-      return_tuple = (monthly_searches_limit_pct, monthly_searches, q_word_limit, date_limit, active_packet, user_group)
-      memcache.set(email + '_get_limit', return_tuple, 86400)  # expire in 24 hours
-
-    return return_tuple
 
 
 class AuthHandler(BaseHandler, SimpleAuthHandler):

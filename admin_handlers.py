@@ -105,8 +105,6 @@ class RequestSource(BaseHandler):
     description = json_data['description']
     email = self.get_user_email()
     implemented = False
-    limit = self.get_limit(email)
-    date_limit = limit[3]
     src = None
 
     """if not date_limit or date_limit < datetime.now().date():
@@ -334,7 +332,7 @@ class SiteAdmin(BaseHandler): # not really used for now (planned for site admin(
   @BaseHandler.logged_in2
   def post(self):
     email = self.get_user_email()
-    if email not in ['kasparg@gmail.com', 'amltoomas@gmail.com']:
+    if email not in ['kasparg@gmail.com', 'veiko.soomets@gmail.com']:
       template_values = {
       'message_type': 'danger',
       'message': 'No admin rights!'
@@ -345,96 +343,16 @@ class SiteAdmin(BaseHandler): # not really used for now (planned for site admin(
 
   @BaseHandler.logged_in2
   def get(self):
-      action = self.request.get('action')
       message=None
-
       self.buildAdminPage(message=message, message_type='success')
 
   def buildAdminPage(self, message=None, message_type=None):
-    users = models.User.query().order(-models.User.created).fetch()
-    faq = models.FAQ.query().fetch()
-
-    new_users = []
-    for user in users:
-      limit = self.get_limit(user.email_address)
-      user.monthly_searches = limit[1]
-      dashboard = self.get_dashboard_stats(user.email_address)
-      user.new_results = dashboard[0]
-      user.old_results = dashboard[1]
-      user.qword_count = dashboard[2]
-      user.qword_count = dashboard[2]
-
-      if user.usage_expire_date:
-        if user.usage_expire_date < datetime.now().date():
-          user.usage_expire_date = None
-
-      new_users.append(user)
-
     template_values = {
       'message_type': message_type,
-      'message': message,
-      'users': new_users,
-      'faq': faq
+      'message': message
       }
     self.render_template('sys.html', template_values)
 
-
-class AdminHandler(BaseHandler): # not really used for now (planned for site admin(
-  """Displays the admin page."""
-
-  @BaseHandler.logged_in2
-  def post(self):
-    self.get()
-
-  @BaseHandler.logged_in2
-  def get(self):
-      action = self.request.get('action')
-      cat_name = str(self.request.get('cat_name'))
-      cat_link = self.request.get('cat_link')
-      parent_cat = str(self.request.get('parent_cat'))
-      message=None
-      #print parent_cat
-
-      if action=='create_main':
-        cat = models.MainCategories(maincategory_name=cat_name, id=cat_name)
-        cat.put()
-        message=_('Main category created!')
-      elif action=='create_sub':
-        cat = models.SubCategories(subcategory_name=cat_name, id=cat_name, parent=ndb.Key('MainCategories', parent_cat))
-        cat.put()
-        message=_('Sub category created!')
-      elif action=='create_cat':
-        cat = models.Category(category_name=cat_name, category_link=cat_link, id=cat_name, subcategory_name=parent_cat)
-        cat.put()
-        message=_('Category created!')
-
-      elif action=='delete_main':
-        cat = models.MainCategories.query(models.MainCategories.maincategory_name==cat_name).get(keys_only=True)
-        cat.delete()
-        message=_('Main category deleted!')
-      elif action=='delete_sub':
-        cat = models.SubCategories.query(models.SubCategories.subcategory_name==cat_name).get(keys_only=True)
-        cat.delete()
-        message=_('Sub category deleted!')
-      elif action=='delete_cat':
-        cat = models.Category.query(models.Category.category_name==cat_name).get(keys_only=True)
-        cat.delete()
-        message=_('Category deleted!')
-
-      self.buildAdminPage(message=message, message_type='success')
-
-  def buildAdminPage(self, message=None,message_type=None):
-
-    catlist = get_categories()
-    faq = models.FAQ.query().fetch()
-
-    template_values = {
-      'message_type': message_type,
-      'message' : message,
-      'catlist' : catlist,
-      'faq' : faq
-      }
-    self.render_template('admin.html', template_values)
 
 
 PAGE_SIZE = 10
@@ -621,10 +539,6 @@ class RequestsHandler(BaseHandler):
   @ndb.toplevel
   def post(self):
     email = self.get_user_email()
-    limit = self.get_limit(email)
-    monthly_searches_limit_pct = limit[0]
-    monthly_searches = limit[1]
-    date_limit = limit[3]
 
     """if not date_limit:
       message = _("Changes will not be applied. If you want to use service without restriction, choose a paid package!")
@@ -650,12 +564,6 @@ class RequestsHandler(BaseHandler):
       categories = json_data['categories']
       splitted_queryword=queryword.split(',')
       # TODO! Search frequency in querywords page to show hours or days
-
-      if monthly_searches_limit_pct>=100:
-        message = _('Querywords limit is exceeded. Change search frequencies, remove categories or querywords, or extend limit.')
-        data = {'message': message, 'type': 'danger'}
-        self.response.out.write(json.dumps((data)))
-        return
 
       if not categories:
         message = _('Please choose atleast one source!')
@@ -684,7 +592,6 @@ class RequestsHandler(BaseHandler):
         future = ndb.put_multi_async(dbps) # put asyncronously (doesn check if exists)
         ndb.Future.wait_all(future)
         memcache.delete_multi([email+'_requests',email+'_dashboard',email+'_get_limit']) # we now have different requests, remove cache
-        AdminSettings.groupmember_monthly_searches(email,monthly_searches) # add monthly search values to usergroup
         message=_('New querywords added!')
         data = {'message' : message, 'type': 'success'}
         self.response.out.write(json.dumps((data)))
@@ -697,7 +604,6 @@ class RequestsHandler(BaseHandler):
       qry6.request_frequency=request_frequency
       qry6.put()
       memcache.delete_multi([email+'_requests',email+'_get_limit']) # we now have different results, so remove from cache
-      AdminSettings.groupmember_monthly_searches(email,monthly_searches)  # add monthly search values to usergroup
       
       message=_("Frequency changed for '%s'") % (queryword)
       message_type='success'
@@ -708,7 +614,6 @@ class RequestsHandler(BaseHandler):
       qry6 = models.UserRequest.query(ndb.AND(models.UserRequest.user_id == email, models.UserRequest.queryword==queryword)).get(keys_only=True)
       qry6.delete()
       memcache.delete_multi([email+'_requests',email+'_dashboard',email+'_get_limit']) # we now have different results, remove cache
-      AdminSettings.groupmember_monthly_searches(email,monthly_searches)  # add monthly search values to usergroup
       
       message=_("Request '%s' removed!")  % (queryword)
       message_type='success'
@@ -721,8 +626,7 @@ class RequestsHandler(BaseHandler):
       qry6.categories.remove(single_cat) # remove tag
       qry6.put()
       memcache.delete_multi([email+'_requests',email+'_get_limit']) # we now have different results, so remove from cache
-      AdminSettings.groupmember_monthly_searches(email,monthly_searches) # add monthly search values to usergroup
-      
+
       message=_("Category '%s' removed!")  % (single_cat)
       message_type='success'
       data = {'message' : message, 'type' : message_type}
@@ -736,75 +640,11 @@ class RequestsHandler(BaseHandler):
           qry6.categories.append(cat)
           qry6.put() # put to datastore object
       memcache.delete(email + '_get_limit')
-      AdminSettings.groupmember_monthly_searches(email,monthly_searches) # add monthly search values to usergroup
       
       message=_('Added categories')
       message_type='success'
       data = {'message': message, 'type': message_type}
       self.response.out.write(json.dumps((data)))
-
-
-class UserDashboard(BaseHandler):
-  """Displays the dashboard page."""
-  @BaseHandler.logged_in2
-  def get(self):
-    if self.logged_in:
-      self.build_dashboard()
-
-  def days_hours_minutes(self, td):
-    if td.days>1:
-      date_text=str(td.days) + ' days ago'
-    if td.days==1:
-      date_text=str(td.days) + ' day ago'
-    if td.days<1:
-      date_text=str(td.seconds//3600) + ' hours, ' + str((td.seconds//60)%60) + ' minutes ago'
-    return date_text
-
-  def build_dashboard(self):
-    email = self.get_user_email()
-    dashboard = self.get_dashboard_stats(email)
-
-    events = memcache.get(email + '_events')
-    if not events:
-      # TODO! Add back!
-      """
-      conn = base_handler.get_connection()
-      if isinstance(conn, basestring):
-        self.render_template('message.html', {'message-type': 'danger', 'message': conn})
-        return
-      cursor = conn.cursor()
-      sql3 = 'SELECT load_dtime, date(load_dtime) as date, queryword, SUM(result_cnt) FROM Statistics WHERE user_id="%s" group by 2,3 order by load_dtime desc limit 10' % (email)
-      cursor.execute(sql3)
-      user_events = cursor.fetchall()
-      conn.close()
-
-      events = []
-      if user_events:
-        for event in user_events:
-          minutes_ago = self.days_hours_minutes(datetime.now() - event[0])
-          event_count = int(event[3])
-          event_queryword = event[2]
-          if event_queryword == 'None':
-            event_queryword = _('All keywords')
-          event_name = 'new results for "' + event_queryword + '"'
-          params={
-            'event_name': event_name,
-            'minutes_ago': minutes_ago,
-            'event_count': event_count
-          }
-          events.append(params)
-        memcache.set(email + '_events', events, 900)  # 15min """
-
-    user_events = []
-    # render template
-    template_values = {
-      'new_results': dashboard[0],
-      'old_results': dashboard[1],
-      'qword_count': dashboard[2],
-      'user_events': events,
-      'current_page': 'dashboard'
-      }
-    self.render_template('dashboard.html', template_values)
 
 
 class CustomCats(BaseHandler):
@@ -817,352 +657,6 @@ class CustomCats(BaseHandler):
       data = JSONEncoder().encode(resultsdict)  # get JSON data... encode, because some fields are of different type.. + just fetch doesn't stringify
       self.response.out.write(data)
 
-
-class AdminSettings(BaseHandler):
-  """Displays the settings page."""
-  @BaseHandler.logged_in2
-  def get(self):
-    email = self.get_user_email()
-    if 'application/json' in self.request.headers['Accept']:
-      group_members, group_master = self.query_usergroup(email)  # get all members of usergroup
-      group_to_answer = self.group_to_answer(email)
-      results = {
-          'user_email': email,
-          'group_members': group_members,
-          'group_master': group_master,
-          'group_to_answer': group_to_answer,
-      }
-      resultsdict = {'data': results}
-      data = JSONEncoder().encode(resultsdict)  # get JSON data... encode, because some fields are of different type.. + just fetch doesn't stringify
-      self.response.out.write(data)
-    else:
-      self.buildAdminPage()
-
-  @classmethod
-  def delete_from_usergroup(self,email,group_name):
-    # Remove from Usergroup structured property
-    usergroup = models.Usergroup.query(models.Usergroup.group_name == group_name).get()
-    if usergroup:
-      to_delete = []
-      for user in usergroup.users:
-        if user.user_email == email:
-          to_delete.append(user)  # gather up users, later try "Remove items from a list while iterating in Python" instead
-      for a in to_delete:
-        usergroup.users.remove(a)
-        usergroup.put()
-
-    # also remove from user model
-    user = models.User.query(models.User.email_address == email).get()
-    user.group_name = None
-    user.put()
-
-    memcache.delete_multi([email + '_user_query', email + '_user_group_query'])
-    return
-    # TODO! add event that user has been removed from group
-
-  @classmethod
-  def query_usergroup(self,email):
-    usergroup = models.Usergroup.query(models.Usergroup.group_master==email).get() # user email
-    #print usergroup
-    group_users=[]
-    group_name=None
-    #for usergroup in usergroups:
-    if usergroup:
-      group_name=usergroup.group_name
-      #if usergroup.users
-      for user in usergroup.users:
-        user_email=user.user_email
-        user_status='pending'
-        if user.agreed==False:
-            user_status='declined'
-        elif user.agreed==True:
-            user_status='accepted'
-        group_users.append({'user_email':user_email,'user_status':user_status})
-
-    return (group_users,group_name)
-
-  @classmethod
-  def groupmember_monthly_searches(self,email,monthly_searches):
-    # Add individual monthly searches to usergroup structured property list
-    #usergroup = self.get_user_group(email)
-    #usergroup = models.Usergroup.query(models.Usergroup.users.user_email==email).get()
-    usergroup = self.get_user_group(email)
-    #usergroup = models.Usergroup.query(models.Usergroup.users.user_email==email).get() #,agreed=None)])).get()
-    if usergroup:
-      #print usergroup.users
-      for user in list(usergroup.users):  # properties need to be copied to a list, because else you get _basevalues (memcache mutates them)
-        if user.user_email==email and user.agreed==True:
-          usergroup.users.remove(user)
-          new_user=models.Groupmember(user_email=email,agreed=True,monthly_searches=monthly_searches)
-          usergroup.users.append(new_user)
-          usergroup.put()
-          memcache.delete_multi([email+'_user_group_query',email+'_user_query',email+'_get_limit'])
-    return
-
-  @classmethod
-  def group_to_answer(self,email):
-    # Show wheter users has any pending groups
-    pending_group = None
-    usergroup = self.get_user_group(email)
-    #group_date_limit
-    if usergroup:
-      for user in list(usergroup.users):
-        if user.user_email==email and user.agreed==None:
-          pending_group = usergroup.group_name
-
-    return pending_group
-
-  @classmethod
-  def answer_invitation(self,answer,email,group_name):
-    if answer == 'True':
-      answer = True
-      # put to usermodel
-      user = models.User.query(models.User.email_address == email).get() # user email
-      user.group_name = group_name
-      user.put()
-
-      usergroup = self.get_user_group(email)
-      if usergroup:
-        for user in list(usergroup.users):
-          if email==user.user_email:
-            usergroup.users.remove(user)
-            new_user=models.Groupmember(user_email=email,agreed=answer)
-            usergroup.users.append(new_user)
-            usergroup.put()
-            memcache.delete(email + '_user_query')
-
-    else:  # if user declines, delete
-      self.delete_from_usergroup(email,group_name)
-    # put to usergroup
-    return
-    # add events to both group owner and user (that new user is in a group, or that user has declined)
-
-  def post(self):
-    email = self.get_user_email()
-    limit = self.get_limit(email)
-    date_limit = limit[3]
-
-    action = self.request.get('action')
-    if action not in ['answer_usergroup','remove_from_usergroup']:
-      json_data = json.loads(self.request.body)
-      action = json_data['action']
-
-    if action == 'extend_usage':
-      try:
-        months = json_data['months']
-        packet = json_data['packet']
-
-        if packet == 1:
-          search_cnt = 50000
-        elif packet == 2:
-          search_cnt = 200000  # While saying unlimited, we have this here because we don't believe a user will be using up this much of limits. Else, consider repricing.
-
-        user_query = self.get_user(email)
-        old_expire_date = user_query.usage_expire_date
-        if not old_expire_date:
-          old_expire_date = datetime.now().date()
-        expire_date = old_expire_date + timedelta(days=int(months)*30) # for this use from dateutil relativedelta (calculates real months, because length feb != length jan)
-        user_query.usage_expire_date = expire_date
-        user_query.search_count_limit = int(search_cnt)
-        user_query.packet = packet
-        user_query.put()
-
-        if user_query.group_name:  # if user belongs to a group (or owns it), permit him to pay for the group
-          usergroup = self.get_user_group(email)
-          for user in list(usergroup.users):  # properties need to be copied to a list, because else you get _basevalues (memcache mutates them)
-            if user.user_email == email and user.agreed == True:
-              usergroup.group_date_limit = expire_date
-              usergroup.packet = packet
-              usergroup.q_word_limit = search_cnt
-              usergroup.put()
-        memcache.delete_multi([email + '_user_query', email + '_user_group_query', email + '_get_limit'])
-        message = _('Payment processed and usage limit extended')
-        message_type = 'success'
-        data = {'message': message, 'type': message_type}
-        self.response.out.write(json.dumps((data)))
-        return
-      except Exception, e:
-        logging.error(e)
-        message=str(e)
-        message_type = 'danger'
-        data = {'message': message, 'type': message_type}
-        self.response.out.write(json.dumps((data)))
-        return
-
-    elif action == 'change_password':
-      new_password = json_data['new_password']
-      old_password = json_data['old_password']
-      if not new_password or not old_password: # we only need this if jquery validation doesn't work (for extra security)
-        message = _('Please type both passwords!')
-        message_type = 'danger'
-        data = {'message' : message, 'type' : message_type}
-        #logging.error(message)
-        self.response.out.write(json.dumps((data)))
-        return
-      username = str(''.join(self.user.auth_ids))
-      try:
-        u = self.auth.get_user_by_password(username, old_password, remember=False, save_session=False)
-        user = self.user
-        user.set_password(new_password)
-        user.put()
-        message = _('Password successfully changed!')
-        message_type = 'success'
-        data = {'message': message, 'type': message_type}
-        self.response.out.write(json.dumps((data)))
-      except Exception, e:
-        message_type = 'danger'
-        message = _('Old password is wrong!')
-        data = {'message': message, 'type': message_type}
-        self.response.out.write(json.dumps((data)))
-        return
-
-    elif action == "answer_usergroup":
-      # group_name = json_data['group_name']
-      # answer = json_data['group_answer']
-      group_name = self.request.get('group_name')
-      answer = self.request.get('group_answer')
-      self.answer_invitation(answer,email,group_name)
-      memcache.delete_multi([email+'_user_group_query',email+'_user_query',email+'_get_limit'])
-      if answer == 'True':
-        message = _('Congratulations! You are now member of %s group.') % (group_name)
-      else:
-        message = _('Declined joining group %s.') % (group_name)
-      message_type = 'success'
-      data = {'message': message, 'type': message_type}
-      #logging.error(message)
-      self.buildAdminPage(message=message, message_type=message_type)
-      # self.response.out.write(json.dumps((data)))
-      return
-
-    elif action == "remove_from_usergroup":
-      """ Did not want to duplicate remove_from_usergroup, because leave from usergroup is essentially the same """
-      group_name = self.request.get('group_name')
-      self_leave = False
-      if not group_name:  # if not form action, then angular
-        json_data = json.loads(self.request.body)
-        group_name = json_data['group_name']
-        member_email = json_data['member_email']
-      else:  # this is for self-leave
-        member_email = email
-        self_leave = True
-      if not member_email:
-        self_leave = True
-        member_email = email
-      self.delete_from_usergroup(member_email, group_name)
-      memcache.delete_multi([email+'_user_group_query',email+'_user_query',member_email+'_get_limit',email+'_get_limit'])
-      message = _('User removed from usergroup')
-      message_type = 'success'
-      data = {'message': message, 'type': message_type}
-      if self_leave:
-        message = _('You successfully left from usergroup %s') % (group_name)
-        self.buildAdminPage(message=message, message_type=message_type)
-      else:
-        self.response.out.write(json.dumps((data)))
-        return
-
-    # Consider checking for date_limit here and warn that this action can't be completed
-
-    elif action == "create_usergroup":
-      group_name = json_data['group_name']
-      # get limits from user to be cloned to user created group
-      limit = self.get_limit(email)
-      q_word_limit = limit[2]
-      date_limit = limit[3]
-      active_packet = limit[4]
-
-      new_group = models.Usergroup(group_name=group_name,group_master=email,group_date_limit=date_limit,q_word_limit=q_word_limit,packet=active_packet)
-      new_user = models.Groupmember(user_email=email, agreed=True)  # put creator to same usergroup
-      new_group.users.append(new_user)
-      new_group.put()
-      memcache.delete(email + '_user_query')
-
-      # also change user model entity
-      user_model = models.User.query(models.User.email_address == email).get()
-      user_model.group_name = group_name
-      user_model.put()
-
-      message = _('User group created')
-      message_type = 'success'
-      data = {'message': message, 'type': message_type}
-      #logging.error(message)
-      self.response.out.write(json.dumps((data)))
-      return
-
-    elif action == "add_to_usergroup":
-      group_name = json_data['group_name']
-      member_email = json_data['member_email']
-      user = models.User.query(models.User.email_address == member_email).get()  # can't get this from cache, because in cache we store session user, not user input
-      if user:
-        if group_name == user.group_name:
-          message = _('User is already in your group!')
-          message_type = 'success'
-          data = {'message': message, 'type': message_type}
-          #logging.error(message)
-          self.response.out.write(json.dumps((data)))
-          return
-        else:
-          memcache.delete_multi([email+'_user_group_query',email+'_user_query',member_email+'_user_group_query',member_email+'_user_query'])
-          new_user = models.Groupmember(user_email=member_email, agreed=None)
-          usergroup = models.Usergroup.query(models.Usergroup.group_name == group_name).get()
-          usergroup.users.append(new_user)
-          usergroup.put()
-          message = _('User invitation sent - user needs to accept invitation.')
-          message_type = 'success'
-          data = {'message': message, 'type': message_type}
-          #logging.error(message)
-          self.response.out.write(json.dumps((data)))
-          return
-      else:
-        mailto, name = member_email, member_email
-        tyyp = 'invitation'
-        verification_url = 'https://www.lawcats.com/signup'
-        subject_ = _('lawcats - Invitation by %s!') % (group_name)
-        base_handler.sendmail(mailto,subject_,verification_url,name,tyyp)
-        message = _('Invitation sent to this e-mail.')
-        message_type = 'success'
-        data = {'message': message, 'type': message_type}
-        #logging.error(message)
-        self.response.out.write(json.dumps((data)))
-        return
-
-  def buildAdminPage(self, message=None, message_type=None):
-    email = self.get_user_email()
-    google_login = email[1]
-
-    # date_limit, monthly_searches, monthly_searches_limit, q_word_limit = None, None, None, None
-    group_members, group_master = self.query_usergroup(email)  # get all members of usergroup
-    group_to_answer = self.group_to_answer(email)
-
-    # gets a tuple of 4 items from basehandler
-    limit = self.get_limit(email)
-    monthly_searches_limit_pct = limit[0]
-    monthly_searches = limit[1]
-    q_word_limit = limit[2]
-    date_limit = limit[3]
-    active_packet = limit[4]
-
-    catlist = get_categories()
-
-    if date_limit and date_limit < datetime.now().date():
-      date_limit = None
-
-    # render template
-    template_values = {
-      'message_type': message_type,
-      'message': message,
-      'date_limit': date_limit,  # when will searches expire
-      'monthly_searches': monthly_searches, # unique monthly searches
-      'q_word_limit': q_word_limit,  # monthly search limit
-      'limit_bar': monthly_searches_limit_pct, # for limit bar
-      'google_login': google_login,  # check if user has logged in with google
-      'active_packet': active_packet,
-      'group_members': group_members,
-      'group_master': group_master,
-      'group_to_answer': group_to_answer,
-      'current_page': 'settings',
-      'catlist': catlist
-      }
-    self.render_template('settings.html', template_values)
 
 class RiigiTeatajaDownloadHandler(BaseHandler):
   # TODO! instead of cron jobs running this, switch to task queues instead
@@ -1205,3 +699,6 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       future_meta = ndb.put_multi_async(dbps_meta)
       ndb.Future.wait_all(future_meta)
       ndb.Future.wait_all(future)
+
+      message="Operation successful, added %s law files to datastore!" % str(len(dbps_meta))
+      self.render_template('sys.html',{'message_type':'success','message':message})
