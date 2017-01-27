@@ -64,6 +64,6 @@ application = webapp2.WSGIApplication(
         ('/sys/add_eu', Add_EU_Sanctions),  # add EU sanctions
         ('/app/admin', SiteAdmin),
         ('/app/change_lang', SetLangCookie),
-        ('/app/download_riigihtml', RiigiTeatajaDownloadHandler)
+        ('/sys/download_riigihtml', DataGatherer)
     ],
     debug=True, config=app_config)
