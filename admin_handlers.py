@@ -693,7 +693,7 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       for url in urls:
         text = urlfetch.fetch(url['url'], method=urlfetch.GET)  # replaced because of timeouts
         #text = urllib2.urlopen(url['url'])
-        dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.read())
+        dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.content)
         dbp_meta = models.RiigiTeatajaMetainfo(title=url['title'])
         dbps_main.append(dbp)
         dbps_meta.append(dbp_meta)
