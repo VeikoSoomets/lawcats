@@ -657,10 +657,12 @@ class CustomCats(BaseHandler):
       data = JSONEncoder().encode(resultsdict)  # get JSON data... encode, because some fields are of different type.. + just fetch doesn't stringify
       self.response.out.write(data)
 
-
+from google.appengine.api import urlfetch
+urlfetch.set_default_fetch_deadline(300)
 class RiigiTeatajaDownloadHandler(BaseHandler):
   # TODO! instead of cron jobs running this, switch to task queues instead
   def get_urls(self):
+
     src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=60)
     urllist = []
     soup = bs4.BeautifulSoup(src)
@@ -689,7 +691,8 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       models.RiigiTeatajaURLs.query().map(self.delete_async_)
       models.RiigiTeatajaMetainfo.query().map(self.delete_async_)
       for url in urls:
-        text = urllib2.urlopen(url['url'])
+        text = urlfetch.fetch(url['url'], method=urlfetch.GET)  # replaced because of timeouts
+        #text = urllib2.urlopen(url['url'])
         dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.read())
         dbp_meta = models.RiigiTeatajaMetainfo(title=url['title'])
         dbps_main.append(dbp)
