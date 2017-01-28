@@ -70,6 +70,8 @@ var SearchController = (function () {
 
     this.searchSources = [];
     this.sources = [];
+    this.newSourceUrl = '';
+    this.newSourceDescription = '';
 
     this.getSources();
   }
@@ -186,17 +188,26 @@ var SearchController = (function () {
       });
     }
   }, {
-    value: function addNewSource() {
-      if (this.newSource.link.trim() && this.newSource.description.trim()) {
-        this.apiRequest('request_source', {
-          url: this.newSource.link,
-          description: this.newSource.description
-        }, '/app/request_source');
-        this.newSource.link = '';
-        this.newSource.description = '';
-      } else {
-        const msg = 'Please add a link and description to your new source.';
-        this.MessagingService.danger(msg);
+    key: 'sendNewSource',
+
+    /**
+     * Send request for new source
+     */
+    value: function sendNewSource() {
+      var _this3 = this;
+      _this3.loading = true;
+      if (this.newSourceUrl && this.newSourceDescription) {
+        this.$http.post('/app/request_source', {
+          url: this.newSourceUrl,
+          description: this.newSourceDescription
+        }).success(function (data) {
+		  _this3.loading = false;
+          if (data.type === 'success') {
+            _this3.sources[0][1][0][1].push({'category_link':data.link,'category_name':data.title});
+            _this3.newSourceDescription = '';
+            _this3.newSourceUrl = '';
+          }
+        });
       }
     }
   }, {

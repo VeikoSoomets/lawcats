@@ -157,7 +157,7 @@ class RequestSource(BaseHandler):
 
     # Implementing sources live
     try:
-      implemented, resolution = self.do_implement(link, email)
+      implemented, resolution, impl_title, impl_link = self.do_implement(link, email)
     except Exception, e:
       print "Failed to implement source with error message: ", e
       message_type='danger'
@@ -176,8 +176,11 @@ class RequestSource(BaseHandler):
     else:
       message_type = 'danger'
       message =_('Could not implement source automatically! Engineers notified!')
-
-    data = {'message': message, 'type': message_type}
+    data = {'message': message, 'type': message_type, 'link': impl_link}
+    if impl_title != '':
+        data['title'] = impl_title
+    else:
+        data['title'] = description
     self.response.out.write(json.dumps(data))
     return
 
@@ -199,7 +202,7 @@ class RequestSource(BaseHandler):
                   'nice_link': link,
                   'category_type': 'rss_source'}
         models.CustomCategory.create(params)
-        return (True, link)
+        return (True, link, rss_link['title'], link)
     except Exception, e:
         print "rss: ", e
         pass
@@ -215,12 +218,12 @@ class RequestSource(BaseHandler):
                   'nice_link': link,
                   'category_type': 'blog_source'}
         models.CustomCategory.create(params)
-        return (True, link)
+        return (True, link, blog_title, link)
     except Exception, e:
       print "blogs: ", e
       pass
 
-    return (implemented, resolution)
+    return (implemented, resolution, '', link)
 
 
 class StatsHandler(BaseHandler):
