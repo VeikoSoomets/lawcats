@@ -25,8 +25,9 @@ function formatDate(date) {
 */
 
 class SearchController {
-  constructor ($http) {
+  constructor (MessagingService, $http) {
     this.$http = $http;
+    this.MessagingService = MessagingService;
 
     // URL for api calls
     this.baseUrl = '/app/search';
@@ -75,6 +76,28 @@ class SearchController {
   }
 
   /**
+   * Send request for new source
+   */
+  sendNewSource () {
+    if (this.newSourceUrl && this.newSourceDescription) {
+      this.$http.post('/app/request_source', {
+        url: this.newSourceUrl,
+        description: this.newSourceDescription
+      }).success(data => {
+        if (data.type === 'danger') {
+          this.MessagingService.danger(data.message);
+        } else if (data.type === 'success') {
+          this.newSourceDescription = '';
+          this.newSourceUrl = '';
+          this.MessagingService.success(data.message);
+        }
+      });
+    } else {
+      this.MessagingService.danger('Please input a url and description.');
+    }
+  }
+
+  /**
    * Execute a search from sources.
    * @param  {String} where Where to search from.
    */
@@ -86,6 +109,7 @@ class SearchController {
     let queryDate = new Date();
     let queryAction = '';
     let sources = [];
+    let self = this;
 
     this.searchSources.forEach(source => {
       if (source.checked) {
@@ -125,10 +149,25 @@ class SearchController {
       categories: sources
     }).success(response => {
       this.results = response.search_results;
-      this.querywords = '';
-      this.searchSources.forEach(source => {
-        source.checked = false;
-      });
+      setTimeout(function(){
+        $('.result-title-link').html(function(_, html) {
+          function capitalizeFirstLetter(string) {
+              return string.charAt(0).toUpperCase() + string.slice(1);
+          }
+          var words = self.querywords.split(' ');
+          var returnHtml = html;
+          debugger;
+          for (var querywordIndex in words){
+            var queryword = words[querywordIndex];
+            var querywordCapitalized = capitalizeFirstLetter(queryword);
+            returnHtml = returnHtml.replace(queryword,
+                '<span class="highlight-text">'+queryword+'</span>');
+            returnHtml = returnHtml.replace(querywordCapitalized ,
+                '<span class="highlight-text">'+querywordCapitalized+'</span>');
+          }
+          return returnHtml;
+        });
+      }, 500);
       this.loading = false;
     }).error(err => {
       console.error(err);
@@ -137,6 +176,6 @@ class SearchController {
   }
 }
 
-SearchController.$inject = ['$http'];
+SearchController.$inject = ['MessagingService', '$http'];
 
 export default SearchController;
