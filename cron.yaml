@@ -1,5 +1,5 @@
 cron:
 
 - description: craws laws from riigiteataja (we don't want to do 350 http calls on each search
-  url: '/app/download_riigihtml'
+  url: '/sys/download_riigihtml'
   schedule: every 24 hours

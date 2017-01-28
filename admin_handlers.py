@@ -660,6 +660,353 @@ class CustomCats(BaseHandler):
       data = JSONEncoder().encode(resultsdict)  # get JSON data... encode, because some fields are of different type.. + just fetch doesn't stringify
       self.response.out.write(data)
 
+
+class AdminSettings(BaseHandler):
+  """Displays the settings page."""
+  @BaseHandler.logged_in2
+  def get(self):
+    email = self.get_user_email()
+    if 'application/json' in self.request.headers['Accept']:
+      group_members, group_master = self.query_usergroup(email)  # get all members of usergroup
+      group_to_answer = self.group_to_answer(email)
+      results = {
+          'user_email': email,
+          'group_members': group_members,
+          'group_master': group_master,
+          'group_to_answer': group_to_answer,
+      }
+      resultsdict = {'data': results}
+      data = JSONEncoder().encode(resultsdict)  # get JSON data... encode, because some fields are of different type.. + just fetch doesn't stringify
+      self.response.out.write(data)
+    else:
+      self.buildAdminPage()
+
+  @classmethod
+  def delete_from_usergroup(self,email,group_name):
+    # Remove from Usergroup structured property
+    usergroup = models.Usergroup.query(models.Usergroup.group_name == group_name).get()
+    if usergroup:
+      to_delete = []
+      for user in usergroup.users:
+        if user.user_email == email:
+          to_delete.append(user)  # gather up users, later try "Remove items from a list while iterating in Python" instead
+      for a in to_delete:
+        usergroup.users.remove(a)
+        usergroup.put()
+
+    # also remove from user model
+    user = models.User.query(models.User.email_address == email).get()
+    user.group_name = None
+    user.put()
+
+    memcache.delete_multi([email + '_user_query', email + '_user_group_query'])
+    return
+    # TODO! add event that user has been removed from group
+
+  @classmethod
+  def query_usergroup(self,email):
+    usergroup = models.Usergroup.query(models.Usergroup.group_master==email).get() # user email
+    #print usergroup
+    group_users=[]
+    group_name=None
+    #for usergroup in usergroups:
+    if usergroup:
+      group_name=usergroup.group_name
+      #if usergroup.users
+      for user in usergroup.users:
+        user_email=user.user_email
+        user_status='pending'
+        if user.agreed==False:
+            user_status='declined'
+        elif user.agreed==True:
+            user_status='accepted'
+        group_users.append({'user_email':user_email,'user_status':user_status})
+
+    return (group_users,group_name)
+
+  @classmethod
+  def groupmember_monthly_searches(self,email,monthly_searches):
+    # Add individual monthly searches to usergroup structured property list
+    #usergroup = self.get_user_group(email)
+    #usergroup = models.Usergroup.query(models.Usergroup.users.user_email==email).get()
+    usergroup = self.get_user_group(email)
+    #usergroup = models.Usergroup.query(models.Usergroup.users.user_email==email).get() #,agreed=None)])).get()
+    if usergroup:
+      #print usergroup.users
+      for user in list(usergroup.users):  # properties need to be copied to a list, because else you get _basevalues (memcache mutates them)
+        if user.user_email==email and user.agreed==True:
+          usergroup.users.remove(user)
+          new_user=models.Groupmember(user_email=email,agreed=True,monthly_searches=monthly_searches)
+          usergroup.users.append(new_user)
+          usergroup.put()
+          memcache.delete_multi([email+'_user_group_query',email+'_user_query',email+'_get_limit'])
+    return
+
+  @classmethod
+  def group_to_answer(self,email):
+    # Show wheter users has any pending groups
+    pending_group = None
+    usergroup = self.get_user_group(email)
+    #group_date_limit
+    if usergroup:
+      for user in list(usergroup.users):
+        if user.user_email==email and user.agreed==None:
+          pending_group = usergroup.group_name
+
+    return pending_group
+
+  @classmethod
+  def answer_invitation(self,answer,email,group_name):
+    if answer == 'True':
+      answer = True
+      # put to usermodel
+      user = models.User.query(models.User.email_address == email).get() # user email
+      user.group_name = group_name
+      user.put()
+
+      usergroup = self.get_user_group(email)
+      if usergroup:
+        for user in list(usergroup.users):
+          if email==user.user_email:
+            usergroup.users.remove(user)
+            new_user=models.Groupmember(user_email=email,agreed=answer)
+            usergroup.users.append(new_user)
+            usergroup.put()
+            memcache.delete(email + '_user_query')
+
+    else:  # if user declines, delete
+      self.delete_from_usergroup(email,group_name)
+    # put to usergroup
+    return
+    # add events to both group owner and user (that new user is in a group, or that user has declined)
+
+  def post(self):
+    email = self.get_user_email()
+    limit = self.get_limit(email)
+    date_limit = limit[3]
+
+    action = self.request.get('action')
+    if action not in ['answer_usergroup','remove_from_usergroup']:
+      json_data = json.loads(self.request.body)
+      action = json_data['action']
+
+    if action == 'extend_usage':
+      try:
+        months = json_data['months']
+        packet = json_data['packet']
+
+        if packet == 1:
+          search_cnt = 50000
+        elif packet == 2:
+          search_cnt = 200000  # While saying unlimited, we have this here because we don't believe a user will be using up this much of limits. Else, consider repricing.
+
+        user_query = self.get_user(email)
+        old_expire_date = user_query.usage_expire_date
+        if not old_expire_date:
+          old_expire_date = datetime.now().date()
+        expire_date = old_expire_date + timedelta(days=int(months)*30) # for this use from dateutil relativedelta (calculates real months, because length feb != length jan)
+        user_query.usage_expire_date = expire_date
+        user_query.search_count_limit = int(search_cnt)
+        user_query.packet = packet
+        user_query.put()
+
+        if user_query.group_name:  # if user belongs to a group (or owns it), permit him to pay for the group
+          usergroup = self.get_user_group(email)
+          for user in list(usergroup.users):  # properties need to be copied to a list, because else you get _basevalues (memcache mutates them)
+            if user.user_email == email and user.agreed == True:
+              usergroup.group_date_limit = expire_date
+              usergroup.packet = packet
+              usergroup.q_word_limit = search_cnt
+              usergroup.put()
+        memcache.delete_multi([email + '_user_query', email + '_user_group_query', email + '_get_limit'])
+        message = _('Payment processed and usage limit extended')
+        message_type = 'success'
+        data = {'message': message, 'type': message_type}
+        self.response.out.write(json.dumps((data)))
+        return
+      except Exception, e:
+        logging.error(e)
+        message=str(e)
+        message_type = 'danger'
+        data = {'message': message, 'type': message_type}
+        self.response.out.write(json.dumps((data)))
+        return
+
+    elif action == 'change_password':
+      new_password = json_data['new_password']
+      old_password = json_data['old_password']
+      if not new_password or not old_password: # we only need this if jquery validation doesn't work (for extra security)
+        message = _('Please type both passwords!')
+        message_type = 'danger'
+        data = {'message' : message, 'type' : message_type}
+        #logging.error(message)
+        self.response.out.write(json.dumps((data)))
+        return
+      username = str(''.join(self.user.auth_ids))
+      try:
+        u = self.auth.get_user_by_password(username, old_password, remember=False, save_session=False)
+        user = self.user
+        user.set_password(new_password)
+        user.put()
+        message = _('Password successfully changed!')
+        message_type = 'success'
+        data = {'message': message, 'type': message_type}
+        self.response.out.write(json.dumps((data)))
+      except Exception, e:
+        message_type = 'danger'
+        message = _('Old password is wrong!')
+        data = {'message': message, 'type': message_type}
+        self.response.out.write(json.dumps((data)))
+        return
+
+    elif action == "answer_usergroup":
+      # group_name = json_data['group_name']
+      # answer = json_data['group_answer']
+      group_name = self.request.get('group_name')
+      answer = self.request.get('group_answer')
+      self.answer_invitation(answer,email,group_name)
+      memcache.delete_multi([email+'_user_group_query',email+'_user_query',email+'_get_limit'])
+      if answer == 'True':
+        message = _('Congratulations! You are now member of %s group.') % (group_name)
+      else:
+        message = _('Declined joining group %s.') % (group_name)
+      message_type = 'success'
+      data = {'message': message, 'type': message_type}
+      #logging.error(message)
+      self.buildAdminPage(message=message, message_type=message_type)
+      # self.response.out.write(json.dumps((data)))
+      return
+
+    elif action == "remove_from_usergroup":
+      """ Did not want to duplicate remove_from_usergroup, because leave from usergroup is essentially the same """
+      group_name = self.request.get('group_name')
+      self_leave = False
+      if not group_name:  # if not form action, then angular
+        json_data = json.loads(self.request.body)
+        group_name = json_data['group_name']
+        member_email = json_data['member_email']
+      else:  # this is for self-leave
+        member_email = email
+        self_leave = True
+      if not member_email:
+        self_leave = True
+        member_email = email
+      self.delete_from_usergroup(member_email, group_name)
+      memcache.delete_multi([email+'_user_group_query',email+'_user_query',member_email+'_get_limit',email+'_get_limit'])
+      message = _('User removed from usergroup')
+      message_type = 'success'
+      data = {'message': message, 'type': message_type}
+      if self_leave:
+        message = _('You successfully left from usergroup %s') % (group_name)
+        self.buildAdminPage(message=message, message_type=message_type)
+      else:
+        self.response.out.write(json.dumps((data)))
+        return
+
+    # Consider checking for date_limit here and warn that this action can't be completed
+
+    elif action == "create_usergroup":
+      group_name = json_data['group_name']
+      # get limits from user to be cloned to user created group
+      limit = self.get_limit(email)
+      q_word_limit = limit[2]
+      date_limit = limit[3]
+      active_packet = limit[4]
+
+      new_group = models.Usergroup(group_name=group_name,group_master=email,group_date_limit=date_limit,q_word_limit=q_word_limit,packet=active_packet)
+      new_user = models.Groupmember(user_email=email, agreed=True)  # put creator to same usergroup
+      new_group.users.append(new_user)
+      new_group.put()
+      memcache.delete(email + '_user_query')
+
+      # also change user model entity
+      user_model = models.User.query(models.User.email_address == email).get()
+      user_model.group_name = group_name
+      user_model.put()
+
+      message = _('User group created')
+      message_type = 'success'
+      data = {'message': message, 'type': message_type}
+      #logging.error(message)
+      self.response.out.write(json.dumps((data)))
+      return
+
+    elif action == "add_to_usergroup":
+      group_name = json_data['group_name']
+      member_email = json_data['member_email']
+      user = models.User.query(models.User.email_address == member_email).get()  # can't get this from cache, because in cache we store session user, not user input
+      if user:
+        if group_name == user.group_name:
+          message = _('User is already in your group!')
+          message_type = 'success'
+          data = {'message': message, 'type': message_type}
+          #logging.error(message)
+          self.response.out.write(json.dumps((data)))
+          return
+        else:
+          memcache.delete_multi([email+'_user_group_query',email+'_user_query',member_email+'_user_group_query',member_email+'_user_query'])
+          new_user = models.Groupmember(user_email=member_email, agreed=None)
+          usergroup = models.Usergroup.query(models.Usergroup.group_name == group_name).get()
+          usergroup.users.append(new_user)
+          usergroup.put()
+          message = _('User invitation sent - user needs to accept invitation.')
+          message_type = 'success'
+          data = {'message': message, 'type': message_type}
+          #logging.error(message)
+          self.response.out.write(json.dumps((data)))
+          return
+      else:
+        mailto, name = member_email, member_email
+        tyyp = 'invitation'
+        verification_url = 'https://www.lawcats.com/signup'
+        subject_ = _('lawcats - Invitation by %s!') % (group_name)
+        base_handler.sendmail(mailto,subject_,verification_url,name,tyyp)
+        message = _('Invitation sent to this e-mail.')
+        message_type = 'success'
+        data = {'message': message, 'type': message_type}
+        #logging.error(message)
+        self.response.out.write(json.dumps((data)))
+        return
+
+  def buildAdminPage(self, message=None, message_type=None):
+    email = self.get_user_email()
+    google_login = email[1]
+
+    # date_limit, monthly_searches, monthly_searches_limit, q_word_limit = None, None, None, None
+    group_members, group_master = self.query_usergroup(email)  # get all members of usergroup
+    group_to_answer = self.group_to_answer(email)
+
+    # gets a tuple of 4 items from basehandler
+    limit = self.get_limit(email)
+    monthly_searches_limit_pct = limit[0]
+    monthly_searches = limit[1]
+    q_word_limit = limit[2]
+    date_limit = limit[3]
+    active_packet = limit[4]
+
+    catlist = get_categories()
+
+    if date_limit and date_limit < datetime.now().date():
+      date_limit = None
+
+    # render template
+    template_values = {
+      'message_type': message_type,
+      'message': message,
+      'date_limit': date_limit,  # when will searches expire
+      'monthly_searches': monthly_searches, # unique monthly searches
+      'q_word_limit': q_word_limit,  # monthly search limit
+      'limit_bar': monthly_searches_limit_pct, # for limit bar
+      'google_login': google_login,  # check if user has logged in with google
+      'active_packet': active_packet,
+      'group_members': group_members,
+      'group_master': group_master,
+      'group_to_answer': group_to_answer,
+      'current_page': 'settings',
+      'catlist': catlist
+      }
+    self.render_template('settings.html', template_values)
+
 from google.appengine.api import urlfetch
 urlfetch.set_default_fetch_deadline(300)
 class RiigiTeatajaDownloadHandler(BaseHandler):

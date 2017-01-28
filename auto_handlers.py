@@ -301,6 +301,65 @@ class AutoAddSource(BaseHandler):
     return implemented
     #self.render_template('admin.html',{'message_type':'success','message':message})
 
+from google.appengine.api import urlfetch
+urlfetch.set_default_fetch_deadline(600)
+class RiigiTeatajaDownloadHandler(BaseHandler):
+  @classmethod
+  def get_urls(self):
+    src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=600)
+    urllist = []
+    soup = bs4.BeautifulSoup(src)
+    soup = soup.find('tbody')
+    for result in soup.findAll('tr'):
+      law = result.findAll('td')[0]
+      link = law.findNext('a', href=True).get('href')
+      title = law.findNext('a', href=True).get_text()
+      url = "https://www.riigiteataja.ee/%s?leiaKehtiv" % link
+      urllist.append({'title': title, 'url': url})
+    return urllist
+
+  @classmethod
+  @ndb.tasklet
+  def delete_async_(self, input_object):
+      # key = ndb.Key('UserRequest', input_key.id())
+      key = input_object.key
+      del_future = yield key.delete_async(use_memcache=False)  # faster
+      raise ndb.Return(del_future)
+
+
+  @classmethod
+  def delete_htmls(self):
+      models.RiigiTeatajaURLs.query().map(self.delete_async_)
+      models.RiigiTeatajaMetainfo.query().map(self.delete_async_)
+
+
+  @classmethod
+  def get(self):
+      urls = self.get_urls()
+      dbps_meta = []
+      dbps_main = []
+      for url in urls:
+        text = urlfetch.fetch(url['url'], method=urlfetch.GET)
+        dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.content)
+        dbp_meta = models.RiigiTeatajaMetainfo(title=url['title'])
+        dbps_main.append(dbp)
+        dbps_meta.append(dbp_meta)
+
+      future = ndb.put_multi_async(dbps_main)
+      future_meta = ndb.put_multi_async(dbps_meta)
+      ndb.Future.wait_all(future_meta)
+      ndb.Future.wait_all(future)
+
+
+from google.appengine.ext import deferred
+class DataGatherer(BaseHandler):
+  """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
+    Good for long-running tasks """
+  def get(self):
+    RiigiTeatajaDownloadHandler.delete_htmls()
+    deferred.defer(RiigiTeatajaDownloadHandler.get)
+    return
+
 
 def do_implement(link,user_id):
     # do implementation

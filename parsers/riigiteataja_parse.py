@@ -205,6 +205,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
           rank = 0
           for single_word in query.split():
+            para_nbr = 0
             if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
                 paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
 
@@ -213,19 +214,18 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
               # check if paragraph number matches any numbers in the query that was passed
               if para_nbr == single_word:
                   rank += 5
-                  cond = len([x for x in single_word.lower() if x in ['paragraaf','paragrahv',u'§']])
-                  if cond > 0:
-                      rank += 1
+                  if single_word.lower() in ['paragraaf','paragrahv',u'§']:
+                      rank += 4
             except Exception, e:
               print e
               pass
 
             try:
               if single_word.lower() in ''.join(c.get_text().lower()) or para_nbr > 0:
-                rank += 2
+                rank += 1
 
                 if single_word.lower() in c.get_text().lower():
-                  rank += 3
+                  rank += 2
 
                 if single_word.lower() in law.title.lower():
                   rank += 3
