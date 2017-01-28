@@ -301,8 +301,10 @@ class AutoAddSource(BaseHandler):
     return implemented
     #self.render_template('admin.html',{'message_type':'success','message':message})
 
+from google.appengine.api import urlfetch
+urlfetch.set_default_fetch_deadline(300)
 class RiigiTeatajaDownloadHandler(BaseHandler):
-  # TODO! instead of cron jobs running this, switch to task queues instead
+  @classmethod
   def get_urls(self):
     src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=60)
     urllist = []
@@ -324,15 +326,21 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       del_future = yield key.delete_async(use_memcache=False)  # faster
       raise ndb.Return(del_future)
 
+
+  @classmethod
+  def delete_htmls(self):
+      models.RiigiTeatajaURLs.query().map(self.delete_async_)
+      models.RiigiTeatajaMetainfo.query().map(self.delete_async_)
+
+
+  @classmethod
   def get(self):
       urls = self.get_urls()
       dbps_meta = []
       dbps_main = []
-      models.RiigiTeatajaURLs.query().map(self.delete_async_)
-      models.RiigiTeatajaMetainfo.query().map(self.delete_async_)
       for url in urls:
-        text = urllib2.urlopen(url['url'])
-        dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.read())
+        text = urlfetch.fetch(url['url'], method=urlfetch.GET)
+        dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.content)
         dbp_meta = models.RiigiTeatajaMetainfo(title=url['title'])
         dbps_main.append(dbp)
         dbps_meta.append(dbp_meta)
@@ -348,9 +356,8 @@ class DataGatherer(BaseHandler):
   """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
     Good for long-running tasks """
   def get(self):
-    print "starting deferred"
-    deferred.defer(RiigiTeatajaDownloadHandler.get())
-    print "done with deferred"
+    RiigiTeatajaDownloadHandler.delete_htmls()
+    deferred.defer(RiigiTeatajaDownloadHandler.get)
     return
 
 
