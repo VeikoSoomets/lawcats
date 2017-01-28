@@ -302,11 +302,11 @@ class AutoAddSource(BaseHandler):
     #self.render_template('admin.html',{'message_type':'success','message':message})
 
 from google.appengine.api import urlfetch
-urlfetch.set_default_fetch_deadline(300)
+urlfetch.set_default_fetch_deadline(600)
 class RiigiTeatajaDownloadHandler(BaseHandler):
   @classmethod
   def get_urls(self):
-    src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=60)
+    src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=600)
     urllist = []
     soup = bs4.BeautifulSoup(src)
     soup = soup.find('tbody')
