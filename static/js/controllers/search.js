@@ -10786,6 +10786,12 @@ var SearchController = (function () {
           if (data.type === 'danger') {
             _this2.MessagingService.danger(data.message);
           } else if (data.type === 'success') {
+            debugger;
+            _this2.sources.forEach(function (source) {
+              if (source[0].maincategory_name == 'Custom') {
+                source[1][0][1].push({ 'category_link': data.link, 'category_name': data.title });
+              }
+            });
             _this2.newSourceDescription = '';
             _this2.newSourceUrl = '';
             _this2.MessagingService.success(data.message);
@@ -10860,7 +10866,6 @@ var SearchController = (function () {
             }
             var words = self.querywords.split(' ');
             var returnHtml = html;
-            debugger;
             for (var querywordIndex in words) {
               var queryword = words[querywordIndex];
               var querywordCapitalized = capitalizeFirstLetter(queryword);

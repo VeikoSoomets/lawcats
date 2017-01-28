@@ -87,6 +87,11 @@ class SearchController {
         if (data.type === 'danger') {
           this.MessagingService.danger(data.message);
         } else if (data.type === 'success') {
+          this.sources.forEach(source => {
+            if (source[0].maincategory_name == 'Custom') {
+              source[1][0][1].push({'category_link':data.link,'category_name':data.title});
+            }
+          });
           this.newSourceDescription = '';
           this.newSourceUrl = '';
           this.MessagingService.success(data.message);
@@ -156,7 +161,6 @@ class SearchController {
           }
           var words = self.querywords.split(' ');
           var returnHtml = html;
-          debugger;
           for (var querywordIndex in words){
             var queryword = words[querywordIndex];
             var querywordCapitalized = capitalizeFirstLetter(queryword);
