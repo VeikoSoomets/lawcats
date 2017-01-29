@@ -52,7 +52,7 @@ DEFAULT_AVATAR_URL = '/static/images/default-avatar.jpg'
 
 
 def sendmail(mailto,subject_,*args):
-  message = mail.EmailMessage(sender="info@lawcats.com",
+  message = mail.EmailMessage(sender="kasparg@gmail.com",
       subject=unicode((subject_)))
   #message = mail.EmailMessage(sender="kasparg@gmail.com",
   #                        subject=subject_)

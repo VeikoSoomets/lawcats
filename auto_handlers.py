@@ -148,19 +148,23 @@ class AddLawIndex(BaseHandler):
     """Delete all the docs in the given index."""
     res = models.RiigiTeatajaMetainfo.query().fetch()
     for law in res:
-      index_name = law.title.encode('ascii', 'ignore').replace(' ','')
-      doc_index = search.Index(name=index_name)
+      try:
+        index_name = law.title.encode('ascii', 'ignore').replace(' ','')
+        doc_index = search.Index(name=index_name)
 
-      # looping because get_range by default returns up to 100 documents at a time
-      while True:
-          # Get a list of documents populating only the doc_id field and extract the ids.
-          document_ids = [document.doc_id
-                          for document in doc_index.get_range(ids_only=True)]
-          if not document_ids:
-              break
-          # Delete the documents for the given ids from the Index.
-          doc_index.delete(document_ids)
+        # looping because get_range by default returns up to 100 documents at a time
+        while True:
+            # Get a list of documents populating only the doc_id field and extract the ids.
+            document_ids = [document.doc_id
+                            for document in doc_index.get_range(ids_only=True)]
+            if not document_ids:
+                break
+            # Delete the documents for the given ids from the Index.
+            doc_index.delete(document_ids)
+      except Exception:
+        pass #  index name can't be more than 100 bytes
 
+  @classmethod
   def get(self):
 
     def batch(iterable, n = 1):
@@ -331,7 +335,7 @@ class DataGatherer(BaseHandler):
     deferred.defer(RiigiTeatajaDownloadHandler.get)
     return
 
-from google.appengine.ext import deferred
+
 class DataIndexer(BaseHandler):
   """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
     Good for long-running tasks """
@@ -339,6 +343,7 @@ class DataIndexer(BaseHandler):
     AddLawIndex.delete_all_in_index()
     deferred.defer(AddLawIndex.get)
     return
+
 
 def do_implement(link,user_id):
     # do implementation

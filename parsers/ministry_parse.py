@@ -3,13 +3,7 @@
 import sys
 sys.path.insert(0, 'libs')
 import bs4
-import urllib2 # needed?
 from google.appengine.api import urlfetch
-import re
-from datetime import datetime
-import datetime
-import logging
-import urllib
 from collections import defaultdict
 
 import os
@@ -20,7 +14,7 @@ sys.path.insert(0, new_path) # to get utils from root folder.. this might be obs
 from utils import *
 
 
-categories = [\
+categories3 = [\
 #['Haridusministeerium','https://www.hm.ee/et/valitsemisala-uudised'], # SSL fail \
 #['Haridusministeerium','https://www.hm.ee/et/uudised'], # SSL fail \
 ['Justiitsministeerium','http://www.just.ee/et/uudised'], \
@@ -35,7 +29,7 @@ categories = [\
 
 # We need this because ordinary dictionaries can't have duplicate keys (check the case of delfi.ee)
 cat_dict = defaultdict(list)
-for listitem in categories:
+for listitem in categories3:
   cat_dict['categories'].append(listitem)
 
 

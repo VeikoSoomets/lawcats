@@ -25,7 +25,7 @@ sys.path.insert(0, new_path) # to get utils from root folder.. this might be obs
 
 from utils import *
 
-categories = [\
+categories4 = [\
 ['Delfi','http://feeds2.feedburner.com/delfiuudised?format=xml'], \
 ['Delfi','http://feeds.feedburner.com/delfimaailm?format=xml'], \
 ['Delfi','http://feeds.feedburner.com/delfi110-112?format=xml'], \
@@ -99,7 +99,7 @@ categories = [\
 
 # We need this because ordinary dictionaries can't have duplicate keys (check the case of delfi.ee)
 cat_dict = defaultdict(list)
-for listitem in categories:
+for listitem in categories4:
   cat_dict['categories'].append(listitem)
 
 # add custom RSS categories to category list
@@ -112,7 +112,6 @@ if datastore_results:
 def parse_results_ilmumas(ilmumas_links,querywords):
     results=[]
     url_base='http://www.riigiteataja.ee/'
-    #logging.error(ilmumas_links)
     for a in ilmumas_links:
         ourlink=a+'&kuvaKoik=true' # et kuvaks kõik tulemused (riigiteataja lehel pagination)
         src=urllib2.urlopen(ourlink)
@@ -170,8 +169,10 @@ def parse_feed(querywords, category, date_algus='2016-01-01'): # kui kuupäeva e
     date_algus = datetime_object(date_algus)
     results = []
     for cat in cat_dict['categories']:
-      search_from = cat[1]
+
       if category == cat[0]:  # veendume, et võtame õige allika
+        search_from = cat[1]
+
         if category == u'Riigiteataja ilmumas/ilmunud seadused':  # juhul kui tegi riigiteataja ilumas/ilmunud, toimetame teisiti (neil RSS vana ja ei vasta standarditele)
           try:
             src2=urllib2.urlopen(search_from).read(5000) # timeout set (search from, timeout=60) because of default appengine limits (and since riigiteataja ilmumas takes long time to open otherwise too)
@@ -182,65 +183,64 @@ def parse_feed(querywords, category, date_algus='2016-01-01'): # kui kuupäeva e
               while limiter>0:
                 for link in soup2.findAll("link"):
                   if len(link.next)>50:
-                    #logging.error(link.next)
                     links_collection.append(link.next)
                     limiter-=1  # count down until 0 (optimization)
               results.extend(parse_results_ilmumas(links_collection, querywords))
           except Exception, e:
-            logging.error("riigiteataja ilmumas/ilmunud seadused fucked up")
+            pass
             logging.error(e)
 
         else:  # Tegu normaalsete RSSidega
-          if category == 'Finantsministeerium':
-            search_from = urllib2.urlopen(search_from, timeout=40)  # without timeout doesn't work
-          elif category == u'Kooskõlastamiseks esitatud eelnõud':
-            search_from = urllib2.urlopen(search_from, timeout=40).read(20000)
+          try:
+            if category == 'Finantsministeerium':
+              search_from = urllib2.urlopen(search_from, timeout=40)  # without timeout doesn't work
+            elif category == u'Kooskõlastamiseks esitatud eelnõud':
+              search_from = urllib2.urlopen(search_from, timeout=40).read(20000)
 
-          d = feedparser.parse(search_from)
-          for a in d.entries:
-            for x in querywords:
-              if ' ' in x:
-                new_x = set(x.split(' '))  # add to a set
-              elif x == '':
-                new_x = ''
-              else:
-                new_x = [x]
+            d = feedparser.parse(search_from)
+            for a in d.entries:
+              for x in querywords:
+                if ' ' in x:
+                  new_x = set(x.split(' '))  # add to a set
+                elif x == '':
+                  new_x = ''
+                else:
+                  new_x = [x]
 
-              if category in ['eurlex kohtuasjad','eurlex komisjoni ettepanekud',u'eurlex parlament ja nõukogu']:
-                # TODO! TEKITA KUUPÄEV!
-                result_date = datetime.datetime.now().date()  #newdate2 # FIX THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                if result_date >= (date_algus if date_algus else result_date) and (x.lower() in a['title'].lower()):
-                  result_title = a['title']
-                  result_link = a['link']
-                  results.append([result_link, result_title, str(result_date), x, category])
-
-              else:
-                """ Tavaline RSS """
-                try:
-                  result_date = dt.fromtimestamp(mktime(a['published_parsed'])).date()
-                except Exception:
-                  pass
-
-                if not result_date:
-                  try:
-                    result_date = a['published']
-                  except Exception:
-                    result_date = a['pubDate']
-                    pass
-
-                # Sometimes we get empty blocks, let's catch them and pass
-                try:
-                  b = a['title']
-                except Exception:
-                  pass
-                if b:
-                  print "getting something"
-                  if result_date >= (date_algus if date_algus else result_date) and a.get('description') and \
-                          (all([x2.lower() in a['title'].lower()+a['description'].lower() for x2 in new_x])):
+                if category in ['eurlex kohtuasjad','eurlex komisjoni ettepanekud',u'eurlex parlament ja nõukogu']:
+                  result_date = datetime.datetime.now().date()  #newdate2 # FIX THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                  if result_date >= (date_algus if date_algus else result_date) and (x.lower() in a['title'].lower()):
                     result_title = a['title']
                     result_link = a['link']
                     results.append([result_link, result_title, str(result_date), x, category])
-                    #print results
+
+                else:
+                  """ Tavaline RSS """
+                  try:
+                    result_date = dt.fromtimestamp(mktime(a['published_parsed'])).date()
+                  except Exception:
+                    pass
+
+                  if not result_date:
+                    try:
+                      result_date = a['published']
+                    except Exception:
+                      result_date = a['pubDate']
+                      pass
+
+                  # Sometimes we get empty blocks, let's catch them and pass
+                  try:
+                    b = a['title']
+                  except Exception:
+                    pass
+                  if b:
+                    if result_date >= (date_algus if date_algus else result_date) and a.get('description') and \
+                            (all([x2.lower() in a['title'].lower()+a['description'].lower() for x2 in new_x])):
+                      result_title = a['title']
+                      result_link = a['link']
+                      results.append([result_link, result_title, str(result_date), x, category])
+          except Exception:
+            pass
         return results  #results if results else None
 
 

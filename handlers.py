@@ -9,9 +9,8 @@ from base_handler import BaseHandler
 from admin_handlers import get_categories
 import json
 
-import archive_search
 from parsers.bureau_parse import LawfirmParsers
-from parsers import ministry_parse, politsei_parse, fi_parse, eurlex_parse, rss_parse, riigiteataja_parse, riigikohtu_parse, custom_source
+from parsers import ministry_parse, politsei_parse, fi_parse, eurlex_parse, rss_parse, riigiteataja_parse, custom_source
 
 from google.appengine.api import search
 from google.appengine.ext import ndb
@@ -151,7 +150,7 @@ class WebSearch(BaseHandler):
         querywords.update(lyhendid_in_query_string)
       if lyhendid_values_in_query_string:
         querywords.update(lyhendid_values_in_query_string)
-      categories = json_data['categories']
+      categories2 = json_data['categories']
       action = json_data['action']
 
     except Exception, e:  # TODO! don't even need this here
@@ -160,12 +159,10 @@ class WebSearch(BaseHandler):
     
     search_results = []
     search_results1 = []
-
-    for cat in categories:
+    for cat in categories2:
 
       if action == 'search':
         date_algus = '2014-01-01'
-        print "category is ", repr(cat)
         search_results1 = do_search(querywords,cat,date_algus)
 
       elif action == 'custom_search':
@@ -183,13 +180,6 @@ class WebSearch(BaseHandler):
                     'categories': result[4]
                     }
           search_results.append(params)
-      
-      """if search_results1 and action=='list_search': # we don't want to add empty values to our final search list
-        for result in search_results1:
-          params = {'programs': result['programs'],
-                    'name': result['name']
-                    }
-          search_results.append(params) """
           
     if search_results:
       message=_('Got %s results') % str(len(search_results))
@@ -223,11 +213,8 @@ def custom_search(querywords, category, date_algus, email=None):
         if custom.category_type == 'rss_source' and category == custom.category_name:
           try:
             search_results.extend(rss_parse.parse_feed(querywords, category, date_algus))
-            #print search_results
           except Exception, e:
             logging.error('failed with custom rss source')
-            #message = 'Could not find querywords "%s" from category "%s"' % (repr(querywords), repr(category))
-            #logging.error(message)
             logging.error(e)
             pass
 
@@ -243,8 +230,6 @@ def custom_search(querywords, category, date_algus, email=None):
                 search_results.extend(blog_results)
           except Exception, e:
             logging.error('failed with custom blog search')
-            #message = 'Could not find querywords "%s" from category "%s"' % (repr(querywords), repr(category))
-            #logging.error(message)
             logging.error(e)
             pass
 
@@ -285,13 +270,11 @@ def do_search(querywords, category, date_algus):
 
     # Otsime ministeeriumitest (mis ei ole RSS)
     if source['category'] == 'ministeeriumid':
-      if category in [x[0] for x in ministry_parse.categories]:  # mitu allikat
+      if category in [x[0] for x in ministry_parse.categories3]:  # mitu allikat
         try:
           search_results.extend(source['results'](querywords, category, date_algus))
         except Exception, e:
           logging.error('failed with ministeeriumid')
-          #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
-          #logging.error(message)
           logging.error(e)
           pass
 
@@ -303,8 +286,6 @@ def do_search(querywords, category, date_algus):
           search_results.extend(source['results'](querywords, category, date_algus))
         except Exception, e:
           logging.error('failed with FI teated')
-          #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
-          #logging.error(message)
           logging.error(e)
           pass
 
@@ -325,8 +306,6 @@ def do_search(querywords, category, date_algus):
           search_results.extend(source['results'](querywords, category, date_algus))
         except Exception, e:
           logging.error('failed with FI oigusaktid')
-          #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
-          #logging.error(message)
           logging.error(e)
           pass
 
@@ -337,24 +316,14 @@ def do_search(querywords, category, date_algus):
           search_results.extend(source['results'](querywords, category, date_algus))
         except Exception, e:
           logging.error('failed with riigiteataja uudised')
-          #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
-          #logging.error(message)
           logging.error(e)
           pass
 
     # Otsime RSS allikatest
     if source['category'] == 'RSS allikad':
       #catlist = [key for key, value in rss_parse.categories2] rss_parse.categories2
-      if category in [x[0] for x in rss_parse.categories]:  # mitu allikat
+      if category in [x[0] for x in rss_parse.categories4]:  # mitu allikat
         search_results.extend(source['results'](querywords, category, date_algus))
-        """try:
-          search_results.extend(source['results'](querywords, category, date_algus))
-        except Exception, e:
-          logging.error('failed with rss allikad')
-          #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
-          #logging.error(message)
-          logging.error(e)
-          pass"""
 
     # Everything else
     if category == source['category']:
@@ -362,8 +331,6 @@ def do_search(querywords, category, date_algus):
         search_results.extend(source['results'](querywords, category, date_algus))
       except Exception, e:
         logging.error('failed with singular category search')
-        #message = 'Could not find querywords "%s" from category "%s"' % (str(querywords),str(category))
-        #logging.error(message)
         logging.error(e)
         pass
   #print search_results
