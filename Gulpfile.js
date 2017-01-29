@@ -29,8 +29,7 @@ gulp.task('lint:watch', ['lint'], function () {
 gulp.task('build', function(done) {
   [
     'results',
-    'search',
-    'settings'
+    'search'
   ].forEach(function(entry) {
     browserify('./scriptsrc/apps/' + entry + '.js')
       .transform(babelify)

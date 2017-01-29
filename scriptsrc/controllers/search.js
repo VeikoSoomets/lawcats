@@ -36,10 +36,8 @@ class SearchController {
     this.hasSearched = false;
     this.loading = false;
     this.results = [];
-    this.searchSources = [];
     this.querywords = '';
     this.searchedSanctions = false;
-
     this.searchSources = [];
     this.sources = [];
 
@@ -90,9 +88,14 @@ class SearchController {
           this.MessagingService.danger(data.message);
         } else if (data.type === 'success') {
           this.sources.forEach(source => {
-            if (source[0].maincategory_name == 'Custom') {
-              source[1][0][1].push({'category_link':data.link,'category_name':data.title});
+            if (source[0].maincategory_name === 'Custom') {
+              source[1][0][1].push({'category_link':data.link,
+                                    'category_name':data.title});
             }
+          });
+          this.searchSources.push({
+            checked: true,
+            name: data.title
           });
           this.newSourceDescription = '';
           this.newSourceUrl = '';
@@ -148,7 +151,6 @@ class SearchController {
       default: // Should never enter, this is for future guys.
         console.error('Entered default case in searchFrom');
     }
-
     this.$http.post(this.baseUrl, {
       action: queryAction,
       queryword: this.querywords,
@@ -157,7 +159,7 @@ class SearchController {
       categories: sources
     }).success(response => {
       this.results = response.search_results;
-      setTimeout(function(){
+      setTimeout(function() {
         $('.result-title-link').html(function(_, html) {
           function capitalizeFirstLetter(string) {
               return string.charAt(0).toUpperCase() + string.slice(1);
