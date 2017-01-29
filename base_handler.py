@@ -780,7 +780,7 @@ class LoginRequiredHandler(webapp2.RequestHandler):
 
   def get(self):
     continue_url, = self.request.get('continue',allow_multiple=True)
-    self.redirect('app/dashboard')
+    self.redirect('app/search')
     #self.redirect(users.create_login_url('/app/dashboard'))
 
 
@@ -800,7 +800,7 @@ class LoginHandler(BaseHandler):
       u = self.auth.get_user_by_password(username, password, remember=True,
         save_session=True)
       #self.redirect(self.uri_for('home'))
-      self.redirect('app/dashboard')
+      self.redirect('app/search')
     except Exception, e: # except (InvalidAuthIdError, InvalidPasswordError) as e:
       #logging.info('Login failed for user %s because of %s', username, type(e))
       self._serve_page(True)

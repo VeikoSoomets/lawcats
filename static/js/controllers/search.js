@@ -10789,8 +10789,9 @@ var SearchController = (function () {
             _this2.MessagingService.danger(data.message);
           } else if (data.type === 'success') {
             _this2.sources.forEach(function (source) {
-              if (source[0].maincategory_name == 'Custom') {
-                source[1][0][1].push({ 'category_link': data.link, 'category_name': data.title });
+              if (source[0].maincategory_name === 'Custom') {
+                source[1][0][1].push({ 'category_link': data.link,
+                  'category_name': data.title });
               }
             });
             _this2.newSourceDescription = '';
