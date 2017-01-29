@@ -36,10 +36,8 @@ class SearchController {
     this.hasSearched = false;
     this.loading = false;
     this.results = [];
-    this.searchSources = [];
     this.querywords = '';
     this.searchedSanctions = false;
-
     this.searchSources = [];
     this.sources = [];
 
@@ -95,6 +93,10 @@ class SearchController {
                                     'category_name':data.title});
             }
           });
+          this.searchSources.push({
+            checked: true,
+            name: data.title
+          });
           this.newSourceDescription = '';
           this.newSourceUrl = '';
           this.MessagingService.success(data.message);
@@ -149,7 +151,6 @@ class SearchController {
       default: // Should never enter, this is for future guys.
         console.error('Entered default case in searchFrom');
     }
-
     this.$http.post(this.baseUrl, {
       action: queryAction,
       queryword: this.querywords,
@@ -158,7 +159,7 @@ class SearchController {
       categories: sources
     }).success(response => {
       this.results = response.search_results;
-      setTimeout(function(){
+      setTimeout(function() {
         $('.result-title-link').html(function(_, html) {
           function capitalizeFirstLetter(string) {
               return string.charAt(0).toUpperCase() + string.slice(1);

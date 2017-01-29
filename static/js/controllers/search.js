@@ -10726,10 +10726,8 @@ var SearchController = (function () {
     this.hasSearched = false;
     this.loading = false;
     this.results = [];
-    this.searchSources = [];
     this.querywords = '';
     this.searchedSanctions = false;
-
     this.searchSources = [];
     this.sources = [];
 
@@ -10794,6 +10792,10 @@ var SearchController = (function () {
                   'category_name': data.title });
               }
             });
+            _this2.searchSources.push({
+              checked: true,
+              name: data.title
+            });
             _this2.newSourceDescription = '';
             _this2.newSourceUrl = '';
             _this2.MessagingService.success(data.message);
@@ -10853,7 +10855,6 @@ var SearchController = (function () {
           // Should never enter, this is for future guys.
           console.error('Entered default case in searchFrom');
       }
-
       this.$http.post(this.baseUrl, {
         action: queryAction,
         queryword: this.querywords,
