@@ -49,6 +49,7 @@ def search_seadused(querywords, category, date_algus='2010-01-01'):
     date_algus = datetime_object(date_algus)
     results = []
     for query in querywords:
+      print query
       result = parse_results_seadused(query, category, date_algus)
       if result:
         results.extend(result)
@@ -151,13 +152,11 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     laws = models.RiigiTeatajaURLs.query().fetch()
     print "fetching took %s seconds" % str(time.time() - start_time) """
 
-    final_results = []
     search_law_names = []
     paragraph_words =  ['paragraaf','paragrahv',u'§','para']
     search_law_name = None
     search_para_nbr = None
-
-    if any(x in query for x in paragraph_words):
+    if any(x in query for x in paragraph_words) or filter(str.isdigit, query.replace(u'§','').encode('latin1')):
       # get paragraph number to limit searches (if we have indication that we're search for a specific paragraph))
       # remove paragraph words from search string
       search_para_nbr = filter(str.isdigit, query.replace(u'§','').encode('latin1'))  # find digit, but replace paragraph symbpl first
@@ -173,38 +172,38 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
           ):
         search_law_names.append(law.title)
 
-
     if len(search_law_names) > 0:  # TODO! think what to do when we don't get law name?
+      final_results = []
       for search_law_name in search_law_names:
-        #logging.error(search_law_name)
-        try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
 
+        try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
           index = search.Index(name=search_law_name.encode('ascii', 'ignore').replace(' ',''))  # index name is printable ASCII
 
-          #for single_query in query.split():
           if len(query2.split()) == 1 and search_para_nbr:
             #logging.error(query2.split())
             query_string = 'para_nbr=%s' % search_para_nbr
             results = index.search(query_string)
-
             for result in results:
+
               rank = 0
               for single_query in query.split():
+                try:
+                  # rank results (had to split query only for ranking here)
+                  if result.field('para_nbr').value == int(search_para_nbr):
+                      rank += 1
+                  if single_query.lower() in result.field('law_title').value.lower():
+                      rank += 1
+                  if single_query.lower() in result.field('content').value.lower():
+                      rank += 2
+                except Exception:
+                  pass
 
-                # rank results (had to split query only for ranking here)
-                if result.field('para_nbr').value == int(search_para_nbr):
-                    rank += 1
-                if single_query.lower() in result.field('law_title').encode('utf8').value.lower():
-                    rank += 1
-                if single_query.lower() in result.field('content').encode('utf8').value.lower():
-                    rank += 2
-
-              #logging.error('GOT A FINAL RESULT 1')
               final_results.append([result.field('law_link').value,
                                       result.field('content').value,
-                                      u'§' + unicode(int(result.field('para_nbr').value)),  # int because in db they are double
+                                      result.field('para_title').value,
                                       result.field('law_title').value,
                                       rank, rank])
+
 
           else:
             for single_query in query.split():
@@ -212,34 +211,30 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
               results = index.search(query_string)
               if results:
                 for result in results:
-
-                  # rank results
-                  rank = 0
-                  if result.field('para_nbr').value == int(search_para_nbr):
-                      rank += 2
-                  if single_query.lower() in result.field('law_title').value.lower():
-                      rank += 1
-                  if single_query.lower() in result.field('content').value.replace(' ','').lower():
-                      logging.error('adding +2 from content because %s exists in %s' %(single_query.lower(), result.field('content').value.replace(' ','').lower()))
-                      rank += 2
-
-                  #logging.error('GOT A FINAL RESULT 2')
+                  try:
+                    # rank results
+                    rank = 0
+                    if single_query.lower() in result.field('law_title').value.lower():
+                        rank += 1
+                    if single_query.lower() in result.field('content').value.replace(' ','').lower():
+                        #logging.error('adding +2 from content because %s exists in %s' %(single_query.lower(), result.field('content').value.replace(' ','').lower()))
+                        rank += 2
+                  except Exception:
+                    pass
                   final_results.append([result.field('law_link').value,
                                         result.field('content').value,
-                                        result.field('para_nbr').value,
+                                        result.field('para_title').value,
                                         result.field('law_title').value,
                                         rank, rank])
 
-
-
         except Exception, e:
-          logging.error(e)
-          pass
+            logging.error(e)
+            pass
 
 
-    print "total results: %d" % len(final_results)
-    final_results = sorted(final_results, key=itemgetter(5), reverse=True)
-    return final_results
+      print "total results: %d" % len(final_results)
+      final_results = sorted(final_results, key=itemgetter(5), reverse=True)
+      return final_results
 
 
 # TODO! seems not to be working

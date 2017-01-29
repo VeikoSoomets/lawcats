@@ -192,6 +192,9 @@ class AddLawIndex(BaseHandler):
           para_nbr = 0
           if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
               paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
+              paragraph_title = c.find_previous_sibling('h3').get_text()
+              logging.error(repr(paragraph_title))
+
           try:
             para_nbr = paragraph.split()[1].replace('.','').replace(' ','')
           except Exception:
@@ -205,14 +208,11 @@ class AddLawIndex(BaseHandler):
                search.AtomField(name='law_title', value=law_title),
                search.AtomField(name='law_link', value=article_link),
                search.NumberField(name='para_nbr', value=int(para_nbr)),
+               search.TextField(name='para_title', value=paragraph_title),
                search.TextField(name='content', value=content)
                ])
             documents.append(document)
 
-      #logging.error(type(law.title))
-      #logging.error(repr(law.title))
-      #logging.error(repr(law_title.encode('ascii','ignore')))
-      #logging.error(type(law_title.encode('ascii','ignore')))
       try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
 
         self.delete_all_in_index(law_title.encode('ascii', 'ignore').replace(' ',''))  # empty index before reindexing
@@ -227,63 +227,6 @@ class AddLawIndex(BaseHandler):
       put_laws += 1
 
     logging.error('put %s laws to index!' % str(put_laws))
-
-class Add_EU_Sanctions(BaseHandler):
-
-  @classmethod
-  def delete_all_in_index(self,index_name):
-    """Delete all the docs in the given index."""
-    doc_index = search.Index(name=index_name)
-
-    # looping because get_range by default returns up to 100 documents at a time
-    while True:
-        # Get a list of documents populating only the doc_id field and extract the ids.
-        document_ids = [document.doc_id
-                        for document in doc_index.get_range(ids_only=True)]
-        if not document_ids:
-            break
-        # Delete the documents for the given ids from the Index.
-        doc_index.delete(document_ids)
-
-  def get(self):
-
-    start_time = time.time()
-    #ndb.delete_multi(models.SDN.query().fetch(keys_only=True)) # empty datastore for SDN
-    # self.delete_all_in_index('SDN_list') # empty index for SDN
-
-    documents = []
-
-    """ Open prepared file and put to search api index """
-    file = 'EU_sanctions.csv' # doesn't work if it is in static folder
-    with open(file, 'rb') as file:
-      #file.next() # skip first line, because it had headers
-      for row in csv.reader(file, delimiter=',', skipinitialspace=True):
-        program=row[0] # string
-        #programs=programs.split(',') # generate list for datastore, string for search index
-        name=row[1]
-        #sdn_type=row[3]
-
-        # build document 
-        document = search.Document(
-        fields=[
-           search.TextField(name='name', value=name),
-           search.TextField(name='program', value=program)
-           ])
-        documents.append(document)
-
-    """ Put documents to index in a batch (limit is 200 in one batch) """
-    def batch(iterable, n = 1):
-       l = len(iterable)
-       for ndx in range(0, l, n):
-           yield iterable[ndx:min(ndx+n, l)]
-
-    for x in batch(documents, 200):
-        index = search.Index(name="EU_list")
-        index.put(x)
-
-    search_length=str(time.time() - start_time)
-    message='Success! EU list to datastore took '+search_length+' seconds!'
-    self.render_template('sys.html',{'message_type':'success','message': message})
 
 
 class AutoAddSource(BaseHandler):
@@ -388,7 +331,6 @@ class DataGatherer(BaseHandler):
     RiigiTeatajaDownloadHandler.delete_htmls()
     deferred.defer(RiigiTeatajaDownloadHandler.get)
     return
-
 
 def do_implement(link,user_id):
     # do implementation

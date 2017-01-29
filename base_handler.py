@@ -337,7 +337,7 @@ class BaseHandler(webapp2.RequestHandler):
 
     if email:
       logged_in = True
-      if email in ['kasparg@gmail.com','amltoomas@gmail.com']:
+      if email in ['kasparg@gmail.com','veiko.soomets@gmail.com','test@example.com']:
         is_admin = True
 
     user_query = models.User.query(models.User.email_address == email).get()

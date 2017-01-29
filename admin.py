@@ -10,9 +10,9 @@
 
 from admin_handlers import *
 from auto_handlers import *
-from handlers import WebSearch, List_Search
-from categories import GenerateCategories
+from handlers import WebSearch
 from secrets import SESSION_KEY
+from categories import GenerateCategories
 
 import webapp2
 
@@ -43,20 +43,19 @@ application = webapp2.WSGIApplication(
         ('/app/querywords/data', RequestsHandler),
         ('/app/custom_cats', CustomCats),
         ('/app/search', WebSearch),
-        ('/app/list_search', List_Search),
         ('/app/search/data', WebSearch),
         ('/app/request_source', RequestSource), 
         ('/app/charts', StatsHandler),  # show statistics
         ('/sys/delete_user_results', DeleteUserResults),  # delete userresults
         ('/sys/delete_user_requests', DeleteRequests),  # delete requests
-        ('/sys/delete_categories', DeleteCategories),  # delete categories
         ('/sys/remove_last_crawl', DeleteLastCrawl),  # delete events
-        ('/sys/generate_categories', GenerateCategories),  # generate categories
-        ('/sys/implement_src', AutoAddSource),  # automatic implementation of sources
+        ('/sys/create_categories', GenerateCategories),  # generate categories
+        ('/sys/delete_categories', DeleteCategories),  # generate categories
+        #('/sys/implement_src', AutoAddSource),  # automatic implementation of sources
         ('/sys/add_law_index', AddLawIndex),
-        ('/sys/add_eu', Add_EU_Sanctions),  # add EU sanctions
         ('/app/admin', SiteAdmin),
         ('/app/change_lang', SetLangCookie),
-        ('/sys/download_riigihtml', DataGatherer)
+        ('/sys/download_riigihtml', DataGatherer),
+        ('/sys/reindex_law', AddLawIndex)
     ],
     debug=True, config=app_config)

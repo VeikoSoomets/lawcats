@@ -1,6 +1,6 @@
 ﻿{% extends "base.html" %}
 {% block title %}
-    {% trans %}Sysadmin{% endtrans %}
+    {% trans %}Admin{% endtrans %}
 {% endblock %}
 {% block page_title %}
 {% trans %}Sysadmin{% endtrans %}
@@ -10,12 +10,9 @@
 {% endblock %}
 {% block content %}
 
-
-    <li><a href="/sys/implement_src" class="btn btn-info">Implement Custom Sources</a></li><br/>
-    <li><a href="/sys/download_riigihtml" class="btn btn-info">Download Riigi HTML</a></li><br/>
-    <li><a href="/sys/generate_categories" class="btn btn-info">Generate categories</a></li><br/>
-    <li><a href="/sys/delete_categories" class="btn btn-info">Delete categories</a></li><br/>
-    <li><a href="/sys/add_law_index" class="btn btn-info">Reindex laws</a></li><br/>
-
+<li><a href="/sys/download_riigihtml" class="btn btn-info">Download Riigi HTML</a></li><br/>
+<li><a href="/sys/reindex_law" class="btn btn-info">Reindex laws</a></li><br/>
+<li><a href="/sys/delete_categories" class="btn btn-info">Delete categories</a></li><br/>
+<li><a href="/sys/create_categories" class="btn btn-info">Create categories</a></li><br/>
 
 {% endblock %}
