@@ -144,22 +144,24 @@ class DeleteUserResults(BaseHandler):
 class AddLawIndex(BaseHandler):
 
   @classmethod
-  def delete_all_in_index(self,index_name):
+  def delete_all_in_index(self):
     """Delete all the docs in the given index."""
-    doc_index = search.Index(name=index_name)
+    res = models.RiigiTeatajaMetainfo.query().fetch()
+    for law in res:
+      index_name = law.title.encode('ascii', 'ignore').replace(' ','')
+      doc_index = search.Index(name=index_name)
 
-    # looping because get_range by default returns up to 100 documents at a time
-    while True:
-        # Get a list of documents populating only the doc_id field and extract the ids.
-        document_ids = [document.doc_id
-                        for document in doc_index.get_range(ids_only=True)]
-        if not document_ids:
-            break
-        # Delete the documents for the given ids from the Index.
-        doc_index.delete(document_ids)
+      # looping because get_range by default returns up to 100 documents at a time
+      while True:
+          # Get a list of documents populating only the doc_id field and extract the ids.
+          document_ids = [document.doc_id
+                          for document in doc_index.get_range(ids_only=True)]
+          if not document_ids:
+              break
+          # Delete the documents for the given ids from the Index.
+          doc_index.delete(document_ids)
 
   def get(self):
-    self.delete_all_in_index('laws')  # empty index before reindexing
 
     def batch(iterable, n = 1):
        l = len(iterable)
@@ -213,8 +215,6 @@ class AddLawIndex(BaseHandler):
             documents.append(document)
 
       try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
-
-        self.delete_all_in_index(law_title.encode('ascii', 'ignore').replace(' ',''))  # empty index before reindexing
         """ Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index. """
         for x in batch(documents, 200):
             index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ',''))  # index name must be printable ASCII
@@ -329,6 +329,15 @@ class DataGatherer(BaseHandler):
   def get(self):
     RiigiTeatajaDownloadHandler.delete_htmls()
     deferred.defer(RiigiTeatajaDownloadHandler.get)
+    return
+
+from google.appengine.ext import deferred
+class DataIndexer(BaseHandler):
+  """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
+    Good for long-running tasks """
+  def get(self):
+    AddLawIndex.delete_all_in_index()
+    deferred.defer(AddLawIndex.get)
     return
 
 def do_implement(link,user_id):
