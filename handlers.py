@@ -162,15 +162,8 @@ class WebSearch(BaseHandler):
     search_results1 = []
 
     for cat in categories:
-      
-      if action == 'archive_search':
-        date_algus = json_data.get('date_algus') if json_data.get('date_algus') else '2014-01-01'
-        search_results1 = search_archive(querywords, cat, date_algus)
 
-      elif action == 'list_search':
-        search_results1 = list_search(querywords,cat)
-
-      elif action == 'search':
+      if action == 'search':
         date_algus = '2014-01-01'
         print "category is ", repr(cat)
         search_results1 = do_search(querywords,cat,date_algus)
@@ -179,31 +172,9 @@ class WebSearch(BaseHandler):
         date_algus = '2014-01-01'
         search_results1 = custom_search(querywords,cat,date_algus,email)
 
-      elif action=='landing_search':
-        date_algus = '2014-01-01'        
-        if cat in ['EU Sanctions', 'OFAC Sanctions']:
-          search_results_1 = list_search(querywords,cat)
-          if search_results_1:
-            for result in search_results_1:
-              params = {'programs': result['programs'],
-                        'name': result['name']
-                        }
-              search_results.append(params)
-              
-        elif cat not in ['EU Sanctions', 'OFAC Sanctions']:
-          search_results_1 = do_search(querywords,cat,date_algus)
-          if search_results_1:
-            for result in search_results_1:
-              params = {'result_link': result[0],
-                        'result_title': result[1],
-                        'result_date': result[2],
-                        'queryword': result[3],
-                        'categories': result[4]
-                        }
-              search_results.append(params)
       
       # There are different result set structures for different search types
-      if search_results1 and action != 'list_search':  # we don't want to add empty values to our final search list
+      if search_results1:  # we don't want to add empty values to our final search list
         for result in search_results1:
           params = {'result_link': result[0],
                     'result_title': result[1],
@@ -213,12 +184,12 @@ class WebSearch(BaseHandler):
                     }
           search_results.append(params)
       
-      if search_results1 and action=='list_search': # we don't want to add empty values to our final search list
+      """if search_results1 and action=='list_search': # we don't want to add empty values to our final search list
         for result in search_results1:
           params = {'programs': result['programs'],
                     'name': result['name']
                     }
-          search_results.append(params)
+          search_results.append(params) """
           
     if search_results:
       message=_('Got %s results') % str(len(search_results))

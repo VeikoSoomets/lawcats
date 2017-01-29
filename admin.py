@@ -53,7 +53,7 @@ application = webapp2.WSGIApplication(
         ('/sys/remove_last_crawl', DeleteLastCrawl),  # delete events
         ('/sys/generate_categories', GenerateCategories),  # generate categories
         ('/sys/implement_src', AutoAddSource),  # automatic implementation of sources
-        ('/sys/add_sdn', AddSDN),  # add OFAC sanctions
+        ('/sys/add_law_index', AddLawIndex),
         ('/sys/add_eu', Add_EU_Sanctions),  # add EU sanctions
         ('/app/admin', SiteAdmin),
         ('/app/change_lang', SetLangCookie),

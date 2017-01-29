@@ -5,10 +5,6 @@ sys.path.insert(0, 'libs')
 import bs4
 import urllib2
 
-from datetime import datetime
-import datetime
-#from google.appengine.api import search
-#import docs
 import logging
 import urllib
 
@@ -138,13 +134,10 @@ def search_riigiteataja_uudised(querywords,category,date_algus='2010-01-01'):
 
     return results
 
-import models
-import time
-from operator import itemgetter
 
-"""def max_value(inputlist):
-    return ( max([sublist[-1] for sublist in inputlist]), min([sublist[-1] for sublist in inputlist if sublist[-1] > 0]) )
-"""
+from operator import itemgetter
+import models
+from google.appengine.api import search
 def parse_results_seadused(query=None, category=None, date_algus=None):
 
     """hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -158,88 +151,90 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     laws = models.RiigiTeatajaURLs.query().fetch()
     print "fetching took %s seconds" % str(time.time() - start_time) """
 
-    laws_titles = models.RiigiTeatajaMetainfo.query().fetch()
-    #print "BBBBBBBBBBBBBBBBB"  # TODO! for somereason, this gets logged twice, but should be logged once!!!
-    laws = None
-    for law in laws_titles:
-      # search for "Lõhkematerjali seadus paragrahv 5"
-      # title = Lõhkematerjaliseadus
-      if (query.lower() in law.title.lower()
-            or query.split()[0].lower() in law.title.lower()  # ["lõhkematerjali","seadus","paragrahv"][0]
-            or law.title.lower() in query.lower()
-            or query.replace(' ', '').lower() in law.title.lower().replace(' ', '')):
-        laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title == law.title).fetch()
-
-    if not laws:
-      laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title==u'Lõhkematerjaliseadus').fetch()
-
     final_results = []
-    for law in laws:
-      #  limit results by 5
-      """itr += 1
-      if itr > 5:
-        print "iteration limit 5, breaking loop here... "
-        break"""
+    search_law_names = []
+    paragraph_words =  ['paragraaf','paragrahv',u'§','para']
+    search_law_name = None
+    search_para_nbr = None
 
-      #req = urllib2.Request(law.link)  # , headers=hdr
-      src = law.text
+    if any(x in query for x in paragraph_words):
+      # get paragraph number to limit searches (if we have indication that we're search for a specific paragraph))
+      # remove paragraph words from search string
+      search_para_nbr = filter(str.isdigit, query.replace(u'§','').encode('latin1'))  # find digit, but replace paragraph symbpl first
 
-      soup = bs4.BeautifulSoup(src, "html5lib")
-      url_base = law.link
+    laws_titles = models.RiigiTeatajaMetainfo.query().fetch()
+    for law in laws_titles:
+      query2 = ''.join([e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + ['seadus', search_para_nbr]])
+      query3 = query.split()[0]
+      if (query2.lower() in law.title.lower().replace(' ','')
+            or query3.lower() in law.title.lower()  # ["lõhkematerjali","seadus","paragrahv"][0]
+            or law.title.lower() in query.lower()
+            or any(x.lower() in ''.join(law.title).encode('utf8').lower() for x in [e for e in query.replace(u'§','').encode('latin1').split() if e.lower() not in paragraph_words + ['seadus', search_para_nbr]])
+          ):
+        search_law_names.append(law.title)
 
-      # Get individual articles
-      articles = soup.find_all('div', attrs={'id': 'article-content'})
-      article_cnt = 0
-      for article in articles:
-        article_link, title, content = None, None, None
-        title = law.title
-        # Get content
-        content = article.find_all('p')  #, attrs={'class': 'announcement-body'}
-        for c in content:
-          article_cnt += 1
-          try:
-            article_link = c.find_next('a').get('name')
-            article_link = url_base + '#' + article_link
-          except:
-            pass
 
-          rank = 0
-          for single_word in query.split():
-            para_nbr = 0
-            if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
-                paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
+    if len(search_law_names) > 0:  # TODO! think what to do when we don't get law name?
+      for search_law_name in search_law_names:
+        #logging.error(search_law_name)
+        try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
 
-            try:
-              para_nbr = paragraph.split()[1].replace('.','').replace(' ','')
-              # check if paragraph number matches any numbers in the query that was passed
-              if para_nbr == single_word:
-                  rank += 5
-                  if single_word.lower() in ['paragraaf','paragrahv',u'§']:
-                      rank += 4
-            except Exception, e:
-              print e
-              pass
+          index = search.Index(name=search_law_name.encode('ascii', 'ignore').replace(' ',''))  # index name is printable ASCII
 
-            try:
-              if single_word.lower() in ''.join(c.get_text().lower()) or para_nbr > 0:
-                rank += 1
+          #for single_query in query.split():
+          if len(query2.split()) == 1 and search_para_nbr:
+            #logging.error(query2.split())
+            query_string = 'para_nbr=%s' % search_para_nbr
+            results = index.search(query_string)
 
-                if single_word.lower() in c.get_text().lower():
-                  rank += 2
+            for result in results:
+              rank = 0
+              for single_query in query.split():
 
-                if single_word.lower() in law.title.lower():
-                  rank += 3
+                # rank results (had to split query only for ranking here)
+                if result.field('para_nbr').value == int(search_para_nbr):
+                    rank += 1
+                if single_query.lower() in result.field('law_title').encode('utf8').value.lower():
+                    rank += 1
+                if single_query.lower() in result.field('content').encode('utf8').value.lower():
+                    rank += 2
 
-                #print rank
-                content = c.get_text()
-                final_results.append([article_link, content, paragraph, title, rank, rank])
-            except Exception, e:
-               print e
-               pass
+              #logging.error('GOT A FINAL RESULT 1')
+              final_results.append([result.field('law_link').value,
+                                      result.field('content').value,
+                                      u'§' + unicode(int(result.field('para_nbr').value)),  # int because in db they are double
+                                      result.field('law_title').value,
+                                      rank, rank])
 
-            """max_rank, min_rank = max_value(final_results)
-            if max_rank - min_rank >= 3:
-              print "breaking loop 'cause we got enough results for now... """""
+          else:
+            for single_query in query.split():
+              query_string = 'content: ~"%s"' % (single_query)
+              results = index.search(query_string)
+              if results:
+                for result in results:
+
+                  # rank results
+                  rank = 0
+                  if result.field('para_nbr').value == int(search_para_nbr):
+                      rank += 2
+                  if single_query.lower() in result.field('law_title').value.lower():
+                      rank += 1
+                  if single_query.lower() in result.field('content').value.replace(' ','').lower():
+                      logging.error('adding +2 from content because %s exists in %s' %(single_query.lower(), result.field('content').value.replace(' ','').lower()))
+                      rank += 2
+
+                  #logging.error('GOT A FINAL RESULT 2')
+                  final_results.append([result.field('law_link').value,
+                                        result.field('content').value,
+                                        result.field('para_nbr').value,
+                                        result.field('law_title').value,
+                                        rank, rank])
+
+
+
+        except Exception, e:
+          logging.error(e)
+          pass
 
 
     print "total results: %d" % len(final_results)
@@ -247,6 +242,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     return final_results
 
 
+# TODO! seems not to be working
 def parse_results_teadaanded(link, query=None, category=None, date_algus=None):
     url_base="https://www.ametlikudteadaanded.ee"
     hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -450,79 +446,7 @@ def parse_results_oigusaktid(url, query=None, category=None, date_algus=None):
       pass
  
  
-def parse_seadus(src,seadus): # pole kasutusel
-    #src = '"{0}"'.format(src.replace('"',''))
 
-    """
-    with open("KarS.html") as myfile:
-        url_base="https://www.riigiteataja.ee/akt/126022014005" #"http://www.ilukabinet.ee/AdvS.html"
-    #f = urllib2.urlopen(url_base)
-        sisu = myfile.read(1000000) # f.read
-    soup = bs4.BeautifulSoup(sisu)
-
-    paraTitles = []
-    paraLinks = []
-    ptkTitle = []
-
-    for peatykk in soup.findAll("a", {"class": "toggle truncate-toc"}):
-        ptk_title = peatykk.findAll(text=True, limit=100)
-        ptkTitle.append(ptk_title)
-        
-    for para in soup.findAll("a", {"class": "truncate2-toc"}):
-        paratitle = para.get_text() #para.findAll(text=True, limit=100)
-        paralink = para['href'] #"{0}{1}".format(url_base, para['href'])
-        paraTitles.append(paratitle)
-        paraLinks.append(paralink)
-        
-    a=soup.find("div", {"id": "article-content"})
-    
-    delete_all_in_index("KarS") # teeme indeksi tühjaks
-    for b, a, l in zip([x for x in a.findAll("p")],paraTitles,paraLinks):
-    
-        #uus=[x for x in b[4:7] if is_number(x)]
-        #print "para" + ''.join(uus)
-        #if b.findAll("a", {"name": "truncate2-toc"}
-        b = b.get_text() 
-        my_document = search.Document(
-        # Setting the doc_id is optional. If omitted, the search service will create an identifier.
-        #doc_id = 'PA6-5000',
-        fields=[
-           search.TextField(name='name', value='Karistusseadustik'),
-           search.HtmlField(name='paragraph', value=str(a)), #paraTitles
-           search.HtmlField(name='content', value=str(b)), # a.findAll("p")
-           search.TextField(name='link', value=str(l)), # paraLinks
-           search.DateField(name='updated', value=datetime.datetime.now())
-           ])
-        index = search.Index(name="KarS")
-        index.put(my_document) # paneme dokumendi indeksisse
-    """
-    # Query Index
-    #seadus="KarS" # muuta seadust
-    index = search.Index(name=seadus) # "AdvS"
-    
-    # Query String
-    query_string = src 
-
-    # Query Options
-    query_options = search.QueryOptions(
-        limit=20, # something wrong with this
-        returned_fields=['content','name','paragraph','link'])#,
-        # #snippeted_fields=[docs.Product.CONTENT])
-    
-    query = search.Query(query_string=query_string, options=query_options)
-
-    rel2=[]
-    try:
-        results = index.search(query)
-            
-        """for scored_document in results.results:
-            rel2.append(scored_document)  """
-
-    except search.Error:
-        logging.exception('Search failed')
-    
-    return results.results # (paraLinks,paraTitles,rel2)
-    
 # TESTING #####
 if __name__ == "__main__":
   #results=search_kohtu([u'Eldar Plakan','Margus Sepp',u'Vladimir Kolobaškin'],'maa- ja ringkonnakohtu lahendid', '2011-01-01') # site often down

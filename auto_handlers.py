@@ -141,7 +141,7 @@ class DeleteUserResults(BaseHandler):
       self.render_template('sys.html',{'message_type':'danger','message':'Failed!'})
 
 
-class AddSDN(BaseHandler):
+class AddLawIndex(BaseHandler):
 
   @classmethod
   def delete_all_in_index(self,index_name):
@@ -159,46 +159,74 @@ class AddSDN(BaseHandler):
         doc_index.delete(document_ids)
 
   def get(self):
+    self.delete_all_in_index('laws')  # empty index before reindexing
 
-    start_time = time.time()
-    #ndb.delete_multi(models.SDN.query().fetch(keys_only=True)) # empty datastore for SDN
-    # self.delete_all_in_index('SDN_list') # empty index for SDN
-
-    documents = []
-
-    """ Open prepared file and put to search api index """
-    file = 'sdn_prepared.csv' # doesn't work if it is in static folder
-    with open(file, 'rb') as file:
-      file.next() # skip first line, because it had headers
-      for row in csv.reader(file, delimiter=',', skipinitialspace=True):
-        programs=row[1] # string
-        #programs=programs.split(',') # generate list for datastore, string for search index
-        sdn_name=row[2]
-        sdn_type=row[3]
-
-        # build document
-        document = search.Document(
-        fields=[
-           search.TextField(name='sdn_name', value=sdn_name),
-           search.TextField(name='sdn_type', value=sdn_type),
-           search.TextField(name='programs', value=programs)
-           ])
-        documents.append(document)
-
-    """ Put documents to index in a batch (limit is 200 in one batch) """
     def batch(iterable, n = 1):
        l = len(iterable)
        for ndx in range(0, l, n):
            yield iterable[ndx:min(ndx+n, l)]
 
-    for x in batch(documents, 200):
-        index = search.Index(name="SDN_list")
-        index.put(x)
+    """ Get laws from datastore and put to search api index """
+    laws = models.RiigiTeatajaURLs.query().fetch()
+    put_laws = 0
+    for law in laws:
+      documents = []
+      src = law.text
+      soup = bs4.BeautifulSoup(src, "html5lib")
+      url_base = law.link
 
-    search_length=str(time.time() - start_time)
-    message='Success! SDN list to datastore took '+search_length+' seconds!'
-    self.render_template('sys.html',{'message_type':'success','message': message})
+      # Get individual articles
+      articles = soup.find_all('div', attrs={'id': 'article-content'})
+      for article in articles:
+        article_link, law_title, content = None, None, None
+        law_title = law.title
+        # Get content
+        content = article.find_all('p')  #, attrs={'class': 'announcement-body'}
+        for c in content:
+          try:
+            article_link = c.find_next('a').get('name')
+            article_link = url_base + '#' + article_link
+          except:
+            pass
 
+          para_nbr = 0
+          if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
+              paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
+          try:
+            para_nbr = paragraph.split()[1].replace('.','').replace(' ','')
+          except Exception:
+            pass
+          content = c.get_text()
+
+          # build document
+          if article_link:  # lets prune some crappy entries we don't need
+            document = search.Document(
+            fields=[
+               search.AtomField(name='law_title', value=law_title),
+               search.AtomField(name='law_link', value=article_link),
+               search.NumberField(name='para_nbr', value=int(para_nbr)),
+               search.TextField(name='content', value=content)
+               ])
+            documents.append(document)
+
+      #logging.error(type(law.title))
+      #logging.error(repr(law.title))
+      #logging.error(repr(law_title.encode('ascii','ignore')))
+      #logging.error(type(law_title.encode('ascii','ignore')))
+      try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
+
+        self.delete_all_in_index(law_title.encode('ascii', 'ignore').replace(' ',''))  # empty index before reindexing
+        """ Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index. """
+        for x in batch(documents, 200):
+            index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ',''))  # index name must be printable ASCII
+            index.put(x)
+      except Exception, e:
+        # pass only because sometimes index name exceed 100byte limit, but we don't care for those atm
+        pass
+
+      put_laws += 1
+
+    logging.error('put %s laws to index!' % str(put_laws))
 
 class Add_EU_Sanctions(BaseHandler):
 
@@ -300,6 +328,7 @@ class AutoAddSource(BaseHandler):
 
     return implemented
     #self.render_template('admin.html',{'message_type':'success','message':message})
+
 
 from google.appengine.api import urlfetch
 urlfetch.set_default_fetch_deadline(600)
