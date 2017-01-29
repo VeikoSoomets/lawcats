@@ -193,7 +193,6 @@ class AddLawIndex(BaseHandler):
           if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
               paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
               paragraph_title = c.find_previous_sibling('h3').get_text()
-              logging.error(repr(paragraph_title))
 
           try:
             para_nbr = paragraph.split()[1].replace('.','').replace(' ','')
