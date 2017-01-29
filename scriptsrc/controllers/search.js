@@ -78,8 +78,10 @@ class SearchController {
   /**
    * Send request for new source
    */
-  sendNewSource () {
+  sendNewSource (event) {
+    event.preventDefault();
     if (this.newSourceUrl && this.newSourceDescription) {
+      this.loading = true;
       this.$http.post('/app/request_source', {
         url: this.newSourceUrl,
         description: this.newSourceDescription
@@ -96,6 +98,7 @@ class SearchController {
           this.newSourceUrl = '';
           this.MessagingService.success(data.message);
         }
+        this.loading = false;
       });
     } else {
       this.MessagingService.danger('Please input a url and description.');

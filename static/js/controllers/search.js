@@ -10775,10 +10775,12 @@ var SearchController = (function () {
      */
   }, {
     key: 'sendNewSource',
-    value: function sendNewSource() {
+    value: function sendNewSource(event) {
       var _this2 = this;
 
+      event.preventDefault();
       if (this.newSourceUrl && this.newSourceDescription) {
+        this.loading = true;
         this.$http.post('/app/request_source', {
           url: this.newSourceUrl,
           description: this.newSourceDescription
@@ -10786,7 +10788,6 @@ var SearchController = (function () {
           if (data.type === 'danger') {
             _this2.MessagingService.danger(data.message);
           } else if (data.type === 'success') {
-            debugger;
             _this2.sources.forEach(function (source) {
               if (source[0].maincategory_name == 'Custom') {
                 source[1][0][1].push({ 'category_link': data.link, 'category_name': data.title });
@@ -10796,6 +10797,7 @@ var SearchController = (function () {
             _this2.newSourceUrl = '';
             _this2.MessagingService.success(data.message);
           }
+          _this2.loading = false;
         });
       } else {
         this.MessagingService.danger('Please input a url and description.');

@@ -118,6 +118,7 @@ class List_Search(BaseHandler):
 
 class WebSearch(BaseHandler):
   """Searches from the web (from implemented sources) """
+  @BaseHandler.logged_in2
   def get(self):
     email = self.get_user_email()
     if 'application/json' in self.request.headers['Accept']:
