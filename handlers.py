@@ -10,7 +10,7 @@ from admin_handlers import get_categories
 import json
 
 from parsers.bureau_parse import LawfirmParsers
-from parsers import ministry_parse, politsei_parse, fi_parse, eurlex_parse, rss_parse, riigiteataja_parse, custom_source
+from parsers import ministry_parse,  eurlex_parse, rss_parse, riigiteataja_parse, custom_source
 
 from google.appengine.api import search
 from google.appengine.ext import ndb
@@ -243,17 +243,13 @@ def do_search(querywords, category, date_algus):
   search_results=[]
 
   search_list = [
-    {'category': 'Politsei uudised', 'results': politsei_parse.search_politsei},
     {'category': 'Riigiteataja uudised', 'results': riigiteataja_parse.search_riigiteataja_uudised},
     {'category': 'oigusaktid', 'results': riigiteataja_parse.search_oigusaktid},
     {'category': 'RSS allikad', 'results': rss_parse.parse_feed},
     {'category': 'ministeeriumid', 'results': ministry_parse.search_ministry},
-    {'category': 'Ametlikud teadaanded', 'results': riigiteataja_parse.search_ametlikud_teadaanded},
     {'category': 'Riigiteataja seadused', 'results': riigiteataja_parse.search_seadused},
     {'category': 'Maa- ja ringkonnakohtu lahendid', 'results': riigiteataja_parse.search_kohtu},  # to avoid duplicates, add space to source
 
-    {'category': 'finantsinspektsioon', 'results': fi_parse.search_EU_supervision},
-    {'category': 'FI juhendid', 'results': fi_parse.search_fi},
     {'category': 'Eur-Lex eestikeelsete dokumentide otsing', 'results': eurlex_parse.search_eurlex},
 
     # advokaadibürood (need, mida mainitud pole, on RSS allikate all)
@@ -262,11 +258,6 @@ def do_search(querywords, category, date_algus):
   ]
 
   for source in search_list:
-
-    # Otsime finantsinspektsioonist
-    if source['category'] == 'finantsinspektsioon':
-      if category in [x[0] for x in fi_parse.categories]:
-        search_results.extend(source['results'](querywords, category, date_algus))
 
     # Otsime ministeeriumitest (mis ei ole RSS)
     if source['category'] == 'ministeeriumid':
@@ -278,16 +269,6 @@ def do_search(querywords, category, date_algus):
           logging.error(e)
           pass
 
-    # Otsime FI teadetest
-    if source['category'] == 'FI teated':
-      #if category in fi_parse.pages: # mitu allikat
-      if category in [x[0] for x in fi_parse.categories]:  # mitu allikat
-        try:
-          search_results.extend(source['results'](querywords, category, date_algus))
-        except Exception, e:
-          logging.error('failed with FI teated')
-          logging.error(e)
-          pass
 
     # Otsime FI juhenditest
     if source['category'] == 'FI juhendid':  # mitu allikat
@@ -327,6 +308,7 @@ def do_search(querywords, category, date_algus):
 
     # Everything else
     if category == source['category']:
+      search_results.extend(source['results'](querywords, category, date_algus))
       try:
         search_results.extend(source['results'](querywords, category, date_algus))
       except Exception, e:
