@@ -139,19 +139,22 @@ class WebSearch(BaseHandler):
       json_data = json.loads(self.request.body)
       query = json_data['queryword']
       query_string = query.upper().encode('utf-8')
-      querywords = set(query.split(','))
+      querywords = set(query.split(' '))
       # This variables in for shorter law names like 'KarS' etc
       lyhendid_in_query_string = [constants.Lyhendid.get_value_by_name(lyhend).decode('utf-8') for lyhend in
                                   constants.Lyhendid.get_constant_names(uppercase=True) if lyhend in query_string]
       # This variables in for longer law names like 'Karistusseadustik' etc
       lyhendid_values_in_query_string = [constants.Lyhendid.get_name_by_value(lyhend).decode('utf-8') for lyhend in
                                          constants.Lyhendid.get_constant_values(uppercase=True) if lyhend in query_string]
+
       if lyhendid_in_query_string:
         querywords.update(lyhendid_in_query_string)
       if lyhendid_values_in_query_string:
         querywords.update(lyhendid_values_in_query_string)
+
       categories2 = json_data['categories']
       action = json_data['action']
+
 
     except Exception, e:  # TODO! don't even need this here
       logging.error(e)
@@ -269,17 +272,6 @@ def do_search(querywords, category, date_algus):
           logging.error(e)
           pass
 
-
-    # Otsime FI juhenditest
-    if source['category'] == 'FI juhendid':  # mitu allikat
-      if category in ['FI juhendite projektid','FI kehtivad juhendid']:
-        try:
-          search_results.extend(source['results'](querywords, category, date_algus))
-        except Exception, e:
-          logging.error('failed with FI juhendid')
-          logging.error(e)
-          pass
-
     # Otsime riigi ja/või KOV õigusaktidest
     if source['category'] == 'oigusaktid':
       if category in [u'Kehtivate KOV õigusaktide otsing',u'Kehtivate õigusaktide otsing']:  # mitu allikat
@@ -308,7 +300,6 @@ def do_search(querywords, category, date_algus):
 
     # Everything else
     if category == source['category']:
-      search_results.extend(source['results'](querywords, category, date_algus))
       try:
         search_results.extend(source['results'](querywords, category, date_algus))
       except Exception, e:
