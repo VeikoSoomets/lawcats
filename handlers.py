@@ -144,10 +144,10 @@ class WebSearch(BaseHandler):
       logging.error('////////////////////')
       # This variables in for shorter law names like 'KarS' etc
       lyhendid_in_query_string = [constants.Lyhendid.get_value_by_name(lyhend).decode('utf-8') for lyhend in
-                                  constants.Lyhendid.get_constant_names(uppercase=True) if lyhend in query_string]
+                                  constants.Lyhendid.get_constant_names(uppercase=True) if lyhend in query_string.split(' ')]
       # This variables in for longer law names like 'Karistusseadustik' etc
       lyhendid_values_in_query_string = [constants.Lyhendid.get_name_by_value(lyhend).decode('utf-8') for lyhend in
-                                         constants.Lyhendid.get_constant_values(uppercase=True) if lyhend in query_string]
+                                         constants.Lyhendid.get_constant_values(uppercase=True) if lyhend in query_string.split(' ')]
 
       if lyhendid_in_query_string:
         querywords.update(lyhendid_in_query_string)
