@@ -7,3 +7,7 @@ cron:
 - description: reindex laws.. lets do it 1 hour later
   url: '/sys/reindex_law'
   schedule: every 24 hours
+
+#- description: Keep instances alive artificially. If no instances are running, a request will cause an instant to start. Instances stay up for 15 minutes after they served last request.
+#  url: '/sys/reindex_law'
+#  schedule: every 13 minutes

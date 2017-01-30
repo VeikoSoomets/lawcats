@@ -46,7 +46,6 @@ app_config = {
 application = webapp2.WSGIApplication(
     [
         ('/', IndexHandler),
-        ('/mail', SendMail),
         ('/search', WebSearch),
         webapp2.Route('/signup', SignupHandler),
         webapp2.Route('/<type:v|p>/<user_id:\d+>-<signup_token:.+>', VerificationHandler, name='verification'),

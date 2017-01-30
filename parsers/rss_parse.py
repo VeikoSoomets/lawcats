@@ -198,6 +198,7 @@ def parse_feed(querywords, category, date_algus='2016-01-01'): # kui kuupäeva e
               search_from = urllib2.urlopen(search_from, timeout=40).read(20000)
 
             d = feedparser.parse(search_from)
+            logging.error('parsing feed')
             for a in d.entries:
               for x in querywords:
                 if ' ' in x:

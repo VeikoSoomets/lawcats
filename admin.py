@@ -52,7 +52,7 @@ application = webapp2.WSGIApplication(
         ('/sys/create_categories', GenerateCategories),  # generate categories
         ('/sys/delete_categories', DeleteCategories),  # generate categories
         #('/sys/implement_src', AutoAddSource),  # automatic implementation of sources
-        ('/sys/add_law_index', AddLawIndex),
+        #('/sys/add_law_index', AddLawIndex),
         ('/app/admin', SiteAdmin),
         ('/app/change_lang', SetLangCookie),
         ('/sys/download_riigihtml', DataGatherer),

@@ -3,7 +3,8 @@
 runtime: python27
 threadsafe: true
 api_version: 1
-instance_class: F4
+automatic_scaling:
+  max_idle_instances: 1 # default is automatic
 
 handlers:
 - url: /static
@@ -72,3 +73,6 @@ libraries:
 #inbound_services:
 #- warmup
 
+error_handlers:
+  - error_code: over_quota
+    file: over_quota.html

@@ -125,7 +125,10 @@ def search_riigiteataja_uudised(querywords,category,date_algus='2010-01-01'):
 from operator import itemgetter
 import models
 from google.appengine.api import search
+from google.appengine.api import memcache
 def parse_results_seadused(query=None, category=None, date_algus=None):
+    logging.error(repr(query))
+    logging.error('-----------------')
 
     """hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -143,7 +146,13 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
       # remove paragraph words from search string
       search_para_nbr = filter(str.isdigit, query.replace(u'§','').encode('latin1'))  # find digit, but replace paragraph symbpl first
 
-    laws_titles = models.RiigiTeatajaMetainfo.query().fetch()
+
+
+    laws_titles = memcache.get('law_titles')
+    if not laws_titles:
+      laws_titles = models.RiigiTeatajaMetainfo.query().fetch()
+      memcache.set('law_titles', laws_titles)  # no expiration
+
     for law in laws_titles:
       query2 = ''.join([e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + ['seadus', search_para_nbr]])
       query4 = [e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + ['seadus', search_para_nbr]][0]
@@ -161,7 +170,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
             or query4.lower() in law.title.lower().replace(' ','')
             or query3.lower() in law.title.lower().replace(' ','')  # ["lõhkematerjali","seadus","paragrahv"][0]
             or law.title.lower() in query.lower()
-            or any(x.lower() in ''.join(law.title).encode('utf8').lower() for x in [e for e in query.replace(u'§','').encode('latin1').split() if e.lower() not in paragraph_words + [search_para_nbr]])
+            or any(x.lower() in ''.join(law.title).encode('utf8').replace('seadus','').lower() for x in [e for e in query.replace(u'§','').replace('seadus','').encode('latin1').split() if e.lower() not in paragraph_words + [search_para_nbr]])
           ):
         search_law_names.append(law.title)
 
@@ -200,10 +209,11 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
           else:
             search_para_nbr = 'missing' if not search_para_nbr else 'missing'
-            for single_query in query.replace(search_para_nbr,'').split():
+            logging.error(repr(query.replace(search_para_nbr,'').replace('seadus','').split()))
+            for single_query in query.replace(search_para_nbr,'').replace('seadus','').split():
               if single_query != 'seadus':
                 query_string = 'content: ~"%s"' % (single_query)
-                #logging.error(query_string)
+                logging.error(query_string)
                 results = index.search(query_string)
                 if results:
                   for result in results:

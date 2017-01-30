@@ -140,13 +140,33 @@ class DeleteUserResults(BaseHandler):
     else:
       self.render_template('sys.html',{'message_type':'danger','message':'Failed!'})
 
+superscript_map = {
+    0: u"\u2070",
+    1: u"\u00B9",
+    2: u"\u00B2",
+    3: u"\u00B3",
+    4: u"\u2074",
+    5: u"\u2075",
+    6: u"\u2076",
+    7: u"\u2077",
+    8: u"\u2078",
+    9: u"\u2079",
+    10: u"\u00B9\u2070",
+    11: u"\u00B9\u00B9",
+    12: u"\u00B9\u00B2",
+    13: u"\u00B9\u00B3",
+    14: u"\u00B9\u2074"
+}
 
 class AddLawIndex(BaseHandler):
 
   @classmethod
   def delete_all_in_index(self):
     """Delete all the docs in the given index."""
-    res = models.RiigiTeatajaMetainfo.query().fetch()
+    res = memcache.get('law_titles')
+    if not res:
+      res = models.RiigiTeatajaMetainfo.query().fetch()
+      memcache.set('law_titles', res)  # no expiration
     for law in res:
       try:
         index_name = law.title.encode('ascii', 'ignore').replace(' ','')
@@ -172,6 +192,9 @@ class AddLawIndex(BaseHandler):
        for ndx in range(0, l, n):
            yield iterable[ndx:min(ndx+n, l)]
 
+    def not_inside_toc(tag):
+        return tag.get('class') != ['toc-indentation'] or tag.clear()
+
     """ Get laws from datastore and put to search api index """
     laws = models.RiigiTeatajaURLs.query().fetch()
     put_laws = 0
@@ -179,12 +202,19 @@ class AddLawIndex(BaseHandler):
       documents = []
       src = law.text
       soup = bs4.BeautifulSoup(src, "html5lib")
+
+      # we want to understand superscript styles and show them properly to avoid confusion in paragraph numbers
+      try:
+          for e in soup.findAll('sup'):
+              e.string = [y for x, y in superscript_map.iteritems() if x == int(e.get_text())][0]
+      except Exception:
+          pass
       url_base = law.link
 
       # Get individual articles
       articles = soup.find_all('div', attrs={'id': 'article-content'})
       for article in articles:
-        article_link, law_title, content = None, None, None
+        paragraph_title, article_link, law_title, content = None, None, None, None
         law_title = law.title
         # Get content
         content = article.find_all('p')  #, attrs={'class': 'announcement-body'}
@@ -202,12 +232,13 @@ class AddLawIndex(BaseHandler):
 
           try:
             para_nbr = paragraph.split()[1].replace('.','').replace(' ','')
+
           except Exception:
             pass
           content = c.get_text()
 
           # build document
-          if article_link:  # lets prune some crappy entries we don't need
+          if article_link and paragraph_title:  # lets prune some crappy entries we don't need
             document = search.Document(
             fields=[
                search.AtomField(name='law_title', value=law_title),
@@ -218,6 +249,7 @@ class AddLawIndex(BaseHandler):
                ])
             documents.append(document)
 
+      # TODO! truncate to < 100bytes so you'd get all laws (currently a couple missing)
       try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
         """ Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index. """
         for x in batch(documents, 200):
@@ -230,50 +262,6 @@ class AddLawIndex(BaseHandler):
       put_laws += 1
 
     logging.error('put %s laws to index!' % str(put_laws))
-
-
-class AutoAddSource(BaseHandler):
-  """ Tries to automatically add a user requested source. If fails, notifies admin that there are open requests. """
-
-  def get(self):
-    start_time = time.time()
-    datelimit=datetime.datetime.now().date()
-
-    user_list = [x.email_address for x in models.User.query(models.User.usage_expire_date>=datelimit,projection=['email_address']).fetch()] # only take users who don't have expired usage
-    datastore_results = models.SourceRequest.query(ndb.AND(models.SourceRequest.user_id.IN(user_list),models.SourceRequest.implemented_dtime==None)).fetch() # find a way to make this more optimal
-    crawled_keys=[]
-    data = [p.to_dict() for p in datastore_results]  # put individual datastore results to dictionary
-
-    for line in data:
-      if not line['implemented_dtime']:
-        # Start implementing
-        implemented, resolution = do_implement(line['url'], line['user_id'])
-        if implemented:
-          crawled_keys.append(line['key'])
-          msg = 'implemented ' + line['url']
-          logging.error(msg)
-        else:
-          msg = 'did not implement ' + line['url']
-          logging.error(msg)
-
-    """ Update last crawl date async """
-    for key in crawled_keys:
-      qry = models.SourceRequest.add_implemented_dtime(key)
-      qry.get_result()
-
-    #ndb.Future.wait_all(futures) # don't even have to wait for when updating is done  """
-
-    #except Exception, e:
-    #logging.error(e)
-
-    message = str(len(crawled_keys)) + ' new custom sources implementation took ' + str(time.time() - start_time) + ' seconds. Failed to implement ' + str(len(data)-len(crawled_keys)) + ' sources.'
-    logging.error(message)
-    implemented = False
-    if len(crawled_keys)>0:
-      implemented = True
-
-    return implemented
-    #self.render_template('admin.html',{'message_type':'success','message':message})
 
 
 from google.appengine.api import urlfetch
@@ -343,46 +331,3 @@ class DataIndexer(BaseHandler):
     AddLawIndex.delete_all_in_index()
     deferred.defer(AddLawIndex.get)
     return
-
-
-def do_implement(link,user_id):
-    # do implementation
-    implemented = False
-    resolution = False
-    # make sure to add http:// when it is not there
-    if not link.startswith( 'http:', 0, 5):
-        link = 'http://' + link
-
-    try:
-      # Try if rss handler works
-      rss_link = find_rss(link)
-      if rss_link:
-        params = {'user_id': user_id,
-                  'category_name': rss_link['title'],
-                  'category_link': rss_link['link'],
-                  'nice_link': link,
-                  'category_type': 'rss_source'}
-        models.CustomCategory.create(params)
-        return (True, link)
-    except Exception, e:
-        print "rss: ", e
-        pass
-
-    try:
-      # src = urllib2.urlopen(link)
-      # Try if blogs_handler will work
-      blog_result, blog_title = blogs_handler(link)
-      if blog_result:
-        print "got blogs"
-        params = {'user_id': user_id,
-                  'category_name': blog_title,
-                  'category_link': link,
-                  'nice_link': link,
-                  'category_type': 'blog_source'}
-        models.CustomCategory.create(params)
-        return (True, link)
-    except Exception, e:
-      print "blogs: ", e
-      pass
-
-    return (implemented, resolution)

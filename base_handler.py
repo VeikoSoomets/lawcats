@@ -77,7 +77,7 @@ def sendmail(mailto,subject_,*args):
     message.html="""
     Lugupeetud %s,
     <p>
-    Teie e-maili aadressi kasutati kasutajakonto loomiseks <a href="http://www.lawcats.com" target="_blank">lawcats</a> keskkonnas.
+    Teie e-maili aadressi kasutati kasutajakonto loomiseks <a href="https://directed-cove-374.appspot.com" target="_blank">lawcats</a> keskkonnas.
     </p>
     <p>
     Palun aktiveerige oma kasutaja klikkides <a href="%s" target="_blank">siia</a>
@@ -88,16 +88,6 @@ def sendmail(mailto,subject_,*args):
     <div style="background-color: #dadada; width: 100px; height: 100px; float: right;"></div>
     """ % (first_name,verification_url)
 
-  if tyyp == 'invitation':
-    message.html="""
-    Tere,
-
-    Teid kutsus kasutajagrupp "%s" kasutama teenust <a href="http://www.lawcats.com">lawcats</a>.
-
-    Te saate registreerida ennast kasutajaks sellel aadressil: %s
-
-    lawcats Meeskond
-    """ % (first_name, verification_url)
 
   else:
     logging.error('something went wrong with sending mail')
@@ -345,7 +335,7 @@ class BaseHandler(webapp2.RequestHandler):
       avatar = user_query.avatar if user_query.avatar else DEFAULT_AVATAR_URL
     else:
       avatar = DEFAULT_AVATAR_URL
-      logging.error('User logged in (via google), but no data in cloudstore.')
+      #logging.error('User logged in (via google), but no data in cloudstore.')
 
     messages = []
 
@@ -817,68 +807,10 @@ class LoginHandler(BaseHandler):
       'message' : message,
       'message_type' : message_type
     }
-    self.render_template('login.html', params) 
-    #self.redirect('/')
+    self.render_template('login.html', params)
     
 
 class LogoutHandler(BaseHandler):
   def get(self):
-    self.post()
-    
-  def post(self): # not used
-    if self.user:
-      user = self.user
-      user.last_logout = datetime.now()
-      user.put() # lets log the time user signs out 
-      
     self.auth.unset_session()
     self.redirect('/')
-
-    
-class SendMail(BaseHandler):
-  #@BaseHandler.logged_in
-  def get(self):
-    url='http://test'
-    self.sendmail(url)
-  
-  #@BaseHandler.logged_in
-  def sendmail(self,url):
-    message = mail.EmailMessage(sender="info@lawcats.com",
-                            subject="lawcats email testing")
-
-    message.to = "kasparg@gmail.com"
-    message.body = """
-    Dear Kaspar:
-
-    This is a test.  You can now visit
-    http://www.example.com/ and sign in using your Google Account to
-    access new features.
-
-    Please let us know if you have any questions.
-    %s
-    lawcats Team
-    """ % (url)
-
-    message.send()
-    #logging.error('message sent')
-    self.display_message('message.html', 'Meil saadetud!',message_type='success')
-
-class WipeDSHandler(BaseHandler):
-  #@BaseHandler.logged_in
-  def get(self):
-      # TODO: discover why importing deferred outside of a
-      # function causes problems with jinja2 filters.
-      from google.appengine.ext import deferred
-      deferred.defer(wipe_datastore)
-      #logging.error('wipe succeeded')
-      self.display_message('message.html', 'datastore wiped',message_type='success')
-
-def wipe_datastore(self):
-    users = models.User.query().fetch()
-    #profiles = models.UserProfile.query().fetch()
-    #tokens = models.UserToken.query().fetch()
-    #sessions = models.Session.query().fetch()
-
-    for t in [users]:#, profiles, tokens, sessions]:
-        for i in t:
-            i.key.delete()

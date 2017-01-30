@@ -90,7 +90,7 @@ def get_categories(email=None):
           custom_maincats.append([{'maincategory_name': 'Custom'}, custom_subcats])
           catlist.extend(custom_maincats)
 
-        memcache.set(str(email) + 'get_categories', catlist, 84400)
+        memcache.set(str(email) + 'get_categories', catlist)
 
     return catlist
 
