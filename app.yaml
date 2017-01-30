@@ -3,8 +3,9 @@
 runtime: python27
 threadsafe: true
 api_version: 1
-automatic_scaling:
-  max_idle_instances: 1 # default is automatic
+
+#automatic_scaling:  # only tinker with this if you know what you are doing
+#  max_idle_instances: 2 # default is automatic
 
 handlers:
 - url: /static
