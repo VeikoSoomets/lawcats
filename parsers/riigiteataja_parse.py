@@ -152,21 +152,16 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
       query2 = ''.join([e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + ['seadus', search_para_nbr]])
       query4 = [e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + ['seadus', search_para_nbr]][0]
       query3 = query.replace(u'§','').split()[0]
-      #logging.error(repr(query4))
-      #logging.error(repr(query5))
-      logging.error(repr(query))
-      logging.error(repr(law.title.lower().replace(' ','')))
+
       if (query2.lower() in law.title.lower().replace(' ','')
             or query4.lower() in law.title.lower().replace(' ','')
             or query3.lower() in law.title.lower()  # ["lõhkematerjali","seadus","paragrahv"][0]
             or law.title.lower() in query.lower()
             or any(x.lower() in ''.join(law.title).encode('utf8').lower() for x in [e for e in query.replace(u'§','').encode('latin1').split() if e.lower() not in paragraph_words + ['seadus', search_para_nbr]])
           ):
-        logging.error(2)
         search_law_names.append(law.title)
 
     if len(search_law_names) > 0:  # TODO! think what to do when we don't get law name?
-      logging.error(repr(search_law_names))
       final_results = []
       for search_law_name in search_law_names:
 
