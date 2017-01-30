@@ -10878,6 +10878,19 @@ var SearchController = (function () {
             }
             return returnHtml;
           });
+          var highestRank = Math.round($('.result-category-rank').first().text());
+          var upperBound = highestRank - Math.round(highestRank / 3);
+          var lowerBound = Math.ceil(highestRank / 3);
+          $('.result-category-rank').html(function (_, html) {
+            var rank = html;
+            if (rank <= lowerBound) {
+              return '<span class="bg-gray heatbar"></span>';
+            } else if (rank <= upperBound) {
+              return '<span class="bg-yellow heatbar"></span>';
+            } else {
+              return '<span class="bg-green heatbar"></span>';
+            }
+          });
         }, 500);
         _this3.loading = false;
       }).error(function (err) {
