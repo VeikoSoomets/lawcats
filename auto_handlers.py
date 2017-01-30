@@ -18,6 +18,7 @@ new_path = os.path.split(file_dir)[0]
 sys.path.insert(0, new_path)
 import csv
 from google.appengine.api import search
+from google.appengine.ext import deferred
 
 import logging
 #from google.appengine.ext.webapp.util import run_wsgi_app
@@ -38,6 +39,8 @@ from google.appengine.ext import ndb
 
 from parsers.custom_source import *
 from google.appengine.api import memcache
+from google.appengine.api import urlfetch
+urlfetch.set_default_fetch_deadline(600)
 
 
 def datetime_object(date):
@@ -158,15 +161,13 @@ superscript_map = {
     14: u"\u00B9\u2074"
 }
 
+
 class AddLawIndex(BaseHandler):
 
   @classmethod
   def delete_all_in_index(self):
     """Delete all the docs in the given index."""
-    res = memcache.get('law_titles')
-    if not res:
-      res = models.RiigiTeatajaMetainfo.query().fetch()
-      memcache.set('law_titles', res)  # no expiration
+    res = models.RiigiTeatajaMetainfo.query().fetch()
     for law in res:
       try:
         index_name = law.title.encode('ascii', 'ignore').replace(' ','')
@@ -191,9 +192,6 @@ class AddLawIndex(BaseHandler):
        l = len(iterable)
        for ndx in range(0, l, n):
            yield iterable[ndx:min(ndx+n, l)]
-
-    def not_inside_toc(tag):
-        return tag.get('class') != ['toc-indentation'] or tag.clear()
 
     """ Get laws from datastore and put to search api index """
     laws = models.RiigiTeatajaURLs.query().fetch()
@@ -264,8 +262,6 @@ class AddLawIndex(BaseHandler):
     logging.error('put %s laws to index!' % str(put_laws))
 
 
-from google.appengine.api import urlfetch
-urlfetch.set_default_fetch_deadline(600)
 class RiigiTeatajaDownloadHandler(BaseHandler):
   @classmethod
   def get_urls(self):
@@ -314,7 +310,6 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       ndb.Future.wait_all(future)
 
 
-from google.appengine.ext import deferred
 class DataGatherer(BaseHandler):
   """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
     Good for long-running tasks """
@@ -325,7 +320,7 @@ class DataGatherer(BaseHandler):
 
 
 class DataIndexer(BaseHandler):
-  """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
+  """ Indexes laws for faster access. Uses "deferred" module, which uses queues.
     Good for long-running tasks """
   def get(self):
     AddLawIndex.delete_all_in_index()
