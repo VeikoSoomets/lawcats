@@ -154,8 +154,8 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
       memcache.set('law_titles', laws_titles)  # no expiration
 
     for law in laws_titles:
-      query2 = ''.join([e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + ['seadus', search_para_nbr]])
-      query4 = [e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + ['seadus', search_para_nbr]][0]
+      query2 = ''.join([e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + [search_para_nbr]])
+      query4 = [e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + [search_para_nbr]][0]
       #logging.error(1)
       search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
       #logging.error(search_para_nbr)
@@ -209,17 +209,17 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
           else:
             search_para_nbr = 'missing' if not search_para_nbr else 'missing'
-            logging.error(repr(query.replace(search_para_nbr,'').replace('seadus','').split()))
-            for single_query in query.replace(search_para_nbr,'').replace('seadus','').split():
+            for single_query in query.replace(search_para_nbr,'').split():
               if single_query != 'seadus':
-                query_string = 'content: ~"%s"' % (single_query)
-                logging.error(query_string)
+                query_string = 'content: ~"%s" OR law_title: ~"%s"' % (single_query, single_query)
                 results = index.search(query_string)
                 if results:
                   for result in results:
                     try:
                       # rank results
                       rank = 0
+                      if str(search_para_nbr) in result.field('para_title').value.lower():
+                          rank += 1
                       if single_query.lower() in result.field('law_title').value.lower():
                           rank += 1
                       if single_query.lower() in result.field('para_title').value.lower():
@@ -234,6 +234,9 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
                                           result.field('para_title').value,
                                           result.field('law_title').value,
                                           rank, rank])
+
+
+
 
         except Exception, e:
             logging.error(e)
