@@ -300,6 +300,7 @@ def do_search(querywords, category, date_algus):
 
     # Everything else
     if category == source['category']:
+      #search_results.extend(source['results'](querywords, category, date_algus))
       try:
         search_results.extend(source['results'](querywords, category, date_algus))
       except Exception, e:

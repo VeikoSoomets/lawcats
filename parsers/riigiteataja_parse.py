@@ -147,13 +147,21 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     for law in laws_titles:
       query2 = ''.join([e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + ['seadus', search_para_nbr]])
       query4 = [e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + ['seadus', search_para_nbr]][0]
-      query3 = query.replace(u'§','').replace('seadus',' ').replace(search_para_nbr,'').split()[0]
-
-      if (query2.lower() in law.title.lower().replace(' ','')
+      #logging.error(1)
+      search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
+      #logging.error(search_para_nbr)
+      query3 = query.replace(u'§','').replace('seadus','').replace(search_para_nbr,'').split()[0]
+      #logging.error(2)
+      """logging.error(query2)
+      logging.error(query3)
+      logging.error(query4)"""
+      #logging.error(repr([e for e in query.replace(u'§','').encode('latin1').split() if e.lower() not in paragraph_words + [search_para_nbr]]))
+      #logging.error(repr(''.join(law.title).encode('utf8').lower()))
+      if (     query2.lower() in law.title.lower().replace(' ','')
             or query4.lower() in law.title.lower().replace(' ','')
             or query3.lower() in law.title.lower().replace(' ','')  # ["lõhkematerjali","seadus","paragrahv"][0]
             or law.title.lower() in query.lower()
-            or any(x.lower() in ''.join(law.title).encode('utf8').lower() for x in [e for e in query.replace(u'§','').encode('latin1').split() if e.lower() not in paragraph_words + ['seadus', search_para_nbr]])
+            or any(x.lower() in ''.join(law.title).encode('utf8').lower() for x in [e for e in query.replace(u'§','').encode('latin1').split() if e.lower() not in paragraph_words + [search_para_nbr]])
           ):
         search_law_names.append(law.title)
 
@@ -163,19 +171,20 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
         try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
           index = search.Index(name=search_law_name.encode('ascii', 'ignore').replace(' ',''))  # index name is printable ASCII
-
-          if len(query2.split()) == 1 and search_para_nbr:
+          if search_para_nbr and search_para_nbr != 'missing':
             query_string = 'para_nbr=%s' % search_para_nbr
             results = index.search(query_string)
             for result in results:
 
               rank = 0
-              for single_query in query.split():
+              for single_query in query.replace('seadus',' ').replace(search_para_nbr,'').split():
                 try:
                   # rank results (had to split query only for ranking here)
                   if result.field('para_nbr').value == int(search_para_nbr):
                       rank += 1
                   if single_query.lower() in result.field('law_title').value.lower():
+                      rank += 1
+                  if single_query.lower() in result.field('para_title').value.lower():
                       rank += 1
                   if single_query.lower() in result.field('content').value.lower():
                       rank += 2
@@ -190,26 +199,31 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
 
           else:
-            for single_query in query.split():
-              query_string = 'content: ~"%s"' % (single_query)
-              results = index.search(query_string)
-              if results:
-                for result in results:
-                  try:
-                    # rank results
-                    rank = 0
-                    if single_query.lower() in result.field('law_title').value.lower():
-                        rank += 1
-                    if single_query.lower() in result.field('content').value.replace(' ','').lower():
-                        #logging.error('adding +2 from content because %s exists in %s' %(single_query.lower(), result.field('content').value.replace(' ','').lower()))
-                        rank += 2
-                  except Exception:
-                    pass
-                  final_results.append([result.field('law_link').value,
-                                        result.field('content').value,
-                                        result.field('para_title').value,
-                                        result.field('law_title').value,
-                                        rank, rank])
+            search_para_nbr = 'missing' if not search_para_nbr else 'missing'
+            for single_query in query.replace(search_para_nbr,'').split():
+              if single_query != 'seadus':
+                query_string = 'content: ~"%s"' % (single_query)
+                #logging.error(query_string)
+                results = index.search(query_string)
+                if results:
+                  for result in results:
+                    try:
+                      # rank results
+                      rank = 0
+                      if single_query.lower() in result.field('law_title').value.lower():
+                          rank += 1
+                      if single_query.lower() in result.field('para_title').value.lower():
+                          rank += 1
+                      if single_query.lower() in result.field('content').value.replace(' ','').lower():
+                          #logging.error('adding +2 from content because %s exists in %s' %(single_query.lower(), result.field('content').value.replace(' ','').lower()))
+                          rank += 2
+                    except Exception:
+                      pass
+                    final_results.append([result.field('law_link').value,
+                                          result.field('content').value,
+                                          result.field('para_title').value,
+                                          result.field('law_title').value,
+                                          rank, rank])
 
         except Exception, e:
             logging.error(e)
