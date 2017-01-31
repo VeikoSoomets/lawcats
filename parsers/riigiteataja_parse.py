@@ -158,25 +158,32 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     # query3 = query.replace(u'§','').replace(search_para_nbr,'').split()[0]
     # search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
 
-    a = [x for x in [e for e in query.replace(u'§','').encode('latin1').lower().split() if e.lower() not in paragraph_words + [str(search_para_nbr),'seadus', search_para_nbr, u'§']]]
+    a = [x for x in [e for e in query.replace(u'§','').encode('latin1').lower().split() if e.lower() not in paragraph_words + ['seadus', u'§']]]
 
     # logging.error(repr(a))
     # b = laws_titles2[0].para_title.split(',')
     # logging.error(repr(law.title.lower().replace(' ','')))
     # law.para_title.lower()
+    #logging.error()
+    logging.error(repr(a))
     if search_para_nbr and any(x in a for x in law.title.lower().replace(' ','')) \
             or law.title.lower().split()[0] in a   \
             or any(x in a for x in law.title.lower().replace(' ','')):
         #logging.error(repr(law.title))
+        logging.error('got result')
         search_law_names.append(law.title)
 
-    if not search_para_nbr:
+    if not search_law_names: #not any(x in query for x in paragraph_words):
+      #logging.error()
       # TODO! add cache in a separate process, not during search
       search_law_title = law.title.encode('ascii', 'ignore').replace(' ','1')[:76]
       laws_titles2 = memcache.get(search_law_title)
       if not laws_titles2:
         laws_titles2 = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo.title == law.title).fetch()
         memcache.set(search_law_title, laws_titles2)  # no expiration"""
+
+      if str(search_para_nbr) in ''.join(laws_titles2[0].para_title):
+        search_law_names.append(law.title)
 
       for single_query in a:
         #try:
@@ -222,7 +229,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
               if result.field('para_nbr').value == int(search_para_nbr):
                 rank += 1
               if single_query.lower() in result.field('law_title').value.lower():
-                rank += 1
+                rank += 2
               if single_query.lower() in result.field('para_title').value.lower():
                 rank += 1
               if single_query.lower() in result.field('content').value.lower():
@@ -238,8 +245,9 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
 
       else:
-        search_para_nbr = 'missing' if not search_para_nbr else 'missing'
-        for single_query in query.replace(search_para_nbr,'').split():
+        search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
+        logging.error(search_para_nbr)
+        for single_query in query.split():
           if single_query != 'seadus':
             query_string = 'content: ~"%s" OR law_title: ~"%s"' % (single_query, single_query)
             results = index.search(query_string)
@@ -251,12 +259,12 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
                   if str(search_para_nbr) in result.field('para_title').value.lower():
                     rank += 1
                   if single_query.lower() in result.field('law_title').value.lower():
-                    rank += 1
+                    rank += 2
                   if single_query.lower() in result.field('para_title').value.lower():
-                    rank += 1
+                    rank += 2
                   if single_query.lower() in result.field('content').value.replace(' ','').lower():
                     #logging.error('adding +2 from content because %s exists in %s' %(single_query.lower(), result.field('content').value.replace(' ','').lower()))
-                    rank += 2
+                    rank += 1
                 except Exception:
                   pass
                 final_results.append([result.field('law_link').value,

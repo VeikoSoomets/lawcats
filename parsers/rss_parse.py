@@ -86,8 +86,6 @@ categories4 = [\
 ['Kaitseministeerium' , 'http://www.kaitseministeerium.ee/et/rss-uudiste-voog'],\
 ['Finantsministeerium' , 'http://www.fin.ee/rss_uudised'], \
 # #################### \
-['OFAC Recent Actions', 'http://www.treasury.gov/resource-center/sanctions/OFAC-Enforcement/Documents/ofac.xml'], \
-['FATF', 'http://www.fatf-gafi.org/index.xml'], \
  #['Majandusministeerium' , 'https://www.mkm.ee/et/news/all/feed'], ssl fail \
  #['haridusministeerium' , 'https://www.hm.ee/et/news/all/feed' ]# ssl certificate - not allowed \
  #['lextal' , 'http://www.lextal.ee/feed/' ] # doesn't work, has robots.txt \

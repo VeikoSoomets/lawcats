@@ -56,7 +56,7 @@ application = webapp2.WSGIApplication(
         ('/app/admin', SiteAdmin),
         ('/app/change_lang', SetLangCookie),
         ('/sys/download_riigihtml', DataGatherer),
-        ('/sys/reindex_law', DataIndexer),
+        ('/sys/reindex_law2', DataIndexer),
         #('/sys/delete_data', DataDeleter)
     ],
     debug=True, config=app_config)

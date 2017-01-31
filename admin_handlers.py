@@ -54,7 +54,8 @@ from parsers.custom_source import *
 
 
 def get_categories(email=None):
-    catlist = memcache.get(str(email) + 'get_categories')
+    cat_mem_name = email.encode('ascii', 'ignore').replace('.','').replace('@','')
+    catlist = memcache.get(cat_mem_name + 'get_categories')
     if not catlist:
         main_cats = models.MainCategories.query().fetch_async()
         catlist = []
@@ -80,17 +81,18 @@ def get_categories(email=None):
           custom_maincats = []
           custom_subcats = []
           custom_cats = []
-          datastore_custom_cats = models.CustomCategory.query(models.CustomCategory.user_id==email).fetch_async()
+          datastore_custom_cats = models.CustomCategory.query(models.CustomCategory.user_id==email).fetch()
           if datastore_custom_cats:
-            data = [p.to_dict() for p in datastore_custom_cats.get_result()]
+            data = [p.to_dict() for p in datastore_custom_cats]
             for line in data:
               custom_cats.append({'category_link': line['nice_link'],
                                    'category_name': line['category_name']})
-          custom_subcats.append([{'subcategory_name': 'Custom Sources'}, custom_cats])
-          custom_maincats.append([{'maincategory_name': 'Custom'}, custom_subcats])
-          catlist.extend(custom_maincats)
+            custom_subcats.append([{'subcategory_name': 'Custom Sources'}, custom_cats])
+            custom_maincats.append([{'maincategory_name': 'Custom'}, custom_subcats])
+            catlist.extend(custom_maincats)
 
-        memcache.set(str(email) + 'get_categories', catlist)
+        cat_mem_name = email.encode('ascii', 'ignore').replace('.','').replace('@','')
+        memcache.set(cat_mem_name + 'get_categories', catlist)
 
     return catlist
 
@@ -168,11 +170,14 @@ class RequestSource(BaseHandler):
 
     if implemented:
       message_type='success'
-      message = _('New source has been implemented! You can test this source in the search page right now!')
+      message = _('New source has been implemented! You can test this source in the search page right now! NB! It may take a few seconds, a refresh might help ;) ')
       source_request = models.SourceRequest.query(models.SourceRequest.user_id==email, models.SourceRequest.url==url_requested).get()
       source_request.implemented_dtime = datetime.now()
       source_request.put()
-      memcache.delete(email + 'get_categories')
+      cat_mem_name = email.encode('ascii', 'ignore').replace('.','').replace('@','')
+      logging.error(cat_mem_name)
+      memcache.delete(cat_mem_name + 'get_categories')
+
     else:
       message_type = 'danger'
       message =_('Could not implement source automatically! Engineers notified!')
