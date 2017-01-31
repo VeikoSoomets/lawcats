@@ -173,6 +173,9 @@ class AddLawIndex(BaseHandler):
   def delete_all_in_index(self):
     """Delete all the docs in the given index."""
     res = models.RiigiTeatajaMetainfo2.query().fetch()
+    if not res:
+        logging.error('did not get res, cannot delete index')
+        return
     for law in res:
       try:
         index_name = law.title.encode('ascii', 'ignore').replace(' ','')[:76]
@@ -191,17 +194,29 @@ class AddLawIndex(BaseHandler):
         logging.error(e)
         pass #  index name can't be more than 100 bytes
 
-  @classmethod
-  @ndb.tasklet
-  def delete_async_(self, input_object):
-      # key = ndb.Key('UserRequest', input_key.id())
-      key = input_object.key
-      del_future = yield key.delete_async(use_memcache=False)  # faster
-      raise ndb.Return(del_future)
 
   @classmethod
   def get(self):
 
+    # TODO clear this by replacing numbers and symbols (reduce up to 30-40% of letters in tokens):
+    """
+    222¹,22¹.,222¹.,Auto,utor,tori,oriõ,riõi,iõig,õigu,igus,guse,Autor,utori,toriõ,oriõi,riõig,iõigu,õigus,iguse,Autori,utoriõ,toriõi,oriõig,riõigu,iõigus,õiguse,Autoriõ,utoriõi,toriõig,oriõigu,riõigus,iõiguse,Autoriõi,utoriõig,toriõigu,oriõigus,riõiguse,Autoriõig,utoriõigu,toriõigus,oriõiguse,Autoriõigu,utoriõigus,toriõiguse,Autoriõigus,utoriõiguse,Autoriõiguse,rikk,ikku,kkum,kumi,umin,mine,rikku,ikkum,kkumi,kumin,umine,rikkum,ikkumi,kkumin,kumine,rikkumi,ikkumin,kkumine,rikkumin,ikkumine,rikkumine,arvu,rvut,vuti,utis,tisü,isüs,süst,üste,stee,teem,eemi,emis,mis[,is[R,s[RT,arvut,rvuti,vutis,utisü,tisüs,isüst,süste,üstee,steem,teemi,eemis,emis[,mis[R,is[RT,arvuti,rvutis,vutisü,utisüs,tisüst,isüste,süstee,üsteem,steemi,teemis,eemis[,emis[R,mis[RT,arvutis,rvutisü,vutisüs,utisüst,tisüste,isüstee,süsteem,üsteemi,steemis,teemis[,eemis[R,emis[RT,arvutisü,rvutisüs,vutisüst,utisüste,tisüstee,isüsteem,süsteemi,üsteemis,steemis[,teemis[R,eemis[RT,arvutisüs,rvutisüst,vutisüste,utisüstee,tisüsteem,isüsteemi,süsteemis,üsteemis[,steemis[R,teemis[RT,arvutisüst,rvutisüste,vutisüstee,utisüsteem,tisüsteemi,isüsteemis,süsteemis[,üsteemis[R,steemis[RT,arvutisüste,rvutisüstee,vutisüsteem,utisüsteemi,tisüsteemis,isüsteemis[,süsteemis[R,üsteemis[RT,arvutisüstee,rvutisüsteem,vutisüsteemi,utisüsteemis,tisüsteemis[,isüsteemis[R,süsteemis[RT,arvutisüsteem,rvutisüsteemi,vutisüsteemis,utisüsteemis[,tisüsteemis[R,isüsteemis[RT,arvutisüsteemi,rvutisüsteemis,vutisüsteemis[,utisüsteemis[R,tisüsteemis[RT,arvutisüsteemis,rvutisüsteemis[,vutisüsteemis[R,utisüsteemis[RT,arvutisüsteemis[,rvutisüsteemis[R,vutisüsteemis[RT,arvutisüsteemis[R,rvutisüsteemis[RT,arvutisüsteemis[RT,12.0,2.07,.07.,07.2,7.20,.201,2014,014,,12.07,2.07.,.07.2,07.20,7.201,.2014,2014,,12.07.,2.07.2,.07.20,07.201,7.2014,.2014,,12.07.2,2.07.20,.07.201,07.2014,7.2014,,12.07.20,2.07.201,.07.2014,07.2014,,12.07.201,2.07.2014,.07.2014,,12.07.2014,2.07.2014,,12.07.2014,,jõus,õust,ust.,jõust,õust.,jõust.,01.0,1.01,.01.,01.2,1.20,.201,2015,015],01.01,1.01.,.01.2,01.20,1.201,.2015,2015],01.01.,1.01.2,.01.20,01.201,1.2015,.2015],01.01.2,1.01.20,.01.201,01.2015,1.2015],01.01.20,1.01.201,.01.2015,01.2015],01.01.201,1.01.2015,.01.2015],01.01.2015,1.01.2015],01.01.2015]
+
+    """
+    # Tokenize words for enhanced search capabilities from Search Index API
+    def tokenize(phrase):
+        a = []
+        for word in phrase.split():
+            j = 1
+            while True:
+                for i in range(len(word) - j + 1):
+                    token = word[i:i + j]
+                    if len(token) > 3:  # NB! token limit 4
+                        a.append(token)
+                if j == len(word):
+                    break
+                j += 1
+        return a
 
     def batch(iterable, n = 1):
        l = len(iterable)
@@ -210,7 +225,7 @@ class AddLawIndex(BaseHandler):
 
 
     """ Get laws from datastore and put to search api index """
-    laws = models.RiigiTeatajaURLs.query().fetch()
+    laws = models.RiigiTeatajaURLs.query().fetch()  # models.RiigiTeatajaURLs.title=='Lennundusseadus'
     put_laws = 0
     dbp_metas = []
     para_titles = []
@@ -221,7 +236,7 @@ class AddLawIndex(BaseHandler):
       src = law.text
       soup = bs4.BeautifulSoup(src, "html5lib")
 
-      # we want to understand superscript styles and show them properly to avoid confusion in paragraph numbers
+      # We want to understand superscript styles and show them properly to avoid confusion in paragraph numbers
       try:
           for e in soup.findAll('sup'):
 
@@ -243,7 +258,8 @@ class AddLawIndex(BaseHandler):
               except Exception:
                 pass
 
-      except Exception:
+      except Exception, e:
+          logging.error(e)
           pass
       url_base = law.link
 
@@ -279,13 +295,14 @@ class AddLawIndex(BaseHandler):
           # build document
           if article_link and paragraph_title and para_nbr:  # lets prune some crappy entries we don't need
             para_titles.append(paragraph_title)
-
+            para_token = ','.join(tokenize(paragraph_title))
             document = search.Document(
             fields=[
                search.AtomField(name='law_title', value=law_title),
                search.AtomField(name='law_link', value=article_link),
                search.NumberField(name='para_nbr', value=int(para_nbr)),
                search.TextField(name='para_title', value=paragraph_title),
+               search.TextField(name='para_token', value=para_token),
                search.TextField(name='content', value=content)
                ])
 
@@ -303,6 +320,7 @@ class AddLawIndex(BaseHandler):
             index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','')[:76])  # index name must be printable ASCII
             index.put(x)
       except Exception, e:
+        logging.error(e)
         # pass only because sometimes index name exceed 100byte limit, but we don't care for those atm
         pass
 
@@ -380,7 +398,32 @@ class DataIndexer(BaseHandler):
   """ Indexes laws for faster access. Uses "deferred" module, which uses queues.
     Good for long-running tasks """
   def get(self):
-    deferred.defer(AddLawIndex.delete_all_in_index)
+
+
+    """Delete all the docs in the given index."""
+    """res = models.RiigiTeatajaMetainfo2.query().fetch()
+    if not res:
+        logging.error('did not get res')
+    for law in res:
+      try:
+        index_name = law.title.encode('ascii', 'ignore').replace(' ','')[:76]
+        logging.error(repr(index_name))
+        doc_index = search.Index(name=index_name)
+
+        # looping because get_range by default returns up to 100 documents at a time
+        while True:
+            # Get a list of documents populating only the doc_id field and extract the ids.
+            document_ids = [document.doc_id
+                            for document in doc_index.get_range(ids_only=True)]
+            if not document_ids:
+                break
+            # Delete the documents for the given ids from the Index.
+            doc_index.delete(document_ids)
+      except Exception, e:
+        logging.error(e)
+        pass #  index name can't be more than 100 bytes """
+
+    AddLawIndex.delete_all_in_index()
     deferred.defer(AddLawIndex.get)
     return
 

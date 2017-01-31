@@ -127,7 +127,7 @@ import models
 from google.appengine.api import search
 from google.appengine.api import memcache
 def parse_results_seadused(query=None, category=None, date_algus=None):
-  #logging.error(repr(query))
+  logging.error(repr(query))
   #logging.error('-----------------')
 
   """hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -149,32 +149,41 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
   laws_titles = memcache.get('law_titles')
   if not laws_titles:
     laws_titles = models.RiigiTeatajaMetainfo2.query().fetch()
-    #logging.error(repr(laws_titles))
     memcache.set('law_titles', laws_titles)  # no expiration
 
   for law in laws_titles:
-
-    # query2 = ''.join([e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + [search_para_nbr]])
-    # query3 = query.replace(u'§','').replace(search_para_nbr,'').split()[0]
-    # search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
-
     a = [x for x in [e for e in query.replace(u'§','').encode('latin1').lower().split() if e.lower() not in paragraph_words + ['seadus', u'§']]]
-
-    # logging.error(repr(a))
-    # b = laws_titles2[0].para_title.split(',')
-    # logging.error(repr(law.title.lower().replace(' ','')))
-    # law.para_title.lower()
-    #logging.error()
-    logging.error(repr(a))
-    if search_para_nbr and any(x in a for x in law.title.lower().replace(' ','')) \
+    # if any keyword is in law title or first word of law is in keyword - do tokenize here
+    if (any(x in law.title.lower().replace(' ','') for x in a) \
             or law.title.lower().split()[0] in a   \
-            or any(x in a for x in law.title.lower().replace(' ','')):
-        #logging.error(repr(law.title))
-        logging.error('got result')
+        ):
         search_law_names.append(law.title)
 
-    if not search_law_names: #not any(x in query for x in paragraph_words):
-      #logging.error()
+    # If we know what law we are looking for
+    """if search_law_names:
+      for title in search_law_names:
+        # get paragraph titles from memcahce - fairy expensive operation if done for each law
+        # TODO! add cache in a separate process, not during search
+        search_law_title = law.title.encode('ascii', 'ignore').replace(' ','1')[:76]
+        laws_titles2 = memcache.get(search_law_title)
+        if not laws_titles2:
+            laws_titles2 = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo.title == law.title).fetch()
+            memcache.set(search_law_title, laws_titles2)  # no expiration
+
+        # if we have paragraph nbr in law title + one of the searched keywords is in law title
+        if str(search_para_nbr) in ''.join(laws_titles2[0].para_title) and any(x in a for x in law.title.lower().replace(' ','')):
+          search_law_names.append(law.title)
+
+        # if we have single keyword in law title or in parameter title
+        for single_query in a:
+          if (single_query in law.title.encode('utf8').lower().replace(' ', '')) or single_query in ''.join(laws_titles2[0].para_title):
+            search_law_names.append(law.title) """
+
+
+    # Do a longer search... might take 5-10s
+    if not search_law_names:  #any(x in query for x in paragraph_words):
+
+      # get paragraph titles from memcahce - fairy expensive operation if done for each law
       # TODO! add cache in a separate process, not during search
       search_law_title = law.title.encode('ascii', 'ignore').replace(' ','1')[:76]
       laws_titles2 = memcache.get(search_law_title)
@@ -182,19 +191,15 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
         laws_titles2 = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo.title == law.title).fetch()
         memcache.set(search_law_title, laws_titles2)  # no expiration"""
 
-      if str(search_para_nbr) in ''.join(laws_titles2[0].para_title):
+      # if we have paragraph nbr in law title + one of the searched keywords is in law title
+      if str(search_para_nbr) in ''.join(laws_titles2[0].para_title) and any(x in law.title.lower().replace(' ','') for x in a):
         search_law_names.append(law.title)
 
+      # if we have single keyword in law title or in parameter title
       for single_query in a:
-        #try:
-        if (single_query in law.title.encode('utf8').lower().replace(' ', '')): # \
-               # or single_query in ''.join(laws_titles2[0].para_title)\
-          #logging.error(laws_titles2[0].para_title)
-          #logging.error(repr(''.join(laws_titles2.para_title)))
+        if (single_query in law.title.encode('utf8').lower().replace(' ', '')) or single_query in ''.join(laws_titles2[0].para_title):
           search_law_names.append(law.title)
-        """except Exception, e:
-          logging.error(e)
-          pass"""
+
 
     """
     for single_query in a:
@@ -227,51 +232,68 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
             try:
               # rank results (had to split query only for ranking here)
               if result.field('para_nbr').value == int(search_para_nbr):
+                logging.error(1)
                 rank += 1
-              if single_query.lower() in result.field('law_title').value.lower():
+              if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
+                logging.error(2)
                 rank += 2
-              if single_query.lower() in result.field('para_title').value.lower():
+              if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
+                logging.error(3)
                 rank += 1
-              if single_query.lower() in result.field('content').value.lower():
+              if single_query.lower() in result.field('content').value.replace(' ','').lower():
+                logging.error(4)
                 rank += 2
             except Exception:
               pass
 
-          final_results.append([result.field('law_link').value,
-                                result.field('content').value,
-                                result.field('para_title').value,
-                                result.field('law_title').value,
-                                rank, rank])
+          if rank > 0:
+              final_results.append([result.field('law_link').value,
+                                    result.field('content').value,
+                                    result.field('para_title').value,
+                                    result.field('law_title').value,
+                                    rank, rank])
 
 
-      else:
+      else:  # didn't get search_para
         search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
-        logging.error(search_para_nbr)
         for single_query in query.split():
           if single_query != 'seadus':
-            query_string = 'content: ~"%s" OR law_title: ~"%s"' % (single_query, single_query)
+            query_string = 'content: ~"%s" OR law_title: ~"%s" OR para_title: ~"%s" OR para_token:%s' % (single_query, single_query, single_query, single_query)
             results = index.search(query_string)
             if results:
               for result in results:
                 try:
                   # rank results
                   rank = 0
-                  if str(search_para_nbr) in result.field('para_title').value.lower():
-                    rank += 1
-                  if single_query.lower() in result.field('law_title').value.lower():
-                    rank += 2
-                  if single_query.lower() in result.field('para_title').value.lower():
-                    rank += 2
-                  if single_query.lower() in result.field('content').value.replace(' ','').lower():
-                    #logging.error('adding +2 from content because %s exists in %s' %(single_query.lower(), result.field('content').value.replace(' ','').lower()))
-                    rank += 1
+                  for single_query in query.split():
+                      if str(search_para_nbr) in result.field('para_title').value.replace(' ','').lower():
+                        logging.error(5)
+                        rank += 1
+                      if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
+                        logging.error(6)
+                        rank += 2
+                      if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
+                        logging.error(7)
+                        rank += 2
+                      if single_query.lower() in result.field('content').value.replace(' ','').lower():
+                        logging.error(8)
+                        rank += 3
+                      if single_query.lower() in result.field('para_token').value.replace(' ','').lower():
+                        logging.error(9)
+                        rank += 1
+                      if any(x in result.field('para_token').lower().split(',') for x in single_query.lower()):
+                        logging.error(10)
+                        rank += 1
+
                 except Exception:
                   pass
-                final_results.append([result.field('law_link').value,
-                                      result.field('content').value,
-                                      result.field('para_title').value,
-                                      result.field('law_title').value,
-                                      rank, rank])
+
+                if rank > 0:
+                    final_results.append([result.field('law_link').value,
+                                          result.field('content').value,
+                                          result.field('para_title').value,
+                                          result.field('law_title').value,
+                                          rank, rank])
 
 
 
