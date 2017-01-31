@@ -2,8 +2,8 @@
 .landing-jumbo {
 	background-color: #37BC9B;
 	margin-top: -20px;
-	padding-top: 20vh;
-	padding-bottom: 20vh;
+	padding-top: 40vh;
+	padding-bottom: 40vh;
 }
 
 .landing-main-text {
@@ -31,8 +31,8 @@
 }
 
 .padded-section {
-	padding-top: 15vh;
-	padding-bottom: 15vh;
+	padding-top: 5vh;
+	padding-bottom: 5vh;
 }
 
 .glyphicon-giant {
