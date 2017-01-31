@@ -110,6 +110,21 @@ h2:before {
 .mt20 {
   margin-top: 20px;
 }
+.bg-green {
+  background-color: #4caf50;
+}
+.bg-yellow {
+  background-color: #ffeb3b;
+}
+.bg-gray {
+  background-color: #9e9e9e;
+}
+.heatbar {
+  height: 50px;
+  width: 5px;
+  display: block;
+  margin-top: 2px;
+}
 /* Popover */
 /*
 .popover-title {

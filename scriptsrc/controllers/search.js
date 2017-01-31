@@ -160,7 +160,7 @@ class SearchController {
     }).success(response => {
       this.results = response.search_results;
       setTimeout(function() {
-        $('.result-title-link').html(function(_, html) {
+        $('.result-title-link').html((_, html) => {
           function capitalizeFirstLetter(string) {
               return string.charAt(0).toUpperCase() + string.slice(1);
           }
@@ -175,6 +175,21 @@ class SearchController {
                 '<span class="highlight-text">'+querywordCapitalized+'</span>');
           }
           return returnHtml;
+        });
+        let highestRank = Math.round($('.result-category-rank').first().text());
+        let upperBound = highestRank - Math.round(highestRank/3);
+        let lowerBound = Math.ceil(highestRank/3);
+        $('.result-category-rank').html((_, html) => {
+          var rank = html;
+          if (rank <= lowerBound) {
+            return '<span class="bg-gray heatbar"></span>';
+          }
+          else if (rank <= upperBound) {
+            return '<span class="bg-yellow heatbar"></span>';
+          }
+          else {
+            return '<span class="bg-green heatbar"></span>';
+          }
         });
       }, 500);
       this.loading = false;
