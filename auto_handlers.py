@@ -265,6 +265,8 @@ class AddLawIndex(BaseHandler):
                search.TextField(name='content', value=content)
                ])
 
+            documents.append(document)
+
 
       # TODO! instead of str(list( , why not insert list?
       dbp_meta = models.RiigiTeatajaMetainfo(title=law_title, para_title=str(list(set(para_titles))) ) # set to remove duplicates, then repr of list for later parsing
@@ -274,7 +276,7 @@ class AddLawIndex(BaseHandler):
       try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
         """ Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index. """
         for x in batch(documents, 200):
-            index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','1')[:76])  # index name must be printable ASCII
+            index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','')[:76])  # index name must be printable ASCII
             index.put(x)
       except Exception, e:
         # pass only because sometimes index name exceed 100byte limit, but we don't care for those atm

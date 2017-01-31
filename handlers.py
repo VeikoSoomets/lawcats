@@ -148,8 +148,8 @@ class WebSearch(BaseHandler):
       lyhendid_values_in_query_string = [constants.Lyhendid.get_name_by_value(lyhend).decode('utf-8') for lyhend in
                                          constants.Lyhendid.get_constant_values(uppercase=True) if lyhend in query_string.split(' ')]
 
-      if lyhendid_in_query_string:
-        querywords.update(lyhendid_in_query_string)
+      """if lyhendid_in_query_string:
+        querywords.update(lyhendid_in_query_string) """
       if lyhendid_values_in_query_string:
         querywords.update(lyhendid_values_in_query_string)
       categories2 = json_data['categories']
@@ -300,13 +300,13 @@ def do_search(querywords, category, date_algus):
 
     # Everything else
     if category == source['category']:
-      #search_results.extend(source['results'](querywords, category, date_algus))
-      try:
+      search_results.extend(source['results'](querywords, category, date_algus))
+      """try:
         search_results.extend(source['results'](querywords, category, date_algus))
       except Exception, e:
         logging.error('failed with singular category search')
         logging.error(e)
-        pass
+        pass"""
   #print search_results
   return search_results  # link, title, date, qword, category
  
