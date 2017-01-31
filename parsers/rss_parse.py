@@ -198,7 +198,6 @@ def parse_feed(querywords, category, date_algus='2016-01-01'): # kui kuupäeva e
               search_from = urllib2.urlopen(search_from, timeout=40).read(20000)
 
             d = feedparser.parse(search_from)
-            logging.error('parsing feed')
             for a in d.entries:
               for x in querywords:
                 if ' ' in x:
@@ -208,8 +207,8 @@ def parse_feed(querywords, category, date_algus='2016-01-01'): # kui kuupäeva e
                 else:
                   new_x = [x]
 
+                result_date = datetime.datetime.now().date()
                 if category in ['eurlex kohtuasjad','eurlex komisjoni ettepanekud',u'eurlex parlament ja nõukogu']:
-                  result_date = datetime.datetime.now().date()  #newdate2 # FIX THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                   if result_date >= (date_algus if date_algus else result_date) and (x.lower() in a['title'].lower()):
                     result_title = a['title']
                     result_link = a['link']
@@ -235,12 +234,13 @@ def parse_feed(querywords, category, date_algus='2016-01-01'): # kui kuupäeva e
                   except Exception:
                     pass
                   if b:
-                    if result_date >= (date_algus if date_algus else result_date) and a.get('description') and \
+                    if a.get('description') and \
                             (all([x2.lower() in a['title'].lower()+a['description'].lower() for x2 in new_x])):
                       result_title = a['title']
                       result_link = a['link']
                       results.append([result_link, result_title, str(result_date), x, category])
-          except Exception:
+          except Exception,e:
+            logging.error(e)
             pass
         return results  #results if results else None
 

@@ -214,6 +214,7 @@ def custom_search(querywords, category, date_algus, email=None):
       for custom in custom_sources2.get_result():
         # Otsime rss allikatest
         if custom.category_type == 'rss_source' and category == custom.category_name:
+          #search_results.extend(rss_parse.parse_feed(querywords, category, date_algus))
           try:
             search_results.extend(rss_parse.parse_feed(querywords, category, date_algus))
           except Exception, e:
