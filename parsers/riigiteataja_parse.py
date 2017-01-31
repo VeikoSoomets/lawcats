@@ -180,7 +180,9 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
       for single_query in a:
         #try:
-        if (single_query in law.title.encode('utf8').lower().replace(' ', '')) or single_query in ''.join(laws_titles2[0].para_title):
+        if (single_query in law.title.encode('utf8').lower().replace(' ', '')): # \
+               # or single_query in ''.join(laws_titles2[0].para_title)\
+          #logging.error(laws_titles2[0].para_title)
           #logging.error(repr(''.join(laws_titles2.para_title)))
           search_law_names.append(law.title)
         """except Exception, e:
@@ -270,7 +272,6 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
         logging.error(e)
         pass"""
 
-    logging.error('AAAAAAA')
     logging.error("total results: %d" % len(final_results))
     final_results = sorted(final_results, key=itemgetter(5), reverse=True)
     return final_results
