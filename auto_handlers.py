@@ -423,7 +423,7 @@ class DataIndexer(BaseHandler):
         logging.error(e)
         pass #  index name can't be more than 100 bytes """
 
-    AddLawIndex.delete_all_in_index()
+    deferred.defer(AddLawIndex.delete_all_in_index)
     deferred.defer(AddLawIndex.get)
     return
 
