@@ -153,12 +153,17 @@ superscript_map = {
     6: u"\u2076",
     7: u"\u2077",
     8: u"\u2078",
-    9: u"\u2079",
-    10: u"\u00B9\u2070",
-    11: u"\u00B9\u00B9",
-    12: u"\u00B9\u00B2",
-    13: u"\u00B9\u00B3",
-    14: u"\u00B9\u2074"
+    9: u"\u2079"
+    #10: u"\u00B9\u2070",
+    #11: u"\u00B9\u00B9",
+    #12: u"\u00B9\u00B2",
+    #13: u"\u00B9\u00B3",
+    #14: u"\u00B9\u2074",
+    #15: u"\u00B9\u2075",
+    #16: u"\u00B9\u2076",
+    #17: u"\u00B9\u2077",
+    #18: u"\u00B9\u2078",
+    #19: u"\u00B9\u2079"
 }
 
 
@@ -182,7 +187,8 @@ class AddLawIndex(BaseHandler):
                 break
             # Delete the documents for the given ids from the Index.
             doc_index.delete(document_ids)
-      except Exception:
+      except Exception, e:
+        logging.error(e)
         pass #  index name can't be more than 100 bytes
 
   @classmethod
@@ -218,7 +224,25 @@ class AddLawIndex(BaseHandler):
       # we want to understand superscript styles and show them properly to avoid confusion in paragraph numbers
       try:
           for e in soup.findAll('sup'):
-              e.string = [y for x, y in superscript_map.iteritems() if x == int(e.get_text())][0]
+
+              try:
+                part1 = [y for x, y in superscript_map.iteritems() if x == int(e.get_text()[0])][0]
+              except Exception:
+                pass
+
+              try:
+                part2 = [y for x, y in superscript_map.iteritems() if x == int(e.get_text()[1])][0]
+              except Exception:
+                pass
+
+              try:
+                  if len(e.get_text())==1:
+                      e.string = part1
+                  else:
+                      e.string = part1 + part2
+              except Exception:
+                pass
+
       except Exception:
           pass
       url_base = law.link
@@ -277,15 +301,6 @@ class AddLawIndex(BaseHandler):
         """ Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index. """
         for x in batch(documents, 200):
             index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','')[:76])  # index name must be printable ASCII
-            index.put(x)
-      except Exception, e:
-        # pass only because sometimes index name exceed 100byte limit, but we don't care for those atm
-        pass
-
-      try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
-        """ Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index. """
-        for x in batch(meta_docs, 200):
-            index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','2')[:76])  # index name must be printable ASCII
             index.put(x)
       except Exception, e:
         # pass only because sometimes index name exceed 100byte limit, but we don't care for those atm
@@ -365,7 +380,7 @@ class DataIndexer(BaseHandler):
   """ Indexes laws for faster access. Uses "deferred" module, which uses queues.
     Good for long-running tasks """
   def get(self):
-    AddLawIndex.delete_all_in_index()
+    deferred.defer(AddLawIndex.delete_all_in_index)
     deferred.defer(AddLawIndex.get)
     return
 

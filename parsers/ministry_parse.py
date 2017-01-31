@@ -17,14 +17,14 @@ from utils import *
 categories3 = [\
 #['Haridusministeerium','https://www.hm.ee/et/valitsemisala-uudised'], # SSL fail \
 #['Haridusministeerium','https://www.hm.ee/et/uudised'], # SSL fail \
-['Justiitsministeerium','http://www.just.ee/et/uudised'], \
-['Keskkonnaministeerium','http://www.envir.ee/et/uudised'], \
-['Kultuuriministeerium','http://www.kul.ee/et/uudised'], \
+['Justiitsministeerium','http://www.just.ee/'], \
+['Keskkonnaministeerium','http://www.envir.ee/'], \
+['Kultuuriministeerium','http://www.kul.ee/'], \
 #['Majandusministeerium','https://www.mkm.ee/et/uudised'], # SSL fail \ 
-[u'Põllumajandusministeerium','http://www.agri.ee/et/uudised'], \
-['Siseministeerium','https://www.siseministeerium.ee/et/uudised'], \
-['Sotsiaalministeerium','http://www.sm.ee/et/uudised'], \
-[u'Välisministeerium','http://vm.ee/et/uudised'], \
+[u'Põllumajandusministeerium','http://www.agri.ee/'], \
+['Siseministeerium','https://www.siseministeerium.ee/'], \
+['Sotsiaalministeerium','http://www.sm.ee/'], \
+[u'Välisministeerium','http://vm.ee/'], \
 ]
 
 # We need this because ordinary dictionaries can't have duplicate keys (check the case of delfi.ee)
