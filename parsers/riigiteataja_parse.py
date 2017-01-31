@@ -127,125 +127,144 @@ import models
 from google.appengine.api import search
 from google.appengine.api import memcache
 def parse_results_seadused(query=None, category=None, date_algus=None):
-    logging.error(repr(query))
-    logging.error('-----------------')
+  logging.error(repr(query))
+  logging.error('-----------------')
 
-    """hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
-     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-     'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
-     'Accept-Encoding': 'none',
-     'Accept-Language': 'en-US,en;q=0.8',
-     'Connection': 'keep-alive'} """
+  """hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+   'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+   'Accept-Encoding': 'none',
+   'Accept-Language': 'en-US,en;q=0.8',
+   'Connection': 'keep-alive'} """
 
-    search_law_names = []
-    paragraph_words =  ['paragraaf','paragrahv',u'§','para']
-    search_law_name = None
-    search_para_nbr = None
-    if any(x in query for x in paragraph_words) or filter(str.isdigit, query.replace(u'§','').encode('latin1')):
-      # get paragraph number to limit searches (if we have indication that we're search for a specific paragraph))
-      # remove paragraph words from search string
-      search_para_nbr = filter(str.isdigit, query.replace(u'§','').encode('latin1'))  # find digit, but replace paragraph symbpl first
+  search_law_names = []
+  paragraph_words =  ['paragraaf','paragrahv',u'§','para']
+  search_law_name = None
+  search_para_nbr = None
+  if any(x in query for x in paragraph_words) or filter(str.isdigit, query.replace(u'§','').encode('latin1')):
+    # get paragraph number to limit searches (if we have indication that we're search for a specific paragraph))
+    # remove paragraph words from search string
+    search_para_nbr = filter(str.isdigit, query.replace(u'§','').encode('latin1'))  # find digit, but replace paragraph symbpl first
+
+  laws_titles = memcache.get('law_titles')
+  if not laws_titles:
+    laws_titles = models.RiigiTeatajaMetainfo2.query().fetch()
+    #logging.error(repr(laws_titles))
+    memcache.set('law_titles', laws_titles)  # no expiration
+
+  for law in laws_titles:
+
+    search_law_title = law.title.encode('ascii', 'ignore').replace(' ','1')[:76]
+
+    # TODO! add cache in a separate process, not during search
+    laws_titles2 = memcache.get(search_law_title)
+    if not laws_titles2:
+      laws_titles2 = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo.title == law.title).fetch()
+      memcache.set(search_law_title, laws_titles2)  # no expiration
+
+    # query2 = ''.join([e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + [search_para_nbr]])
+    # query3 = query.replace(u'§','').replace(search_para_nbr,'').split()[0]
+    # search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
+
+    a = [x for x in [e for e in query.replace(u'§','').encode('latin1').lower().split() if e.lower() not in paragraph_words + [str(search_para_nbr),'seadus', search_para_nbr, u'§']]]
+
+    # logging.error(repr(a))
+    # b = laws_titles2[0].para_title.split(',')
+    # logging.error(repr(law.title.lower().replace(' ','')))
+    # law.para_title.lower()
+    if search_para_nbr and any(x in a for x in law.title.lower().replace(' ','')) \
+            or law.title.lower().split()[0] in a   \
+            or any(x in a for x in law.title.lower().replace(' ','')):
+        #logging.error(a)
+        search_law_names.append(laws_titles2[0].title)
+
+    """
+    for single_query in a:
+      logging.error('GGGGGGGGGGGGGGG')
+      try:
+        if (single_query in law.para_title  \
+            or single_query in law.title
+            #or single_query.encode('latin1').lower() in b \
+            ) \
+          and single_query not in paragraph_words + [search_para_nbr, 'seadus']:
+
+          search_law_names.append(law.title)
+      except Exception:
+        pass """
 
 
+  if len(search_law_names) > 0:  # TODO! think what to do when we don't get law name?
+    final_results = []
+    for search_law_name in search_law_names:
 
-    laws_titles = memcache.get('law_titles')
-    if not laws_titles:
-      laws_titles = models.RiigiTeatajaMetainfo.query().fetch()
-      memcache.set('law_titles', laws_titles)  # no expiration
+      try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
+        index = search.Index(name=search_law_name.encode('ascii', 'ignore').replace(' ','1')[:76])  # index name is printable ASCII
+        if search_para_nbr and search_para_nbr != 'missing':
+          query_string = 'para_nbr=%s' % search_para_nbr
+          results = index.search(query_string)
+          for result in results:
 
-    for law in laws_titles:
-      query2 = ''.join([e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + [search_para_nbr]])
-      query4 = [e for e in query.replace(u'§','').split() if e.lower() not in paragraph_words + [search_para_nbr]][0]
-      #logging.error(1)
-      search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
-      #logging.error(search_para_nbr)
-      query3 = query.replace(u'§','').replace('seadus','').replace(search_para_nbr,'').split()[0]
-      #logging.error(2)
-      """logging.error(query2)
-      logging.error(query3)
-      logging.error(query4)"""
-      #logging.error(repr([e for e in query.replace(u'§','').encode('latin1').split() if e.lower() not in paragraph_words + [search_para_nbr]]))
-      #logging.error(repr(''.join(law.title).encode('utf8').lower()))
-      if (     query2.lower() in law.title.lower().replace(' ','')
-            or query4.lower() in law.title.lower().replace(' ','')
-            or query3.lower() in law.title.lower().replace(' ','')  # ["lõhkematerjali","seadus","paragrahv"][0]
-            or law.title.lower() in query.lower()
-            or any(x.lower() in ''.join(law.title).encode('utf8').replace('seadus','').lower() for x in [e for e in query.replace(u'§','').replace('seadus','').encode('latin1').split() if e.lower() not in paragraph_words + [search_para_nbr]])
-          ):
-        search_law_names.append(law.title)
+            rank = 0
+            for single_query in query.replace('seadus',' ').replace(search_para_nbr,'').split():
+              try:
+                # rank results (had to split query only for ranking here)
+                if result.field('para_nbr').value == int(search_para_nbr):
+                  rank += 1
+                if single_query.lower() in result.field('law_title').value.lower():
+                  rank += 1
+                if single_query.lower() in result.field('para_title').value.lower():
+                  rank += 1
+                if single_query.lower() in result.field('content').value.lower():
+                  rank += 2
+              except Exception:
+                pass
 
-    if len(search_law_names) > 0:  # TODO! think what to do when we don't get law name?
-      final_results = []
-      for search_law_name in search_law_names:
+            final_results.append([result.field('law_link').value,
+                                  result.field('content').value,
+                                  result.field('para_title').value,
+                                  result.field('law_title').value,
+                                  rank, rank])
 
-        try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
-          index = search.Index(name=search_law_name.encode('ascii', 'ignore').replace(' ',''))  # index name is printable ASCII
-          if search_para_nbr and search_para_nbr != 'missing':
-            query_string = 'para_nbr=%s' % search_para_nbr
-            results = index.search(query_string)
-            for result in results:
 
-              rank = 0
-              for single_query in query.replace('seadus',' ').replace(search_para_nbr,'').split():
-                try:
-                  # rank results (had to split query only for ranking here)
-                  if result.field('para_nbr').value == int(search_para_nbr):
+        else:
+          search_para_nbr = 'missing' if not search_para_nbr else 'missing'
+          for single_query in query.replace(search_para_nbr,'').split():
+            if single_query != 'seadus':
+              query_string = 'content: ~"%s" OR law_title: ~"%s"' % (single_query, single_query)
+              results = index.search(query_string)
+              if results:
+                for result in results:
+                  try:
+                    # rank results
+                    rank = 0
+                    if str(search_para_nbr) in result.field('para_title').value.lower():
                       rank += 1
-                  if single_query.lower() in result.field('law_title').value.lower():
+                    if single_query.lower() in result.field('law_title').value.lower():
                       rank += 1
-                  if single_query.lower() in result.field('para_title').value.lower():
+                    if single_query.lower() in result.field('para_title').value.lower():
                       rank += 1
-                  if single_query.lower() in result.field('content').value.lower():
+                    if single_query.lower() in result.field('content').value.replace(' ','').lower():
+                      #logging.error('adding +2 from content because %s exists in %s' %(single_query.lower(), result.field('content').value.replace(' ','').lower()))
                       rank += 2
-                except Exception:
-                  pass
-
-              final_results.append([result.field('law_link').value,
-                                      result.field('content').value,
-                                      result.field('para_title').value,
-                                      result.field('law_title').value,
-                                      rank, rank])
-
-
-          else:
-            search_para_nbr = 'missing' if not search_para_nbr else 'missing'
-            for single_query in query.replace(search_para_nbr,'').split():
-              if single_query != 'seadus':
-                query_string = 'content: ~"%s" OR law_title: ~"%s"' % (single_query, single_query)
-                results = index.search(query_string)
-                if results:
-                  for result in results:
-                    try:
-                      # rank results
-                      rank = 0
-                      if str(search_para_nbr) in result.field('para_title').value.lower():
-                          rank += 1
-                      if single_query.lower() in result.field('law_title').value.lower():
-                          rank += 1
-                      if single_query.lower() in result.field('para_title').value.lower():
-                          rank += 1
-                      if single_query.lower() in result.field('content').value.replace(' ','').lower():
-                          #logging.error('adding +2 from content because %s exists in %s' %(single_query.lower(), result.field('content').value.replace(' ','').lower()))
-                          rank += 2
-                    except Exception:
-                      pass
-                    final_results.append([result.field('law_link').value,
-                                          result.field('content').value,
-                                          result.field('para_title').value,
-                                          result.field('law_title').value,
-                                          rank, rank])
+                  except Exception:
+                    pass
+                  final_results.append([result.field('law_link').value,
+                                        result.field('content').value,
+                                        result.field('para_title').value,
+                                        result.field('law_title').value,
+                                        rank, rank])
 
 
 
 
-        except Exception, e:
-            logging.error(e)
-            pass
+      except Exception, e:
+        logging.error(e)
+        pass
 
 
-      print "total results: %d" % len(final_results)
-      final_results = sorted(final_results, key=itemgetter(5), reverse=True)
-      return final_results
+    print "total results: %d" % len(final_results)
+    final_results = sorted(final_results, key=itemgetter(5), reverse=True)
+    return final_results
 
 
 def parse_riigiteataja_uudised(url, query=None, category=None, date_algus=None):

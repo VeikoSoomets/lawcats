@@ -432,7 +432,7 @@ class AuthHandler(BaseHandler, SimpleAuthHandler):
      auth_info contains access token or oauth token and secret.
      extra is a dict with additional params passed to the auth init handler.
     """
-    logging.error('Got user data: %s', data)
+    #logging.error('Got user data: %s', data)
     #logging.error(str(data))
     auth_id = '%s:%s' % (provider, data['id'])
     #logging.error(auth_id)

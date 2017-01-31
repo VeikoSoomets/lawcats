@@ -1039,18 +1039,12 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       dbps_meta = []
       dbps_main = []
       models.RiigiTeatajaURLs.query().map(self.delete_async_)
-      models.RiigiTeatajaMetainfo.query().map(self.delete_async_)
       for url in urls:
         text = urlfetch.fetch(url['url'], method=urlfetch.GET)  # replaced because of timeouts
-        #text = urllib2.urlopen(url['url'])
         dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.content)
-        dbp_meta = models.RiigiTeatajaMetainfo(title=url['title'])
         dbps_main.append(dbp)
-        dbps_meta.append(dbp_meta)
 
       future = ndb.put_multi_async(dbps_main)
-      future_meta = ndb.put_multi_async(dbps_meta)
-      ndb.Future.wait_all(future_meta)
       ndb.Future.wait_all(future)
 
       message="Operation successful, added %s law files to datastore!" % str(len(dbps_meta))

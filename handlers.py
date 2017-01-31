@@ -140,8 +140,7 @@ class WebSearch(BaseHandler):
       query = json_data['queryword']
       query_string = query.upper().encode('utf-8')
       querywords = set(query.split(' '))
-      logging.error(repr(querywords))
-      logging.error('////////////////////')
+
       # This variables in for shorter law names like 'KarS' etc
       lyhendid_in_query_string = [constants.Lyhendid.get_value_by_name(lyhend).decode('utf-8') for lyhend in
                                   constants.Lyhendid.get_constant_names(uppercase=True) if lyhend in query_string.split(' ')]
@@ -153,8 +152,6 @@ class WebSearch(BaseHandler):
         querywords.update(lyhendid_in_query_string)
       if lyhendid_values_in_query_string:
         querywords.update(lyhendid_values_in_query_string)
-      logging.error(repr(querywords))
-      logging.error('##################')
       categories2 = json_data['categories']
       action = json_data['action']
 

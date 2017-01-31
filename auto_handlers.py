@@ -167,10 +167,10 @@ class AddLawIndex(BaseHandler):
   @classmethod
   def delete_all_in_index(self):
     """Delete all the docs in the given index."""
-    res = models.RiigiTeatajaMetainfo.query().fetch()
+    res = models.RiigiTeatajaMetainfo2.query().fetch()
     for law in res:
       try:
-        index_name = law.title.encode('ascii', 'ignore').replace(' ','')
+        index_name = law.title.encode('ascii', 'ignore').replace(' ','')[:76]
         doc_index = search.Index(name=index_name)
 
         # looping because get_range by default returns up to 100 documents at a time
@@ -186,18 +186,32 @@ class AddLawIndex(BaseHandler):
         pass #  index name can't be more than 100 bytes
 
   @classmethod
+  @ndb.tasklet
+  def delete_async_(self, input_object):
+      # key = ndb.Key('UserRequest', input_key.id())
+      key = input_object.key
+      del_future = yield key.delete_async(use_memcache=False)  # faster
+      raise ndb.Return(del_future)
+
+  @classmethod
   def get(self):
+
 
     def batch(iterable, n = 1):
        l = len(iterable)
        for ndx in range(0, l, n):
            yield iterable[ndx:min(ndx+n, l)]
 
+
     """ Get laws from datastore and put to search api index """
     laws = models.RiigiTeatajaURLs.query().fetch()
     put_laws = 0
+    dbp_metas = []
+    para_titles = []
     for law in laws:
+
       documents = []
+      meta_docs = []
       src = law.text
       soup = bs4.BeautifulSoup(src, "html5lib")
 
@@ -224,9 +238,12 @@ class AddLawIndex(BaseHandler):
             pass
 
           para_nbr = 0
-          if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
-              paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
-              paragraph_title = c.find_previous_sibling('h3').get_text()
+          try:
+            if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
+                paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
+                paragraph_title = c.find_previous_sibling('h3').get_text()
+          except Exception:
+            pass
 
           try:
             para_nbr = paragraph.split()[1].replace('.','').replace(' ','')
@@ -236,7 +253,9 @@ class AddLawIndex(BaseHandler):
           content = c.get_text()
 
           # build document
-          if article_link and paragraph_title:  # lets prune some crappy entries we don't need
+          if article_link and paragraph_title and para_nbr:  # lets prune some crappy entries we don't need
+            para_titles.append(paragraph_title)
+
             document = search.Document(
             fields=[
                search.AtomField(name='law_title', value=law_title),
@@ -245,13 +264,26 @@ class AddLawIndex(BaseHandler):
                search.TextField(name='para_title', value=paragraph_title),
                search.TextField(name='content', value=content)
                ])
-            documents.append(document)
+
+
+      # TODO! instead of str(list( , why not insert list?
+      dbp_meta = models.RiigiTeatajaMetainfo(title=law_title, para_title=str(list(set(para_titles))) ) # set to remove duplicates, then repr of list for later parsing
+      dbp_metas.append(dbp_meta)
 
       # TODO! truncate to < 100bytes so you'd get all laws (currently a couple missing)
       try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
         """ Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index. """
         for x in batch(documents, 200):
-            index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ',''))  # index name must be printable ASCII
+            index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','1')[:76])  # index name must be printable ASCII
+            index.put(x)
+      except Exception, e:
+        # pass only because sometimes index name exceed 100byte limit, but we don't care for those atm
+        pass
+
+      try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
+        """ Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index. """
+        for x in batch(meta_docs, 200):
+            index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','2')[:76])  # index name must be printable ASCII
             index.put(x)
       except Exception, e:
         # pass only because sometimes index name exceed 100byte limit, but we don't care for those atm
@@ -259,6 +291,8 @@ class AddLawIndex(BaseHandler):
 
       put_laws += 1
 
+    future_meta = ndb.put_multi_async(dbp_metas)
+    ndb.Future.wait_all(future_meta)
     logging.error('put %s laws to index!' % str(put_laws))
 
 
@@ -289,25 +323,31 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
   @classmethod
   def delete_htmls(self):
       models.RiigiTeatajaURLs.query().map(self.delete_async_)
+      models.RiigiTeatajaMetainfo2.query().map(self.delete_async_)
       models.RiigiTeatajaMetainfo.query().map(self.delete_async_)
+
+
+  """@classmethod
+  def delete_htmls2(self):
+      models.RiigiTeatajaMetainfo.query().map(self.delete_async_)"""
 
 
   @classmethod
   def get(self):
       urls = self.get_urls()
-      dbps_meta = []
       dbps_main = []
+      dbps_meta = []
       for url in urls:
         text = urlfetch.fetch(url['url'], method=urlfetch.GET)
         dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.content)
-        dbp_meta = models.RiigiTeatajaMetainfo(title=url['title'])
+        dbp_meta = models.RiigiTeatajaMetainfo2(title=url['title'])
         dbps_main.append(dbp)
         dbps_meta.append(dbp_meta)
 
       future = ndb.put_multi_async(dbps_main)
       future_meta = ndb.put_multi_async(dbps_meta)
-      ndb.Future.wait_all(future_meta)
       ndb.Future.wait_all(future)
+      ndb.Future.wait_all(future_meta)
 
 
 class DataGatherer(BaseHandler):
@@ -326,3 +366,11 @@ class DataIndexer(BaseHandler):
     AddLawIndex.delete_all_in_index()
     deferred.defer(AddLawIndex.get)
     return
+
+
+"""
+class DataDeleter(BaseHandler):
+  # just delete data
+  def get(self):
+    RiigiTeatajaDownloadHandler.delete_htmls2()
+    return"""
