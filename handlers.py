@@ -152,6 +152,7 @@ class WebSearch(BaseHandler):
         querywords.update(lyhendid_in_query_string)
       if lyhendid_values_in_query_string:
         querywords.update(lyhendid_values_in_query_string)
+
       categories2 = json_data['categories']
       action = json_data['action']
 
@@ -163,13 +164,13 @@ class WebSearch(BaseHandler):
     search_results = []
     search_results1 = []
     for cat in categories2:
-
       if action == 'search':
         date_algus = '2014-01-01'
         search_results1 = do_search(querywords,cat,date_algus)
 
       elif action == 'custom_search':
         date_algus = '2014-01-01'
+        logging.error(email)
         search_results1 = custom_search(querywords,cat,date_algus,email)
 
       
@@ -213,9 +214,11 @@ def custom_search(querywords, category, date_algus, email=None):
     if custom_sources2:
       for custom in custom_sources2.get_result():
         # Otsime rss allikatest
+        logging.error(1)
         if custom.category_type == 'rss_source' and category == custom.category_name:
           #search_results.extend(rss_parse.parse_feed(querywords, category, date_algus))
           try:
+            logging.error(2)
             search_results.extend(rss_parse.parse_feed(querywords, category, date_algus))
           except Exception, e:
             logging.error('failed with custom rss source')

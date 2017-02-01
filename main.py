@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
 #
-# Copyright 2014 Kaspar Gering
+# Copyright 2017 Kaspar Gering
 
 
 """Defines the routing for the app's non-admin handlers.

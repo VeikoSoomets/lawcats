@@ -37,22 +37,12 @@ app_config = {
 application = webapp2.WSGIApplication(
     [
         ('/app/terms', TermsHandler),
-        ('/app/results', ResultsHandlerCursor),  # Cursor
-        ('/app/results/data', ResultsHandlerCursor),
-        ('/app/querywords', RequestsHandler),
-        ('/app/querywords/data', RequestsHandler),
         ('/app/custom_cats', CustomCats),
         ('/app/search', WebSearch),
         ('/app/search/data', WebSearch),
-        ('/app/request_source', RequestSource), 
-        ('/app/charts', StatsHandler),  # show statistics
-        ('/sys/delete_user_results', DeleteUserResults),  # delete userresults
-        ('/sys/delete_user_requests', DeleteRequests),  # delete requests
-        ('/sys/remove_last_crawl', DeleteLastCrawl),  # delete events
+        ('/app/request_source', RequestSource),
         ('/sys/create_categories', GenerateCategories),  # generate categories
         ('/sys/delete_categories', DeleteCategories),  # generate categories
-        #('/sys/implement_src', AutoAddSource),  # automatic implementation of sources
-        #('/sys/add_law_index', AddLawIndex),
         ('/app/admin', SiteAdmin),
         ('/app/change_lang', SetLangCookie),
         ('/sys/download_riigihtml', DataGatherer),

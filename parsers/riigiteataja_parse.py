@@ -227,22 +227,24 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
         results = index.search(query_string)
         for result in results:
 
+          # TODO! ranking function
+          """def rank_results(query_list, result_value_list, scorelist):
+            # for each item in a check if exists for each in value.. asign score from indexed score list (len(result_value_list)=len(scorelist))
+            pass"""
+
           rank = 0
-          for single_query in query.replace('seadus',' ').replace(search_para_nbr,'').split():
+          for single_query in a:
             try:
-              # rank results (had to split query only for ranking here)
-              if result.field('para_nbr').value == int(search_para_nbr):
-                logging.error(1)
-                rank += 1
+              if int(result.field('para_nbr').value) == int(search_para_nbr):
+                rank += 2
               if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
-                logging.error(2)
-                rank += 2
+                rank += 3
               if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
-                logging.error(3)
-                rank += 1
-              if single_query.lower() in result.field('content').value.replace(' ','').lower():
-                logging.error(4)
                 rank += 2
+              if single_query.lower() in result.field('law_title').value.lower().split():
+                rank += 3
+              if single_query.lower() in result.field('content').value.replace(' ','').lower():
+                rank += 1
             except Exception:
               pass
 
@@ -254,46 +256,57 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
                                     rank, rank])
 
 
+      elif len(a) == 1:
+        law_title = result.field('law_title').value
+        query_string = 'law_title: ~"%s" OR para_title: ~"%s" OR para_token: %s' % (law_title, law_title, law_title)
+        results = index.search(query_string)
+        for result in results:
+          rank = 0  # TODO! ranking function
+          final_results.append([result.field('law_link').value,
+                                        result.field('content').value,
+                                        result.field('para_title').value,
+                                        result.field('law_title').value,
+                                        rank, rank])
+
       else:  # didn't get search_para
         search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
-        for single_query in query.split():
-          if single_query != 'seadus':
-            query_string = 'content: ~"%s" OR law_title: ~"%s" OR para_title: ~"%s" OR para_token:%s' % (single_query, single_query, single_query, single_query)
-            results = index.search(query_string)
-            if results:
-              for result in results:
-                try:
-                  # rank results
-                  rank = 0
-                  for single_query in query.split():
-                      if str(search_para_nbr) in result.field('para_title').value.replace(' ','').lower():
-                        logging.error(5)
-                        rank += 1
-                      if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
-                        logging.error(6)
-                        rank += 2
-                      if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
-                        logging.error(7)
-                        rank += 2
-                      if single_query.lower() in result.field('content').value.replace(' ','').lower():
-                        logging.error(8)
-                        rank += 3
-                      if single_query.lower() in result.field('para_token').value.replace(' ','').lower():
-                        logging.error(9)
-                        rank += 1
-                      if any(x in result.field('para_token').lower().split(',') for x in single_query.lower()):
-                        logging.error(10)
-                        rank += 1
+        for single_query in a:
+          query_string = 'content: ~"%s" OR law_title: ~"%s" OR para_title: ~"%s" OR para_token:%s' % (single_query, single_query, single_query, single_query)
+          results = index.search(query_string)
+          if results:
+            for result in results:
+              try:
+                # rank results
+                rank = 0
+                for single_query in a:
+                    if str(search_para_nbr) in result.field('para_title').value.replace(' ','').lower():
+                      logging.error(5)
+                      rank += 1
+                    if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
+                      logging.error(6)
+                      rank += 1
+                    if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
+                      logging.error(7)
+                      rank += 1
+                    if single_query.lower() in result.field('content').value.replace(' ','').lower():
+                      logging.error(8)
+                      rank += 3
+                    if single_query.lower() in result.field('para_token').value.replace(' ','').lower():
+                      logging.error(9)
+                      rank += 1
+                    if any(x in result.field('para_token').lower().split(',') for x in single_query.lower()):
+                      logging.error(10)
+                      rank += 1
 
-                except Exception:
-                  pass
+              except Exception:
+                pass
 
-                if rank > 0:
-                    final_results.append([result.field('law_link').value,
-                                          result.field('content').value,
-                                          result.field('para_title').value,
-                                          result.field('law_title').value,
-                                          rank, rank])
+              if rank > 0:
+                  final_results.append([result.field('law_link').value,
+                                        result.field('content').value,
+                                        result.field('para_title').value,
+                                        result.field('law_title').value,
+                                        rank, rank])
 
 
 
