@@ -119,7 +119,7 @@ class AddLawIndex(BaseHandler):
 
 
     """ Get laws from datastore and put to search api index """
-    laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title=='Advokatuuriseadus').fetch()  # models.RiigiTeatajaURLs.title=='Lennundusseadus'
+    laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title=='Karistusseadustik').fetch()  # models.RiigiTeatajaURLs.title=='Lennundusseadus'
     put_laws = 0
     dbp_metas = []
     para_titles = []
@@ -127,8 +127,8 @@ class AddLawIndex(BaseHandler):
 
       documents = []
       meta_docs = []
-      src = law.text.decode('utf-8')
-      articles = bs4.BeautifulSoup(src, "html5lib")
+      src = law.text #.decode('utf-8')
+      articles = bs4.BeautifulSoup(src, "html5lib", from_encoding='utf8')
 
       # We want to understand superscript styles and show them properly to avoid confusion in paragraph numbers
       try:
@@ -222,7 +222,7 @@ class AddLawIndex(BaseHandler):
     logging.error('put %s laws to index!' % str(put_laws))
 
 
-class RiigiTeatajaDownloadHandler(BaseHandler):
+class RiigiTeatajaDownloadHandler():
   @classmethod
   def get_urls(self):
     src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=600)
@@ -287,20 +287,26 @@ class DataGatherer(BaseHandler):
   """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
     Good for long-running tasks """
   def get(self):
-    RiigiTeatajaDownloadHandler.delete_htmls()
-    RiigiTeatajaDownloadHandler.get()
-    return
-deferred.defer(DataGatherer.get)
+    deferred.defer(RiigiTeatajaDownloadHandler.delete_htmls)
 
+class DataGatherer2(BaseHandler):
+  """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
+    Good for long-running tasks """
+  def get(self):
+    deferred.defer(RiigiTeatajaDownloadHandler.get)
 
 class DataIndexer(BaseHandler):
   """ Indexes laws for faster access. Uses "deferred" module, which uses queues.
     Good for long-running tasks """
   def get(self):
-    AddLawIndex.delete_all_in_index()
-    AddLawIndex.get()
-    return
-deferred.defer(DataIndexer.get)
+    deferred.defer(AddLawIndex.delete_all_in_index)
+
+class DataIndexer2(BaseHandler):
+  """ Indexes laws for faster access. Uses "deferred" module, which uses queues.
+    Good for long-running tasks """
+  def get(self):
+    deferred.defer(AddLawIndex.get)
+
 
 """
 class DataDeleter(BaseHandler):

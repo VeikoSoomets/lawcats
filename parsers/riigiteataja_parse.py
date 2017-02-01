@@ -185,21 +185,28 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
       # get paragraph titles from memcahce - fairy expensive operation if done for each law
       # TODO! add cache in a separate process, not during search
-      #search_law_title = law.title.encode('ascii', 'ignore').replace(' ','')[:76]
-      search_law_title = 'x'
+      search_law_title = law.title.encode('ascii', 'ignore').replace(' ','')[:76]
       laws_titles2 = memcache.get(search_law_title)
+      logging.error(repr(law.title))
+      logging.error(repr(models.RiigiTeatajaMetainfo.query().fetch(1)[0].para_title))
       if not laws_titles2:
         laws_titles2 = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo.title == law.title).fetch()
         memcache.set(search_law_title, laws_titles2)  # no expiration"""
 
-      # if we have paragraph nbr in law title + one of the searched keywords is in law title
-      if str(search_para_nbr) in ''.join(laws_titles2[0].para_title) and any(x in law.title.lower().replace(' ','') for x in a):
-        search_law_names.append(law.title)
-
-      # if we have single keyword in law title or in parameter title
-      for single_query in a:
-        if (single_query in law.title.encode('utf8').lower().replace(' ', '')) or single_query in ''.join(laws_titles2[0].para_title):
+      try:
+        # if we have paragraph nbr in law title + one of the searched keywords is in law title
+        if str(search_para_nbr) in ''.join(laws_titles2[0]) and any(x in law.title.lower().replace(' ','') for x in a):
           search_law_names.append(law.title)
+      except Exception, e:
+        logging.error(e)
+
+      try:
+        # if we have single keyword in law title or in parameter title
+        for single_query in a:
+          if (single_query in law.title.encode('utf8').lower().replace(' ', '')) or single_query in ''.join(laws_titles[0].para_title):
+            search_law_names.append(law.title)
+      except Exception, e:
+        logging.error(e)
 
 
     """
