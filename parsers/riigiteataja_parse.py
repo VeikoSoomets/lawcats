@@ -152,9 +152,9 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     memcache.set('law_titles', laws_titles)  # no expiration
 
   for law in laws_titles:
-    a = [x for x in [e for e in query.replace(u'§','').encode('latin1').lower().split() if e.lower() not in paragraph_words + ['seadus', u'§']]]
+    a = [x for x in [e for e in query.replace(u'§','').encode('latin1').lower().split() if e.lower() not in paragraph_words + [str(search_para_nbr), 'seadus', u'§']]]
     # if any keyword is in law title or first word of law is in keyword - do tokenize here
-    if (any(x in law.title.lower().replace(' ','') for x in a) \
+    if (any(x in law.title.encode('utf8').lower().replace(' ','') for x in a) \
             or law.title.lower().split()[0] in a   \
         ):
         search_law_names.append(law.title)
@@ -185,7 +185,8 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
       # get paragraph titles from memcahce - fairy expensive operation if done for each law
       # TODO! add cache in a separate process, not during search
-      search_law_title = law.title.encode('ascii', 'ignore').replace(' ','1')[:76]
+      #search_law_title = law.title.encode('ascii', 'ignore').replace(' ','')[:76]
+      search_law_title = 'x'
       laws_titles2 = memcache.get(search_law_title)
       if not laws_titles2:
         laws_titles2 = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo.title == law.title).fetch()
@@ -217,16 +218,17 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
 
   if len(search_law_names) > 0:  # TODO! think what to do when we don't get law name?
+    logging.error('got some laws, starting to use Index Search now')
     final_results = []
     for search_law_name in search_law_names:
-
+      index_name = search_law_name.encode('ascii', 'ignore').replace(' ','')[:76]
       #try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
-      index = search.Index(name=search_law_name.encode('ascii', 'ignore').replace(' ','')[:76])  # index name is printable ASCII
+      # TODO! think of a better index, stringsafe
+      index = search.Index(name=search_law_name.encode('utf8', 'ignore').replace(' ','')[:76])  # index name is printable ASCII
       if search_para_nbr and search_para_nbr != 'missing':
         query_string = 'para_nbr=%s' % search_para_nbr
         results = index.search(query_string)
         for result in results:
-
           # TODO! ranking function
           """def rank_results(query_list, result_value_list, scorelist):
             # for each item in a check if exists for each in value.. asign score from indexed score list (len(result_value_list)=len(scorelist))

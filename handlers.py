@@ -305,12 +305,12 @@ def do_search(querywords, category, date_algus):
     # Everything else
     if category == source['category']:
       search_results.extend(source['results'](querywords, category, date_algus))
-      """try:
+      try:
         search_results.extend(source['results'](querywords, category, date_algus))
       except Exception, e:
         logging.error('failed with singular category search')
         logging.error(e)
-        pass"""
+        pass
   #print search_results
   return search_results  # link, title, date, qword, category
  
