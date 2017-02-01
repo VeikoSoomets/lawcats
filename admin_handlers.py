@@ -451,7 +451,7 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       urls = self.get_urls()
       dbps_meta = []
       dbps_main = []
-      models.RiigiTeatajaURLs.query().map(self.delete_async_)
+      #models.RiigiTeatajaURLs.query().map(self.delete_async_)
       for url in urls:
         text = urlfetch.fetch(url['url'], method=urlfetch.GET)  # replaced because of timeouts
         dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.content)
@@ -459,6 +459,6 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
 
       future = ndb.put_multi_async(dbps_main)
       ndb.Future.wait_any(future)
-
+      logging.error('Done!')
       #message="Operation successful, added %s law files to datastore!" % str(len(dbps_meta))
       #self.render_template('sys.html',{'message_type':'success','message':message})

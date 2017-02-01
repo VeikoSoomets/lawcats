@@ -14,6 +14,7 @@ from handlers import WebSearch
 from secrets import SESSION_KEY
 from categories import GenerateCategories
 
+
 import webapp2
 
 app_config = {
@@ -46,7 +47,7 @@ application = webapp2.WSGIApplication(
         ('/app/admin', SiteAdmin),
         ('/app/change_lang', SetLangCookie),
         ('/sys/download_riigihtml', DataGatherer),
-        ('/sys/reindex_law2', DataIndexer),
+        ('/sys/reindex_law', DataIndexer)
         #('/sys/delete_data', DataDeleter)
     ],
     debug=True, config=app_config)

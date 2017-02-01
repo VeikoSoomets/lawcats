@@ -96,24 +96,20 @@ class AddLawIndex(BaseHandler):
   @classmethod
   def get(self):
 
-    # TODO clear this by replacing numbers and symbols (reduce up to 30-40% of letters in tokens):
-    """
-    222¹,22¹.,222¹.,Auto,utor,tori,oriõ,riõi,iõig,õigu,igus,guse,Autor,utori,toriõ,oriõi,riõig,iõigu,õigus,iguse,Autori,utoriõ,toriõi,oriõig,riõigu,iõigus,õiguse,Autoriõ,utoriõi,toriõig,oriõigu,riõigus,iõiguse,Autoriõi,utoriõig,toriõigu,oriõigus,riõiguse,Autoriõig,utoriõigu,toriõigus,oriõiguse,Autoriõigu,utoriõigus,toriõiguse,Autoriõigus,utoriõiguse,Autoriõiguse,rikk,ikku,kkum,kumi,umin,mine,rikku,ikkum,kkumi,kumin,umine,rikkum,ikkumi,kkumin,kumine,rikkumi,ikkumin,kkumine,rikkumin,ikkumine,rikkumine,arvu,rvut,vuti,utis,tisü,isüs,süst,üste,stee,teem,eemi,emis,mis[,is[R,s[RT,arvut,rvuti,vutis,utisü,tisüs,isüst,süste,üstee,steem,teemi,eemis,emis[,mis[R,is[RT,arvuti,rvutis,vutisü,utisüs,tisüst,isüste,süstee,üsteem,steemi,teemis,eemis[,emis[R,mis[RT,arvutis,rvutisü,vutisüs,utisüst,tisüste,isüstee,süsteem,üsteemi,steemis,teemis[,eemis[R,emis[RT,arvutisü,rvutisüs,vutisüst,utisüste,tisüstee,isüsteem,süsteemi,üsteemis,steemis[,teemis[R,eemis[RT,arvutisüs,rvutisüst,vutisüste,utisüstee,tisüsteem,isüsteemi,süsteemis,üsteemis[,steemis[R,teemis[RT,arvutisüst,rvutisüste,vutisüstee,utisüsteem,tisüsteemi,isüsteemis,süsteemis[,üsteemis[R,steemis[RT,arvutisüste,rvutisüstee,vutisüsteem,utisüsteemi,tisüsteemis,isüsteemis[,süsteemis[R,üsteemis[RT,arvutisüstee,rvutisüsteem,vutisüsteemi,utisüsteemis,tisüsteemis[,isüsteemis[R,süsteemis[RT,arvutisüsteem,rvutisüsteemi,vutisüsteemis,utisüsteemis[,tisüsteemis[R,isüsteemis[RT,arvutisüsteemi,rvutisüsteemis,vutisüsteemis[,utisüsteemis[R,tisüsteemis[RT,arvutisüsteemis,rvutisüsteemis[,vutisüsteemis[R,utisüsteemis[RT,arvutisüsteemis[,rvutisüsteemis[R,vutisüsteemis[RT,arvutisüsteemis[R,rvutisüsteemis[RT,arvutisüsteemis[RT,12.0,2.07,.07.,07.2,7.20,.201,2014,014,,12.07,2.07.,.07.2,07.20,7.201,.2014,2014,,12.07.,2.07.2,.07.20,07.201,7.2014,.2014,,12.07.2,2.07.20,.07.201,07.2014,7.2014,,12.07.20,2.07.201,.07.2014,07.2014,,12.07.201,2.07.2014,.07.2014,,12.07.2014,2.07.2014,,12.07.2014,,jõus,õust,ust.,jõust,õust.,jõust.,01.0,1.01,.01.,01.2,1.20,.201,2015,015],01.01,1.01.,.01.2,01.20,1.201,.2015,2015],01.01.,1.01.2,.01.20,01.201,1.2015,.2015],01.01.2,1.01.20,.01.201,01.2015,1.2015],01.01.20,1.01.201,.01.2015,01.2015],01.01.201,1.01.2015,.01.2015],01.01.2015,1.01.2015],01.01.2015]
-
-    """
     # Tokenize words for enhanced search capabilities from Search Index API
     def tokenize(phrase):
         a = []
         for word in phrase.split():
             j = 1
-            while True:
-                for i in range(len(word) - j + 1):
-                    token = word[i:i + j]
-                    if len(token) > 3:  # NB! token limit 4
-                        a.append(token)
-                if j == len(word):
-                    break
-                j += 1
+            if not word.isdigit() and word.isalnum():  # remove numbers and special chars
+                while True:
+                    for i in range(len(word) - j + 1):
+                        token = word[i:i + j]
+                        if len(token) > 3:  # NB! token limit 4
+                            a.append(token)
+                    if j == len(word):
+                        break
+                    j += 1
         return a
 
     def batch(iterable, n = 1):
@@ -123,7 +119,7 @@ class AddLawIndex(BaseHandler):
 
 
     """ Get laws from datastore and put to search api index """
-    laws = models.RiigiTeatajaURLs.query().fetch()  # models.RiigiTeatajaURLs.title=='Lennundusseadus'
+    laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title=='Advokatuuriseadus').fetch()  # models.RiigiTeatajaURLs.title=='Lennundusseadus'
     put_laws = 0
     dbp_metas = []
     para_titles = []
@@ -131,12 +127,12 @@ class AddLawIndex(BaseHandler):
 
       documents = []
       meta_docs = []
-      src = law.text
-      soup = bs4.BeautifulSoup(src, "html5lib")
+      src = law.text.decode('utf-8')
+      articles = bs4.BeautifulSoup(src, "html5lib")
 
       # We want to understand superscript styles and show them properly to avoid confusion in paragraph numbers
       try:
-          for e in soup.findAll('sup'):
+          for e in articles.findAll('sup'):
 
               try:
                 part1 = [y for x, y in superscript_map.iteritems() if x == int(e.get_text()[0])][0]
@@ -161,50 +157,47 @@ class AddLawIndex(BaseHandler):
           pass
       url_base = law.link
 
-      # Get individual articles
-      articles = soup.find_all('div', attrs={'id': 'article-content'})
-      for article in articles:
-        paragraph_title, article_link, law_title, content = None, None, None, None
-        law_title = law.title
-        # Get content
-        content = article.find_all('p')  #, attrs={'class': 'announcement-body'}
-        for c in content:
-          try:
-            article_link = c.find_next('a').get('name')
-            article_link = url_base + '#' + article_link
-          except:
-            pass
+      #for article in articles:
+      paragraph_title, article_link, law_title, content = None, None, None, None
+      law_title = law.title
+      # Get content
+      content = articles.find_all('p')  #, attrs={'class': 'announcement-body'}
+      for c in content:
+        try:
+          article_link = c.find_next('a').get('name')
+          article_link = url_base + '#' + article_link
+        except:
+          pass
 
-          para_nbr = 0
-          try:
-            if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
-                paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
-                paragraph_title = c.find_previous_sibling('h3').get_text()
-          except Exception:
-            pass
+        para_nbr = 0
+        try:
+          if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
+              paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
+              paragraph_title = c.find_previous_sibling('h3').get_text()
+        except Exception:
+          pass
 
-          try:
-            para_nbr = paragraph.split()[1].replace('.','').replace(' ','')
+        try:
+          para_nbr = paragraph.split()[1].replace('.','').replace(' ','')
 
-          except Exception:
-            pass
-          content = c.get_text()
+        except Exception:
+          pass
+        content = c.get_text()
 
-          # build document
-          if article_link and paragraph_title and para_nbr:  # lets prune some crappy entries we don't need
-            para_titles.append(paragraph_title)
-            para_token = ','.join(tokenize(paragraph_title))
-            document = search.Document(
-            fields=[
-               search.AtomField(name='law_title', value=law_title),
-               search.AtomField(name='law_link', value=article_link),
-               search.NumberField(name='para_nbr', value=int(para_nbr)),
-               search.TextField(name='para_title', value=paragraph_title),
-               search.TextField(name='para_token', value=para_token),
-               search.TextField(name='content', value=content)
-               ])
-
-            documents.append(document)
+        # build document
+        if article_link and paragraph_title and para_nbr:  # lets prune some crappy entries we don't need
+          para_titles.append(paragraph_title)
+          para_token = ','.join(tokenize(paragraph_title))
+          document = search.Document(
+          fields=[
+             search.AtomField(name='law_title', value=law_title),
+             search.AtomField(name='law_link', value=article_link),
+             search.NumberField(name='para_nbr', value=int(para_nbr)),
+             search.TextField(name='para_title', value=paragraph_title),
+             search.TextField(name='para_token', value=para_token),
+             search.TextField(name='content', value=content)
+             ])
+          documents.append(document)
 
 
       # TODO! instead of str(list( , why not insert list?
@@ -225,7 +218,7 @@ class AddLawIndex(BaseHandler):
       put_laws += 1
 
     future_meta = ndb.put_multi_async(dbp_metas)
-    ndb.Future.wait_any(future_meta)
+    ndb.Future.wait_all(future_meta)
     logging.error('put %s laws to index!' % str(put_laws))
 
 
@@ -273,12 +266,12 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       for url in urls:
 
         # TODO! test that below works and reduce weight by 1/3
-        """text = urlfetch.fetch(url['url'], method=urlfetch.GET)
-        soup = bs4.BeautifulSoup(text, "html5lib")
-        law = soup.find_all('div', attrs={'id': 'article-content'})
-        law_content = [str(x) for x in law]"""
-
-        dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.content)
+        text = urlfetch.fetch(url['url'], method=urlfetch.GET)
+        soup = bs4.BeautifulSoup(text.content, "html5lib")
+        law = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
+        #law_content = [i.decode('UTF-8') if isinstance(i, basestring) else i for i in law]
+        #logging.error(type(law))
+        dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=law)
         dbp_meta = models.RiigiTeatajaMetainfo2(title=url['title'])
         dbps_main.append(dbp)
         dbps_meta.append(dbp_meta)
@@ -289,21 +282,25 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       ndb.Future.wait_all(future)
 
 
+
 class DataGatherer(BaseHandler):
   """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
     Good for long-running tasks """
   def get(self):
     RiigiTeatajaDownloadHandler.delete_htmls()
-    deferred.defer(RiigiTeatajaDownloadHandler.get)
+    RiigiTeatajaDownloadHandler.get()
+    return
+deferred.defer(DataGatherer.get)
 
 
 class DataIndexer(BaseHandler):
   """ Indexes laws for faster access. Uses "deferred" module, which uses queues.
     Good for long-running tasks """
   def get(self):
-    deferred.defer(AddLawIndex.delete_all_in_index)
-    deferred.defer(AddLawIndex.get)
-
+    AddLawIndex.delete_all_in_index()
+    AddLawIndex.get()
+    return
+deferred.defer(DataIndexer.get)
 
 """
 class DataDeleter(BaseHandler):

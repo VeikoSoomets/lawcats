@@ -378,7 +378,7 @@ class UTF8BlobProperty(ndb.BlobProperty):
 
 class RiigiTeatajaMetainfo(ndb.Model):  # consider the value of having more metainfo about a law, and showing
     title = ndb.StringProperty()
-    para_title = UTF8BlobProperty()
+    para_title = UTF8BlobProperty
 
 
 class RiigiTeatajaMetainfo2(ndb.Model):  # consider the value of having more metainfo about a law, and showing

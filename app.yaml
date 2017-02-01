@@ -1,11 +1,6 @@
-#application: directed-cove-374
-#version: 1
 runtime: python27
 threadsafe: true
 api_version: 1
-
-#automatic_scaling:  # only tinker with this if you know what you are doing
-#  max_idle_instances: 2 # default is automatic
 
 handlers:
 - url: /static
@@ -26,9 +21,6 @@ handlers:
 
 - url: /_ah/login.*
   script: admin.application
-
-#- url: /_ah/login_required
-#  script: login_required.py
 
 - url: /sys/.*
   script: admin.application
@@ -75,5 +67,5 @@ libraries:
 #- warmup
 
 error_handlers:
-  - error_code: over_quota
-    file: over_quota.html
+- error_code: over_quota
+  file: over_quota.html
