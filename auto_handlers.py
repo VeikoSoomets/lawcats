@@ -121,12 +121,10 @@ class AddLawIndex(BaseHandler):
     """ Get laws from datastore and put to search api index """
     laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title=='Karistusseadustik').fetch()  # models.RiigiTeatajaURLs.title=='Lennundusseadus'
     put_laws = 0
-    dbp_metas = []
-    para_titles = []
     for law in laws:
-
+      para_titles = []
       documents = []
-      meta_docs = []
+      dbp_metas = []
       src = law.text #.decode('utf-8')
       articles = bs4.BeautifulSoup(src, "html5lib", from_encoding='utf8')
 
@@ -235,6 +233,7 @@ class RiigiTeatajaDownloadHandler():
       title = law.findNext('a', href=True).get_text()
       url = "https://www.riigiteataja.ee/%s?leiaKehtiv" % link
       urllist.append({'title': title, 'url': url})
+    src.close()
     return urllist
 
   @classmethod
