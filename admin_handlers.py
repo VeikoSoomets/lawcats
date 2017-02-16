@@ -421,6 +421,7 @@ class AdminSettings(BaseHandler):
       }
     self.render_template('settings.html', template_values)
 
+
 from google.appengine.api import urlfetch
 urlfetch.set_default_fetch_deadline(300)
 class RiigiTeatajaDownloadHandler(BaseHandler):
@@ -447,6 +448,7 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       del_future = yield key.delete_async(use_memcache=False)  # faster
       raise ndb.Return(del_future)
 
+  @classmethod
   def get(self):
       urls = self.get_urls()
       dbps_meta = []
@@ -457,7 +459,7 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
         dbps_main.append(dbp)
 
       future = ndb.put_multi_async(dbps_main)
-      ndb.Future.wait_any(future)
+      ndb.Future.wait_all(future)
       logging.error('Done!')
       #message="Operation successful, added %s law files to datastore!" % str(len(dbps_meta))
       #self.render_template('sys.html',{'message_type':'success','message':message})

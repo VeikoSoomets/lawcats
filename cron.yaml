@@ -1,18 +1,10 @@
 cron:
 
-- description: craws laws from riigiteataja (we don't want to do 350 http calls on each search
+- description: craws laws from riigiteataja
   url: '/sys/download_riigihtml'
   schedule: every 1440 mins
 
-- description: craws laws from riigiteataja (we don't want to do 350 http calls on each search
-  url: '/sys/download_riigihtml2'
-  schedule: every 1445 mins
-
-- description: reindex laws.. lets do it 1 hour later
-  url: '/sys/reindex_law'
-  schedule: every 1460 mins
-
-- description: reindex laws.. lets do it 1 hour later
-  url: '/sys/reindex_law2'
-  schedule: every 1465 mins
+- description: craws laws from riigiteataja
+  url: '/sys/download_riigihtml'
+  schedule: every 1450 mins
 

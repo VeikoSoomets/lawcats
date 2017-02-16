@@ -101,7 +101,7 @@ class AddLawIndex():
       del_future = yield key.delete_async(use_memcache=False)  # faster
       raise ndb.Return(del_future)
 
-  #@classmethod
+  @classmethod
   def get(self):
     # Tokenize words for enhanced search capabilities from Search Index API
     def tokenize(phrase):
@@ -209,7 +209,7 @@ class AddLawIndex():
       # TODO! instead of str(list( , why not insert list?
       try:
           dbp_meta = models.RiigiTeatajaMetainfo(title=law_title, para_title=str(list(set(para_titles))) ) # set to remove duplicates, then repr of list for later parsing
-          dbp_meta.put(dbp_meta)
+          dbp_meta.put()
       except Exception, e:
           logging.error(e)
           pass
@@ -235,11 +235,12 @@ class AddLawIndex():
 
 
 class RiigiTeatajaDownloadHandler():
+
   @classmethod
   def get_urls(self):
     urllist = []
     src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=60)
-    soup = bs4.BeautifulSoup(src)
+    soup = bs4.BeautifulSoup(src,  "html5lib")
     soup = soup.find('tbody')
     for result in soup.findAll('tr'):
       law = result.findAll('td')[0]
@@ -266,6 +267,11 @@ class RiigiTeatajaDownloadHandler():
           logging.error(e)
           pass
       try:
+          models.RiigiTeatajaMetainfo.query().map(self.delete_async_)
+      except Exception, e:
+          logging.error(e)
+          pass
+      try:
           models.RiigiTeatajaMetainfo2.query().map(self.delete_async_)
       except Exception, e:
           logging.error(e)
@@ -276,8 +282,7 @@ class RiigiTeatajaDownloadHandler():
   def get(self):
       # TODO! do in batches.... so memory wouldn't be exceeded in list per one operation
       urls = self.get_urls()
-      dbps_main = []
-      dbps_meta = []
+      #logging.error(len(urls))
       for url in urls:
         try:
             text = urlfetch.fetch(url['url'], method=urlfetch.GET)
@@ -286,17 +291,12 @@ class RiigiTeatajaDownloadHandler():
             #law_content = [i.decode('UTF-8') if isinstance(i, basestring) else i for i in law]
             #logging.error(type(law))
             dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=law)
+            dbp.put()
             dbp_meta = models.RiigiTeatajaMetainfo2(title=url['title'])
-            dbps_main.append(dbp)
-            dbps_meta.append(dbp_meta)
+            dbp_meta.put()
         except Exception, e:
             logging.warning(e)
             pass
-
-      future_meta = ndb.put_multi_async(dbps_meta)
-      future = ndb.put_multi_async(dbps_main)
-      ndb.Future.wait_all(future_meta)
-      ndb.Future.wait_all(future)
 
   #deferred.defer(get)
 
@@ -305,11 +305,40 @@ class RiigiTeatajaDownloadHandler():
 class DataGatherer(BaseHandler):
   """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
     Good for long-running tasks """
-  def get(self):
-    RiigiTeatajaDownloadHandler.delete_htmls()
-    RiigiTeatajaDownloadHandler.get()
-    AddLawIndex.delete_all_in_index()
-    AddLawIndex.get()
 
-deferred.defer(DataGatherer.get)
+  @classmethod
+  def get(self):
+    try:
+        RiigiTeatajaDownloadHandler.delete_htmls()
+    except Exception, e:
+        logging.error(e)
+        pass
+
+    try:
+        deferred.defer(RiigiTeatajaDownloadHandler.get)
+        #RiigiTeatajaDownloadHandler.get()
+    except Exception, e:
+        logging.error(e)
+        pass
+
+class DataIndexer(BaseHandler):
+  """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
+    Good for long-running tasks """
+
+  @classmethod
+  def get(self):
+    try:
+        AddLawIndex.delete_all_in_index()
+    except Exception, e:
+        logging.error(e)
+        pass
+
+    try:
+        deferred.defer(AddLawIndex.get)
+        #AddLawIndex.get()
+    except Exception, e:
+        logging.error(e)
+        pass
+
+#deferred.defer(DataGatherer.get)
 
