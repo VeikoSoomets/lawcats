@@ -28,7 +28,7 @@ from google.appengine.ext import ndb
 from parsers.custom_source import *
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
-urlfetch.set_default_fetch_deadline(600)
+urlfetch.set_default_fetch_deadline(300)
 
 superscript_map = {
     0: u"\u2070",
@@ -65,7 +65,7 @@ class DeleteCategories(BaseHandler):
     self.render_template('sys.html',{'message_type':'success','message':'Operation successful, deleted all maincats, subcats and childcats!'})
 
 
-class AddLawIndex(BaseHandler):
+class AddLawIndex():
 
   @classmethod
   def delete_all_in_index(self):
@@ -94,8 +94,15 @@ class AddLawIndex(BaseHandler):
 
 
   @classmethod
-  def get(self):
+  @ndb.tasklet
+  def delete_async_(self, input_object):
+      # key = ndb.Key('UserRequest', input_key.id())
+      key = input_object.key
+      del_future = yield key.delete_async(use_memcache=False)  # faster
+      raise ndb.Return(del_future)
 
+  #@classmethod
+  def get(self):
     # Tokenize words for enhanced search capabilities from Search Index API
     def tokenize(phrase):
         a = []
@@ -119,7 +126,8 @@ class AddLawIndex(BaseHandler):
 
 
     """ Get laws from datastore and put to search api index """
-    laws = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title=='Karistusseadustik').fetch()  # models.RiigiTeatajaURLs.title=='Lennundusseadus'
+    # TODO! fetch in batches (might need to use cursors)
+    laws = models.RiigiTeatajaURLs.query().fetch()  # models.RiigiTeatajaURLs.title=='Lennundusseadus'
     put_laws = 0
     for law in laws:
       para_titles = []
@@ -199,15 +207,22 @@ class AddLawIndex(BaseHandler):
 
 
       # TODO! instead of str(list( , why not insert list?
-      dbp_meta = models.RiigiTeatajaMetainfo(title=law_title, para_title=str(list(set(para_titles))) ) # set to remove duplicates, then repr of list for later parsing
-      dbp_metas.append(dbp_meta)
+      try:
+          dbp_meta = models.RiigiTeatajaMetainfo(title=law_title, para_title=str(list(set(para_titles))) ) # set to remove duplicates, then repr of list for later parsing
+          dbp_meta.put(dbp_meta)
+      except Exception, e:
+          logging.error(e)
+          pass
 
       # TODO! truncate to < 100bytes so you'd get all laws (currently a couple missing)
       try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
         """ Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index. """
         for x in batch(documents, 200):
-            index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','')[:76])  # index name must be printable ASCII
-            index.put(x)
+            try: # TODO! fix index names
+                index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','')[:76])  # index name must be printable ASCII
+                index.put(x)
+            except Exception:
+                pass
       except Exception, e:
         logging.error(e)
         # pass only because sometimes index name exceed 100byte limit, but we don't care for those atm
@@ -215,16 +230,15 @@ class AddLawIndex(BaseHandler):
 
       put_laws += 1
 
-    future_meta = ndb.put_multi_async(dbp_metas)
-    ndb.Future.wait_all(future_meta)
     logging.error('put %s laws to index!' % str(put_laws))
+  #deferred.defer(get)
 
 
 class RiigiTeatajaDownloadHandler():
   @classmethod
   def get_urls(self):
-    src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=600)
     urllist = []
+    src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=60)
     soup = bs4.BeautifulSoup(src)
     soup = soup.find('tbody')
     for result in soup.findAll('tr'):
@@ -244,41 +258,47 @@ class RiigiTeatajaDownloadHandler():
       del_future = yield key.delete_async(use_memcache=False)  # faster
       raise ndb.Return(del_future)
 
-
   @classmethod
   def delete_htmls(self):
-      models.RiigiTeatajaURLs.query().map(self.delete_async_)
-      models.RiigiTeatajaMetainfo2.query().map(self.delete_async_)
-      models.RiigiTeatajaMetainfo.query().map(self.delete_async_)
-
-
-  """@classmethod
-  def delete_htmls2(self):
-      models.RiigiTeatajaMetainfo.query().map(self.delete_async_)"""
+      try:
+          models.RiigiTeatajaURLs.query().map(self.delete_async_)
+      except Exception, e:
+          logging.error(e)
+          pass
+      try:
+          models.RiigiTeatajaMetainfo2.query().map(self.delete_async_)
+      except Exception, e:
+          logging.error(e)
+          pass
 
 
   @classmethod
   def get(self):
+      # TODO! do in batches.... so memory wouldn't be exceeded in list per one operation
       urls = self.get_urls()
       dbps_main = []
       dbps_meta = []
       for url in urls:
-
-        # TODO! test that below works and reduce weight by 1/3
-        text = urlfetch.fetch(url['url'], method=urlfetch.GET)
-        soup = bs4.BeautifulSoup(text.content, "html5lib")
-        law = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
-        #law_content = [i.decode('UTF-8') if isinstance(i, basestring) else i for i in law]
-        #logging.error(type(law))
-        dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=law)
-        dbp_meta = models.RiigiTeatajaMetainfo2(title=url['title'])
-        dbps_main.append(dbp)
-        dbps_meta.append(dbp_meta)
+        try:
+            text = urlfetch.fetch(url['url'], method=urlfetch.GET)
+            soup = bs4.BeautifulSoup(text.content, "html5lib")
+            law = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
+            #law_content = [i.decode('UTF-8') if isinstance(i, basestring) else i for i in law]
+            #logging.error(type(law))
+            dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=law)
+            dbp_meta = models.RiigiTeatajaMetainfo2(title=url['title'])
+            dbps_main.append(dbp)
+            dbps_meta.append(dbp_meta)
+        except Exception, e:
+            logging.warning(e)
+            pass
 
       future_meta = ndb.put_multi_async(dbps_meta)
       future = ndb.put_multi_async(dbps_main)
       ndb.Future.wait_all(future_meta)
       ndb.Future.wait_all(future)
+
+  #deferred.defer(get)
 
 
 
@@ -286,30 +306,10 @@ class DataGatherer(BaseHandler):
   """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
     Good for long-running tasks """
   def get(self):
-    deferred.defer(RiigiTeatajaDownloadHandler.delete_htmls)
+    RiigiTeatajaDownloadHandler.delete_htmls()
+    RiigiTeatajaDownloadHandler.get()
+    AddLawIndex.delete_all_in_index()
+    AddLawIndex.get()
 
-class DataGatherer2(BaseHandler):
-  """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
-    Good for long-running tasks """
-  def get(self):
-    deferred.defer(RiigiTeatajaDownloadHandler.get)
+deferred.defer(DataGatherer.get)
 
-class DataIndexer(BaseHandler):
-  """ Indexes laws for faster access. Uses "deferred" module, which uses queues.
-    Good for long-running tasks """
-  def get(self):
-    deferred.defer(AddLawIndex.delete_all_in_index)
-
-class DataIndexer2(BaseHandler):
-  """ Indexes laws for faster access. Uses "deferred" module, which uses queues.
-    Good for long-running tasks """
-  def get(self):
-    deferred.defer(AddLawIndex.get)
-
-
-"""
-class DataDeleter(BaseHandler):
-  # just delete data
-  def get(self):
-    RiigiTeatajaDownloadHandler.delete_htmls2()
-    return"""

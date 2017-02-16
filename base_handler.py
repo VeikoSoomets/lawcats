@@ -322,7 +322,7 @@ class BaseHandler(webapp2.RequestHandler):
     is_admin = False
 
     if not user_name:
-      user_name = str(self.user_info['name']) if self.user_info else None
+      user_name = self.user_info['name'] if self.user_info else None
       email = str(self.user_info['email_address']) if self.user_info else None
 
     if email:

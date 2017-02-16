@@ -158,6 +158,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
             or law.title.lower().split()[0] in a   \
         ):
         search_law_names.append(law.title)
+        logging.info('GOT LAW NAME')
 
     # If we know what law we are looking for
     """if search_law_names:
@@ -187,15 +188,13 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
       # TODO! add cache in a separate process, not during search
       search_law_title = law.title.encode('ascii', 'ignore').replace(' ','')[:76]
       laws_titles2 = memcache.get(search_law_title)
-      logging.error(repr(law.title))
-      logging.error(repr(models.RiigiTeatajaMetainfo.query().fetch(1)[0].para_title))
       if not laws_titles2:
         laws_titles2 = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo.title == law.title).fetch()
         memcache.set(search_law_title, laws_titles2)  # no expiration"""
 
       try:
-        # if we have paragraph nbr in law title + one of the searched keywords is in law title
-        if str(search_para_nbr) in ''.join(laws_titles2[0]) and any(x in law.title.lower().replace(' ','') for x in a):
+        # if we have one of the searched keywords is in law title
+        if any(x in law.title.lower().replace(' ','') for x in a):
           search_law_names.append(law.title)
       except Exception, e:
         logging.error(e)
@@ -203,7 +202,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
       try:
         # if we have single keyword in law title or in parameter title
         for single_query in a:
-          if (single_query in law.title.encode('utf8').lower().replace(' ', '')) or single_query in ''.join(laws_titles[0].para_title):
+          if (single_query in law.title.encode('utf8').lower().replace(' ', '')) or single_query in ''.join(laws_titles2[0].para_title):
             search_law_names.append(law.title)
       except Exception, e:
         logging.error(e)
@@ -234,6 +233,8 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
       index = search.Index(name=search_law_name.encode('utf8', 'ignore').replace(' ','')[:76])  # index name is printable ASCII
       if search_para_nbr and search_para_nbr != 'missing':
         query_string = 'para_nbr=%s' % search_para_nbr
+        logging.error('search_para_nbr')
+        logging.error(query_string)
         results = index.search(query_string)
         for result in results:
           # TODO! ranking function
@@ -265,9 +266,10 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
                                     rank, rank])
 
 
-      elif len(a) == 1:
+      else:
         law_title = result.field('law_title').value
         query_string = 'law_title: ~"%s" OR para_title: ~"%s" OR para_token: %s' % (law_title, law_title, law_title)
+        logging.error()
         results = index.search(query_string)
         for result in results:
           rank = 0  # TODO! ranking function
@@ -277,7 +279,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
                                         result.field('law_title').value,
                                         rank, rank])
 
-      else:  # didn't get search_para
+      if not final_results:  # didn't get search_para
         search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
         for single_query in a:
           query_string = 'content: ~"%s" OR law_title: ~"%s" OR para_title: ~"%s" OR para_token:%s' % (single_query, single_query, single_query, single_query)

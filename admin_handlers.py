@@ -451,7 +451,6 @@ class RiigiTeatajaDownloadHandler(BaseHandler):
       urls = self.get_urls()
       dbps_meta = []
       dbps_main = []
-      #models.RiigiTeatajaURLs.query().map(self.delete_async_)
       for url in urls:
         text = urlfetch.fetch(url['url'], method=urlfetch.GET)  # replaced because of timeouts
         dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=text.content)
