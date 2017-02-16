@@ -280,7 +280,7 @@ class RiigiTeatajaDownloadHandler():
 
   @classmethod
   def get(self):
-      # TODO! do in batches.... so memory wouldn't be exceeded in list per one operation
+      # TODO! do in batches, make multiple tasks, so each task would run less than 10min
       urls = self.get_urls()
       #logging.error(len(urls))
       for url in urls:
