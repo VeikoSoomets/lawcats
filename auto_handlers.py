@@ -205,8 +205,7 @@ class AddLawIndex():
              ])
           documents.append(document)
 
-
-      # TODO! instead of str(list( , why not insert list?
+       # TODO! instead of str(list( , why not insert list?
       try:
           dbp_meta = models.RiigiTeatajaMetainfo(title=law_title, para_title=str(list(set(para_titles))) ) # set to remove duplicates, then repr of list for later parsing
           dbp_meta.put()
@@ -230,8 +229,26 @@ class AddLawIndex():
 
       put_laws += 1
 
+
+      dbp_meta = models.RiigiTeatajaMetainfo(title=law_title, para_title=str(list(set(para_titles))) ) # set to remove duplicates, then repr of list for later parsing
+      dbp_metas.append(dbp_meta)
+
     logging.error('put %s laws to index!' % str(put_laws))
-  #deferred.defer(get)
+
+    try:
+        for future in batch(dbp_metas, 200):
+            try: # TODO! fix index names
+                ndb.put_async(future)
+            except Exception:
+                pass
+    except Exception, e:
+        logging.error(e)
+        pass
+    logging.error('successfully put metas!')
+
+    future = ndb.put_multi_async(dbp_metas)
+    ndb.Future.wait_all(future)
+    #deferred.defer(get)
 
 
 class RiigiTeatajaDownloadHandler():
@@ -282,21 +299,27 @@ class RiigiTeatajaDownloadHandler():
   def get(self):
       # TODO! do in batches, make multiple tasks, so each task would run less than 10min
       urls = self.get_urls()
-      #logging.error(len(urls))
+      logging.error(len(urls))
+
+      dbp_metas = []
+      dbps = []
       for url in urls:
         try:
             text = urlfetch.fetch(url['url'], method=urlfetch.GET)
             soup = bs4.BeautifulSoup(text.content, "html5lib")
             law = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
-            #law_content = [i.decode('UTF-8') if isinstance(i, basestring) else i for i in law]
-            #logging.error(type(law))
             dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=law)
-            dbp.put()
+            dbps.append(dbp) #dbp.put()
             dbp_meta = models.RiigiTeatajaMetainfo2(title=url['title'])
-            dbp_meta.put()
+            dbp_metas.append(dbp_meta) # dbp_meta.put()
         except Exception, e:
             logging.warning(e)
             pass
+
+      future = ndb.put_multi_async(dbps)
+      future2 = ndb.put_multi_async(dbp_metas)
+      ndb.Future.wait_all(future)
+      ndb.Future.wait_all(future2)
 
   #deferred.defer(get)
 
