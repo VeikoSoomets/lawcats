@@ -313,42 +313,4 @@ def do_search(querywords, category, date_algus):
         pass
   #print search_results
   return search_results  # link, title, date, qword, category
- 
- 
-def list_search(querywords,category):
 
-  search_results=[]
-
-  if category == 'OFAC Sanctions':
-    index = search.Index(name="SDN_list")
-    for query in querywords:
-      query_string = 'sdn_name: ~"%s"' % (query)
-      try:
-          results = index.search(query_string)
-          for result in results:
-            params={'programs' : result.field('programs').value,
-              'name' : result.field('sdn_name').value, 
-              #'sdn_type' : result.field('sdn_type').value # normalize with EU sanctions data structure
-              }
-            search_results.append(params)
-      except search.Error:
-        logging.exception('Search failed')
-        pass
-  
-  if category == 'EU Sanctions':
-    index = search.Index(name="EU_list")
-    for query in querywords:
-      query_string = 'name: ~"%s"' % (query)
-      try:
-          results = index.search(query_string)
-          for result in results:
-            params={'programs' : result.field('program').value,
-              'name' : result.field('name').value
-              }
-            search_results.append(params)
-      except search.Error:
-        logging.exception('Search failed') 
-        pass
-  
-  #print search_results
-  return search_results

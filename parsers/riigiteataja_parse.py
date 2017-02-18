@@ -162,27 +162,6 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
         ):
         search_law_names.append(law.title)
 
-    # If we know what law we are looking for
-    """if search_law_names:
-      for title in search_law_names:
-        # get paragraph titles from memcahce - fairy expensive operation if done for each law
-        # TODO! add cache in a separate process, not during search
-        search_law_title = law.title.encode('ascii', 'ignore').replace(' ','1')[:76]
-        laws_titles2 = memcache.get(search_law_title)
-        if not laws_titles2:
-            laws_titles2 = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo.title == law.title).fetch()
-            memcache.set(search_law_title, laws_titles2)  # no expiration
-
-        # if we have paragraph nbr in law title + one of the searched keywords is in law title
-        if str(search_para_nbr) in ''.join(laws_titles2[0].para_title) and any(x in a for x in law.title.lower().replace(' ','')):
-          search_law_names.append(law.title)
-
-        # if we have single keyword in law title or in parameter title
-        for single_query in a:
-          if (single_query in law.title.encode('utf8').lower().replace(' ', '')) or single_query in ''.join(laws_titles2[0].para_title):
-            search_law_names.append(law.title) """
-
-
     # Do a longer search... might take 5-10s
     if len(search_law_names) < 2:  #any(x in query for x in paragraph_words):
 
@@ -193,45 +172,23 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
       except Exception, e:
         logging.error(e)
 
+      try:
+        # get paragraph titles from memcahce - fairy expensive operation if done for each law
+        # TODO! add cache in a separate process, not during search
+        search_law_title = law.title.encode('ascii', 'ignore').replace(' ','')[:76]
+        #logging.error(search_law_title)
+        laws_titles2 = memcache.get(search_law_title)
+        if not laws_titles2:
+          laws_titles2 = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo.title == law.title).fetch()
+          memcache.set(search_law_title, laws_titles2)  # no expiration"""
 
-      # get paragraph titles from memcahce - fairy expensive operation if done for each law
-      # TODO! add cache in a separate process, not during search
-      search_law_title = law.title.encode('ascii', 'ignore').replace(' ','')[:76]
-      #logging.error(search_law_title)
-      laws_titles2 = memcache.get(search_law_title)
-      if not laws_titles2:
-        laws_titles2 = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo.title == law.title).fetch()
-        memcache.set(search_law_title, laws_titles2)  # no expiration"""
-
-        # search from paragraph title
-        logging.error(type(laws_titles2))
-        logging.error(repr(laws_titles2))
-        if any(x in laws_titles2[1].encode('utf8').replace(' ','') for x in a):
-          search_law_names.append(law.title)
-
-
-      """try:
-        # if we have single keyword in law title or in parameter title
-        for single_query in a:
-          if (single_query in law.title.encode('utf8').lower().replace(' ', '')) or single_query in ''.join(laws_titles2):
+          # search from paragraph title
+          #logging.error(type(laws_titles2))
+          #logging.error(repr(laws_titles2))
+          if any(x in laws_titles2[1].encode('utf8').replace(' ','') for x in a):
             search_law_names.append(law.title)
       except Exception, e:
         logging.error(e)
-      """
-
-    """
-    for single_query in a:
-      logging.error('GGGGGGGGGGGGGGG')
-      try:
-        if (single_query in law.para_title  \
-            or single_query in law.title
-            #or single_query.encode('latin1').lower() in b \
-            ) \
-          and single_query not in paragraph_words + [search_para_nbr, 'seadus']:
-
-          search_law_names.append(law.title)
-      except Exception:
-        pass """
 
 
   if len(search_law_names) > 0:  # TODO! think what to do when we don't get law name?
@@ -241,13 +198,13 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
       #try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
       # TODO! think of a better index, stringsafe
       index = search.Index(name=search_law_name.encode('utf8', 'ignore').replace(' ','')[:76])  # index name is printable ASCII
-
+      logging.error(search_law_name.encode('utf8', 'ignore').replace(' ','')[:76])
       if search_para_nbr and search_para_nbr != 'missing':
         query_string = 'para_nbr=%s' % search_para_nbr
-        logging.error('search_para_nbr')
         logging.error(query_string)
         results = index.search(query_string)
         for result in results:
+          logging.error('gottygotty')
           # TODO! ranking function
           """def rank_results(query_list, result_value_list, scorelist):
             # for each item in a check if exists for each in value.. asign score from indexed score list (len(result_value_list)=len(scorelist))
@@ -309,7 +266,8 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
             except Exception:
               pass
-            final_results.append([result.field('law_link').value,
+            if rank > 0:
+              final_results.append([result.field('law_link').value,
                                           result.field('content').value,
                                           result.field('para_title').value,
                                           result.field('law_title').value,
