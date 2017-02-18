@@ -126,8 +126,10 @@ from operator import itemgetter
 import models
 from google.appengine.api import search
 from google.appengine.api import memcache
+
+
 def parse_results_seadused(query=None, category=None, date_algus=None):
-  logging.error(repr(query))
+  #logging.error(repr(query))
   #logging.error('-----------------')
 
   """hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -152,13 +154,13 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     memcache.set('law_titles', laws_titles)  # no expiration
 
   for law in laws_titles:
-    a = [x for x in [e for e in query.replace(u'§','').encode('latin1').lower().split() if e.lower() not in paragraph_words + [str(search_para_nbr), 'seadus', u'§']]]
+    # .replace(u'§','').
+    a = [x for x in [e for e in query.encode('utf8').lower().split() if e.lower() not in paragraph_words + [str(search_para_nbr), 'seadus', u'§']]]
     # if any keyword is in law title or first word of law is in keyword - do tokenize here
     if (any(x in law.title.encode('utf8').lower().replace(' ','') for x in a) \
-            or law.title.lower().split()[0] in a   \
+            or law.title.encode('utf8').lower().split()[0] in a   \
         ):
         search_law_names.append(law.title)
-        logging.info('GOT LAW NAME')
 
     # If we know what law we are looking for
     """if search_law_names:
@@ -182,31 +184,40 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
 
     # Do a longer search... might take 5-10s
-    if not search_law_names:  #any(x in query for x in paragraph_words):
+    if len(search_law_names) < 2:  #any(x in query for x in paragraph_words):
+
+      try:
+        # search from law titles
+        if any(x in law.title.encode('utf8').lower().replace(' ','') for x in a):
+          search_law_names.append(law.title)
+      except Exception, e:
+        logging.error(e)
+
 
       # get paragraph titles from memcahce - fairy expensive operation if done for each law
       # TODO! add cache in a separate process, not during search
       search_law_title = law.title.encode('ascii', 'ignore').replace(' ','')[:76]
+      #logging.error(search_law_title)
       laws_titles2 = memcache.get(search_law_title)
       if not laws_titles2:
         laws_titles2 = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo.title == law.title).fetch()
         memcache.set(search_law_title, laws_titles2)  # no expiration"""
 
-      try:
-        # if we have one of the searched keywords is in law title
-        if any(x in law.title.lower().replace(' ','') for x in a):
+        # search from paragraph title
+        logging.error(type(laws_titles2))
+        logging.error(repr(laws_titles2))
+        if any(x in laws_titles2[1].encode('utf8').replace(' ','') for x in a):
           search_law_names.append(law.title)
-      except Exception, e:
-        logging.error(e)
 
-      try:
+
+      """try:
         # if we have single keyword in law title or in parameter title
         for single_query in a:
-          if (single_query in law.title.encode('utf8').lower().replace(' ', '')) or single_query in ''.join(laws_titles2[0].para_title):
+          if (single_query in law.title.encode('utf8').lower().replace(' ', '')) or single_query in ''.join(laws_titles2):
             search_law_names.append(law.title)
       except Exception, e:
         logging.error(e)
-
+      """
 
     """
     for single_query in a:
@@ -224,13 +235,13 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
 
   if len(search_law_names) > 0:  # TODO! think what to do when we don't get law name?
-    logging.error('got some laws, starting to use Index Search now')
     final_results = []
     for search_law_name in search_law_names:
       index_name = search_law_name.encode('ascii', 'ignore').replace(' ','')[:76]
       #try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
       # TODO! think of a better index, stringsafe
       index = search.Index(name=search_law_name.encode('utf8', 'ignore').replace(' ','')[:76])  # index name is printable ASCII
+
       if search_para_nbr and search_para_nbr != 'missing':
         query_string = 'para_nbr=%s' % search_para_nbr
         logging.error('search_para_nbr')
@@ -266,23 +277,52 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
                                     rank, rank])
 
 
-      else:
-        law_title = result.field('law_title').value
-        query_string = 'law_title: ~"%s" OR para_title: ~"%s" OR para_token: %s' % (law_title, law_title, law_title)
-        logging.error()
-        results = index.search(query_string)
-        for result in results:
-          rank = 0  # TODO! ranking function
-          final_results.append([result.field('law_link').value,
-                                        result.field('content').value,
-                                        result.field('para_title').value,
-                                        result.field('law_title').value,
-                                        rank, rank])
+      if len(final_results) < 2:
+          law_title = search_law_name
+          query_string = 'law_title: ~"%s" OR para_title: ~"%s" OR para_token: %s' % (law_title, law_title, law_title)
+          #logging.error(repr(query_string))
+          results = index.search(query_string.encode('utf8'))
+          for result in results:
+            rank = 0  # TODO! ranking function
+            try:
+              # rank results
+              rank = 0
+              for single_query in a:
+                  if str(single_query) in result.field('para_title').value.replace(' ','').lower():
+                    logging.error(5)
+                    rank += 1
+                  if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
+                    logging.error(6)
+                    rank += 1
+                  if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
+                    logging.error(7)
+                    rank += 1
+                  if single_query.lower() in result.field('content').value.replace(' ','').lower():
+                    logging.error(8)
+                    rank += 3
+                  if single_query.lower() in result.field('para_token').value.replace(' ','').lower():
+                    logging.error(9)
+                    rank += 1
+                  if any(x in result.field('para_token').lower().split(',') for x in single_query.lower()):
+                    logging.error(10)
+                    rank += 1
 
-      if not final_results:  # didn't get search_para
+            except Exception:
+              pass
+            final_results.append([result.field('law_link').value,
+                                          result.field('content').value,
+                                          result.field('para_title').value,
+                                          result.field('law_title').value,
+                                          rank, rank])
+
+      if len(final_results) < 2:  # didn't get search_para
         search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
         for single_query in a:
-          query_string = 'content: ~"%s" OR law_title: ~"%s" OR para_title: ~"%s" OR para_token:%s' % (single_query, single_query, single_query, single_query)
+          #logging.error(type(single_query))
+          #logging.error(repr(single_query))
+          s = unicode(single_query, errors='ignore')
+          query_string = 'content: ~"%s" OR law_title: ~"%s" OR para_title: ~"%s" OR para_token:%s' % (s, s, s, s)
+          #logging.error(repr(query_string))
           results = index.search(query_string)
           if results:
             for result in results:
