@@ -198,13 +198,13 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
       #try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
       # TODO! think of a better index, stringsafe
       index = search.Index(name=search_law_name.encode('utf8', 'ignore').replace(' ','')[:76])  # index name is printable ASCII
-      logging.error(search_law_name.encode('utf8', 'ignore').replace(' ','')[:76])
+      #logging.error(search_law_name.encode('utf8', 'ignore').replace(' ','')[:76])
       if search_para_nbr and search_para_nbr != 'missing':
         query_string = 'para_nbr=%s' % search_para_nbr
-        logging.error(query_string)
+        #logging.error(query_string)
         results = index.search(query_string)
         for result in results:
-          logging.error('gottygotty')
+          #logging.error('gottygotty')
           # TODO! ranking function
           """def rank_results(query_list, result_value_list, scorelist):
             # for each item in a check if exists for each in value.. asign score from indexed score list (len(result_value_list)=len(scorelist))
