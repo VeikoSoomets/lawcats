@@ -7,6 +7,9 @@
 #
 
 import sys
+
+import functools
+
 sys.path.insert(0, 'libs')
 
 import os
@@ -303,18 +306,25 @@ class RiigiTeatajaDownloadHandler():
 
       dbp_metas = []
       dbps = []
+
+      def handle_result(rpc, url):
+          result = rpc.get_result()
+          soup = bs4.BeautifulSoup(result.content, "html5lib")
+          law = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
+          dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=law)
+          dbps.append(dbp)  # dbp.put()
+          dbp_meta = models.RiigiTeatajaMetainfo2(title=url['title'])
+          dbp_metas.append(dbp_meta)  # dbp_meta.put()
+
+      rpcs = []
       for url in urls:
-        try:
-            text = urlfetch.fetch(url['url'], method=urlfetch.GET)
-            soup = bs4.BeautifulSoup(text.content, "html5lib")
-            law = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
-            dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=law)
-            dbps.append(dbp) #dbp.put()
-            dbp_meta = models.RiigiTeatajaMetainfo2(title=url['title'])
-            dbp_metas.append(dbp_meta) # dbp_meta.put()
-        except Exception, e:
-            logging.warning(e)
-            pass
+          rpc = urlfetch.create_rpc()
+          rpc.callback = functools.partial(handle_result, rpc, url)
+          urlfetch.make_fetch_call(rpc, url['url'])
+          rpcs.append(rpc)
+
+      for rpc in rpcs:
+          rpc.wait()
 
       future = ndb.put_multi_async(dbps)
       future2 = ndb.put_multi_async(dbp_metas)
