@@ -233,8 +233,8 @@ class AddLawIndex():
       put_laws += 1
 
 
-      dbp_meta = models.RiigiTeatajaMetainfo(title=law_title, para_title=str(list(set(para_titles))) ) # set to remove duplicates, then repr of list for later parsing
-      dbp_metas.append(dbp_meta)
+      #dbp_meta = models.RiigiTeatajaMetainfo(title=law_title, para_title=str(list(set(para_titles))) ) # set to remove duplicates, then repr of list for later parsing
+      #dbp_metas.append(dbp_meta)
 
     logging.error('put %s laws to index!' % str(put_laws))
 
@@ -249,8 +249,8 @@ class AddLawIndex():
         pass
     logging.error('successfully put metas!')
 
-    future = ndb.put_multi_async(dbp_metas)
-    ndb.Future.wait_all(future)
+    #future = ndb.put_multi_async(dbp_metas)
+    #ndb.Future.wait_all(future)
     #deferred.defer(get)
 
 

@@ -155,7 +155,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
   for law in laws_titles:
     # .replace(u'§','').
-    a = [x for x in [e for e in query.encode('utf8').lower().split() if e.lower() not in paragraph_words + [str(search_para_nbr), 'seadus', u'§']]]
+    a = [x for x in [e for e in query.encode('utf8').lower().split() if e.encode('utf8').lower() not in paragraph_words + [str(search_para_nbr), 'seadus', u'§']]]
     # if any keyword is in law title or first word of law is in keyword - do tokenize here
     if (any(x in law.title.encode('utf8').lower().replace(' ','') for x in a) \
             or law.title.encode('utf8').lower().split()[0] in a   \
@@ -188,17 +188,19 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
           if any(x in laws_titles2[1].encode('utf8').replace(' ','') for x in a):
             search_law_names.append(law.title)
       except Exception, e:
-        logging.error(e)
+        pass # TODO! fix
+        #logging.error(e)
 
 
   if len(search_law_names) > 0:  # TODO! think what to do when we don't get law name?
     final_results = []
     for search_law_name in search_law_names:
-      index_name = search_law_name.encode('ascii', 'ignore').replace(' ','')[:76]
+      #index_name = search_law_name.encode('ascii', 'ignore').replace(' ','')[:76]
       #try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
       # TODO! think of a better index, stringsafe
-      index = search.Index(name=search_law_name.encode('utf8', 'ignore').replace(' ','')[:76])  # index name is printable ASCII
+      index = search.Index(name=search_law_name.encode('ascii', 'ignore').replace(' ','')[:76])  # index name is printable ASCII
       #logging.error(search_law_name.encode('utf8', 'ignore').replace(' ','')[:76])
+
       if search_para_nbr and search_para_nbr != 'missing':
         query_string = 'para_nbr=%s' % search_para_nbr
         #logging.error(query_string)
@@ -234,88 +236,93 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
                                     rank, rank])
 
 
-      if len(final_results) < 2:
-          law_title = search_law_name
-          query_string = 'law_title: ~"%s" OR para_title: ~"%s" OR para_token: %s' % (law_title, law_title, law_title)
-          #logging.error(repr(query_string))
-          results = index.search(query_string.encode('utf8'))
-          for result in results:
-            rank = 0  # TODO! ranking function
-            try:
-              # rank results
-              rank = 0
-              for single_query in a:
-                  if str(single_query) in result.field('para_title').value.replace(' ','').lower():
-                    logging.error(5)
-                    rank += 1
-                  if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
-                    logging.error(6)
-                    rank += 1
-                  if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
-                    logging.error(7)
-                    rank += 1
-                  if single_query.lower() in result.field('content').value.replace(' ','').lower():
-                    logging.error(8)
-                    rank += 3
-                  if single_query.lower() in result.field('para_token').value.replace(' ','').lower():
-                    logging.error(9)
-                    rank += 1
-                  if any(x in result.field('para_token').lower().split(',') for x in single_query.lower()):
-                    logging.error(10)
-                    rank += 1
+      """if len(final_results) < 2:
+        for single_query in a:
+            law_title = search_law_name
 
-            except Exception:
-              pass
-            if rank > 0:
-              final_results.append([result.field('law_link').value,
+            single_query = single_query.decode('utf8')
+            query_string = 'para_title: ~"%s" OR para_token: %s' % (single_query, single_query)
+            logging.error(repr(query_string))
+            #logging.error(repr(query_string))
+            results = index.search(query_string)
+            for result in results:
+              rank = 0  # TODO! ranking function
+              try:
+                # rank results
+                rank = 0
+                if str(single_query) in result.field('para_title').value.replace(' ','').lower():
+                  #logging.error(5)
+                  rank += 1
+                if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
+                  #logging.error(6)
+                  rank += 1
+                if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
+                  #logging.error(7)
+                  rank += 1
+                if single_query.lower() in result.field('content').value.replace(' ','').lower():
+                  #logging.error(8)
+                  rank += 3
+                if single_query.lower() in result.field('para_token').value.replace(' ','').lower():
+                  #logging.error(9)
+                  rank += 1
+                if any(x in result.field('para_token').lower().split(',') for x in single_query.lower()):
+                  #logging.error(10)
+                  rank += 1
+
+              except Exception:
+                pass
+              if rank > 0:
+                final_results.append([result.field('law_link').value,
+                                            result.field('content').value,
+                                            result.field('para_title').value,
+                                            result.field('law_title').value,
+                                            rank, rank]) """
+
+      if len(final_results) < 2:  # didn't get search_para
+        logging.error('we have law, checking stuff now')
+        search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
+        for single_query in a:
+          s = single_query
+          if search_law_name.encode('utf8').lower() != s:
+            logging.error(repr(search_law_name.lower()))
+            logging.error(repr(s))
+            query_string = 'content: ~"%s" OR law_title: ~"%s" OR para_title: ~"%s" OR para_token:%s' % (s, s, s, s)
+            logging.error(repr(query_string))
+            results = index.search(query_string)
+            if results:
+              for result in results:
+                try:
+                  # rank results
+                  rank = 0
+                  for single_query in a:
+                      if str(search_para_nbr) in result.field('para_title').value.replace(' ','').lower():
+                        #logging.error(5)
+                        rank += 1
+                      if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
+                        #logging.error(6)
+                        rank += 1
+                      if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
+                        #logging.error(7)
+                        rank += 1
+                      if single_query.lower() in result.field('content').value.replace(' ','').lower():
+                        #logging.error(8)
+                        rank += 3
+                      if single_query.lower() in result.field('para_token').value.replace(' ','').lower():
+                        #logging.error(9)
+                        rank += 1
+                      if any(x in result.field('para_token').lower().split(',') for x in single_query.lower()):
+                        #logging.error(10)
+                        rank += 1
+
+                except Exception:
+                  pass
+
+                if rank > 0:
+                    final_results.append([result.field('law_link').value,
                                           result.field('content').value,
                                           result.field('para_title').value,
                                           result.field('law_title').value,
                                           rank, rank])
-
-      if len(final_results) < 2:  # didn't get search_para
-        search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
-        for single_query in a:
-          #logging.error(type(single_query))
-          #logging.error(repr(single_query))
-          s = unicode(single_query, errors='ignore')
-          query_string = 'content: ~"%s" OR law_title: ~"%s" OR para_title: ~"%s" OR para_token:%s' % (s, s, s, s)
-          #logging.error(repr(query_string))
-          results = index.search(query_string)
-          if results:
-            for result in results:
-              try:
-                # rank results
-                rank = 0
-                for single_query in a:
-                    if str(search_para_nbr) in result.field('para_title').value.replace(' ','').lower():
-                      logging.error(5)
-                      rank += 1
-                    if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
-                      logging.error(6)
-                      rank += 1
-                    if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
-                      logging.error(7)
-                      rank += 1
-                    if single_query.lower() in result.field('content').value.replace(' ','').lower():
-                      logging.error(8)
-                      rank += 3
-                    if single_query.lower() in result.field('para_token').value.replace(' ','').lower():
-                      logging.error(9)
-                      rank += 1
-                    if any(x in result.field('para_token').lower().split(',') for x in single_query.lower()):
-                      logging.error(10)
-                      rank += 1
-
-              except Exception:
-                pass
-
-              if rank > 0:
-                  final_results.append([result.field('law_link').value,
-                                        result.field('content').value,
-                                        result.field('para_title').value,
-                                        result.field('law_title').value,
-                                        rank, rank])
 
 
 
