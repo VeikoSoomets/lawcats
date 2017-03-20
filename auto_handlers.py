@@ -317,11 +317,14 @@ class RiigiTeatajaDownloadHandler():
           dbp_metas.append(dbp_meta)  # dbp_meta.put()
 
       rpcs = []
+      i = 0
       for url in urls:
           rpc = urlfetch.create_rpc()
           rpc.callback = functools.partial(handle_result, rpc, url)
           urlfetch.make_fetch_call(rpc, url['url'])
           rpcs.append(rpc)
+          if i >= 2:
+              break
 
       for rpc in rpcs:
           rpc.wait()
