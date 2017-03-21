@@ -14,7 +14,7 @@ sys.path.insert(0, new_path) # to get utils from root folder.. this might be obs
 from utils import *
 
 
-categories3 = [\
+categories = [\
 #['Haridusministeerium','https://www.hm.ee/et/valitsemisala-uudised'], # SSL fail \
 #['Haridusministeerium','https://www.hm.ee/et/uudised'], # SSL fail \
 ['Justiitsministeerium','http://www.just.ee/'], \
@@ -29,7 +29,7 @@ categories3 = [\
 
 # We need this because ordinary dictionaries can't have duplicate keys (check the case of delfi.ee)
 cat_dict = defaultdict(list)
-for listitem in categories3:
+for listitem in categories:
   cat_dict['categories'].append(listitem)
 
 

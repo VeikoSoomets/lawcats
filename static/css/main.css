@@ -119,6 +119,15 @@ h2:before {
 .bg-gray {
   background-color: #9e9e9e;
 }
+.color-green {
+  color: #079874;
+}
+.color-yellow {
+  color: #E5D015;
+}
+.color-gray {
+  color: #9e9e9e;
+}
 .heatbar {
   height: 50px;
   width: 5px;

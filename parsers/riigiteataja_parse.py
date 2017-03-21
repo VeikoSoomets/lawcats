@@ -416,8 +416,8 @@ def parse_results_kohtu(url, query=None, category=None, date_algus=None):
       
       results2 = []
       for doc in results:
-        item_date = doc[6]
-        item_title = doc[1]
+        item_date = doc[5]
+        item_title = '. '.join(doc[1:3]) + '. ' + doc[4] + '. ' + doc[3]
         item_link = url_base + doc[0]
         
         if datetime_object(sql_normalize_date(item_date)) >= date_algus:

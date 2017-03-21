@@ -25,7 +25,7 @@ sys.path.insert(0, new_path) # to get utils from root folder.. this might be obs
 
 from utils import *
 
-categories4 = [\
+categories = [\
 ['Delfi','http://feeds2.feedburner.com/delfiuudised?format=xml'], \
 ['Delfi','http://feeds.feedburner.com/delfimaailm?format=xml'], \
 ['Delfi','http://feeds.feedburner.com/delfi110-112?format=xml'], \
@@ -97,7 +97,7 @@ categories4 = [\
 
 # We need this because ordinary dictionaries can't have duplicate keys (check the case of delfi.ee)
 cat_dict = defaultdict(list)
-for listitem in categories4:
+for listitem in categories:
   cat_dict['categories'].append(listitem)
 
 # add custom RSS categories to category list
@@ -228,13 +228,13 @@ def parse_feed(querywords, category, date_algus='2016-01-01'): # kui kuupäeva e
 
                   # Sometimes we get empty blocks, let's catch them and pass
                   try:
-                    b = a['title']
+                    b = a['summary']
                   except Exception:
                     pass
                   if b:
                     if a.get('description') and \
                             (all([x2.lower() in a['title'].lower()+a['description'].lower() for x2 in new_x])):
-                      result_title = a['title']
+                      result_title = a['summary']
                       result_link = a['link']
                       results.append([result_link, result_title, str(result_date), x, category])
           except Exception,e:
