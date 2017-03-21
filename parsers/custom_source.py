@@ -129,18 +129,20 @@ def blogs_handler(link,querywords=None,category=None):
 
       # Get content
       content_divs = ['post-content','content','article-content','post-container','postcontainer','post-content','post_content','article_content']
+      tag_names = ['div','li','ul']
       content = article.find_all(only_p_tags)[:]
       if not content:
         for value in content_divs:
-          try:
-            content = soup.findAll('div', attrs={'class': value})
-            content = [x.stripped_strings.next() for x in content]
-          except Exception, e:
-            print "got this error"
-            print e
-            pass
-          if content:
-            break
+          for val in tag_names:
+            try:
+              content = soup.findAll(val, attrs={'class': value})
+              content = [x.stripped_strings.next() for x in content]
+            except Exception, e:
+              print "got this error"
+              print e
+              pass
+            if content:
+              break
       resultset.append(content)
       final_results.append(resultset)
     except Exception, e:

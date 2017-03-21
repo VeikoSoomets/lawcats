@@ -255,6 +255,7 @@ def do_search(querywords, category, date_algus):
     {'category': 'RSS allikad', 'results': rss_parse.parse_feed},
     {'category': 'ministeeriumid', 'results': ministry_parse.search_ministry},
     {'category': 'Riigiteataja seadused', 'results': riigiteataja_parse.search_seadused},
+    #{'category': 'Õigusaktide otsing', 'results': riigiteataja_parse.search_oigusaktid},
     {'category': 'Maa- ja ringkonnakohtu lahendid', 'results': riigiteataja_parse.search_kohtu},  # to avoid duplicates, add space to source
 
     {'category': 'Eur-Lex eestikeelsete dokumentide otsing', 'results': eurlex_parse.search_eurlex},
@@ -278,7 +279,7 @@ def do_search(querywords, category, date_algus):
 
     # Otsime riigi ja/või KOV õigusaktidest
     if source['category'] == 'oigusaktid':
-      if category in [u'Kehtivate KOV õigusaktide otsing',u'Kehtivate õigusaktide otsing']:  # mitu allikat
+      if category in [u'Kehtivate KOV õigusaktide otsing',u'Õigusaktide otsing']:  # mitu allikat
         try:
           search_results.extend(source['results'](querywords, category, date_algus))
         except Exception, e:
@@ -312,5 +313,5 @@ def do_search(querywords, category, date_algus):
         logging.error(e)
         pass
   #print search_results
-  return search_results  # link, title, date, qword, category
+  return search_results  # link, title, date, qword, category, rank
 

@@ -82,12 +82,15 @@ def search_oigusaktid(querywords, category, date_algus='2010-01-01'):
     results = []
     for query in querywords:
       query2 = urllib.quote_plus(query.encode('utf-8')) # asendab tühiku +'iga, muudab mitte ascii'd formaati %C5%A1
-      if category==u'Kehtivate õigusaktide otsing':
+      if category==u'Õigusaktide otsing':
         beginning='&pealkiri='
       elif category==u'Kehtivate KOV õigusaktide otsing':
         beginning='kov=true&pealkiri='
       # NB!!!! siia võib juurde lisada, kas otsida tulevikus jõustuvaid, hetkel kehtivaid jne
       url="https://www.riigiteataja.ee/tervikteksti_tulemused.html?" + beginning + query2 + "&tekst=&valjDoli1=&valjDoli2=&valjDoli3=&nrOtsing=tapne&aktiNr=&minAktiNr=&maxAktiNr=&kehtivuseKuupaev=" + date_algus_format
+
+      url="https://www.riigiteataja.ee/tervikteksti_tulemused.html?pealkiri=&tekst=&valjDoli1=Vabariigi+Valitsus+-+m%C3%A4%C3%A4rus&valjDoli2=&valjDoli3=&nrOtsing=tapne&aktiNr=&minAktiNr=&maxAktiNr=&kehtivusKuupaev=&_valislepingud=on&_valitsuseKorraldused=on&_riigikoguOtsused=on&kehtivuseAlgusKuupaev=&kehtivuseLoppKuupaev="
+
       #logging.error(url)
       #url="https://www.riigiteataja.ee/tervikteksti_tulemused.html?kov=true&pealkiri=alkohol&tekst=&valj1=K%C3%B5ik+KOV-id&valj2=&valj3=&nrOtsing=tapne&aktiNr=&minAktiNr=&maxAktiNr=&kehtivusKuupaev=12.11.2014&kehtivuseAlgusKuupaev=&kehtivuseLoppKuupaev="
       #logging.error(url)
@@ -460,7 +463,7 @@ def parse_results_eelnou(url,query=None,category=None,date_algus=None):
 
 
 def parse_results_oigusaktid(url, query=None, category=None, date_algus=None):
-    url_base="https://www.riigiteataja.ee"
+    url_base="https://www.riigiteataja.ee/"
     # src = urllib2.urlopen(url)
     src = urlfetch.fetch(url, method=urlfetch.GET)
     soup = bs4.BeautifulSoup(src.content)

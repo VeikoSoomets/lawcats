@@ -78,6 +78,7 @@ class GenerateCategories(BaseHandler):
          [u'Kooskõlastamiseks esitatud eelnõud', 'http://eelnoud.valitsus.ee/main#SKixD73F', 'eesti'],
          [u'Valitsusele esitatud eelnõud', 'http://eelnoud.valitsus.ee/main#SKixD73F', 'eesti'],
          [u'Riigiteataja ilmumas/ilmunud seadused', 'https://www.riigiteataja.ee/', 'eesti'],
+         [u'Õigusaktide otsing', 'https://www.riigiteataja.ee/', 'eesti'],
          ['Riigiteataja seadused', 'https://www.riigiteataja.ee/', 'eesti'],
     ]},
     {'subcategory_name': u'Euroopa õigus',
@@ -107,7 +108,7 @@ class GenerateCategories(BaseHandler):
       ['Riigiteataja kohtuuudised','https://www.riigiteataja.ee/oigusuudised/kohtuuudiste_nimekiri.html','eesti'],
       ['Hiljutised Riigikohtu lahendid','http://www.nc.ee','eesti'],
       ['Riigikohtu lahendite arhiiv','http://www.nc.ee','eesti'],
-      ['Maa- ja ringkonnakohtu lahendid','https://www.riigiteataja.ee/kohtuteave/maa_ringkonna_kohtulahendid/otsi.html','eesti'],
+      ['Maa- ja ringkonnakohtu lahendid','https://www.riigiteataja.ee/kohtuteave/maa_ringkonna_kohtulahendid/otsi.html','eesti',0],
     ]},
     ]
     
