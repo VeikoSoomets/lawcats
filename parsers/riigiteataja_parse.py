@@ -233,7 +233,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
                                     result.field('content').value,
                                     result.field('para_title').value,
                                     result.field('law_title').value,
-                                    rank, rank])
+                                    result.field('law_title').value, rank])
 
 
       """if len(final_results) < 2:
@@ -322,7 +322,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
                                           result.field('content').value,
                                           result.field('para_title').value,
                                           result.field('law_title').value,
-                                          rank, rank])
+                                          result.field('law_title').value, rank])
 
 
 
