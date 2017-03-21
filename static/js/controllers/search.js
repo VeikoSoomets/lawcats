@@ -10865,16 +10865,14 @@ var SearchController = (function () {
         _this3.results = response.search_results;
         setTimeout(function () {
           $('.result-title-link').html(function (_, html) {
-            function capitalizeFirstLetter(string) {
-              return string.charAt(0).toUpperCase() + string.slice(1);
+            function preg_quote(string) {
+              return (string + '').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, '\\$1');
             }
             var words = self.querywords.split(' ');
             var returnHtml = html;
             for (var querywordIndex in words) {
               var queryword = words[querywordIndex];
-              var querywordCapitalized = capitalizeFirstLetter(queryword);
-              returnHtml = returnHtml.replace(queryword, '<span class="highlight-text">' + queryword + '</span>');
-              returnHtml = returnHtml.replace(querywordCapitalized, '<span class="highlight-text">' + querywordCapitalized + '</span>');
+              returnHtml = returnHtml.replace(new RegExp('(' + preg_quote(queryword) + ')', 'gi'), '<span class="highlight-text">$1</span>');
             }
             return returnHtml;
           });

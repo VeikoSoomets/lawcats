@@ -3,15 +3,13 @@
   type="text"
   class="form-control"
   ng-model="catCtrl.searchQuery"
-  placeholder="Search from sources" />
+  placeholder="Search from sources" ng-if="!catCtrl.isAllowedCategory(maincategory[0].maincategory_name)"/>
 
 <!-- Maincategories toplevel repeat. -->
 <div
   ng-repeat="maincategory in catCtrl.categories | filter:catCtrl.searchQuery track by $index"
   ng-if="catCtrl.isAllowedCategory(maincategory[0].maincategory_name)">
   <!-- insides of every maincategory -->
-  <br/>
-  <b ng-bind="maincategory[0].maincategory_name"></b>
 
   <!-- Every subcategory -->
   <div

@@ -153,7 +153,7 @@ class WebSearch(BaseHandler):
       if lyhendid_values_in_query_string:
         querywords.update(lyhendid_values_in_query_string)
 
-      categories2 = json_data['categories']
+      categories = json_data['categories']
       action = json_data['action']
 
 
@@ -163,7 +163,7 @@ class WebSearch(BaseHandler):
     
     search_results = []
     search_results1 = []
-    for cat in categories2:
+    for cat in categories:
       if action == 'search':
         date_algus = '2014-01-01'
         search_results1 = do_search(querywords,cat,date_algus)
@@ -268,7 +268,7 @@ def do_search(querywords, category, date_algus):
 
     # Otsime ministeeriumitest (mis ei ole RSS)
     if source['category'] == 'ministeeriumid':
-      if category in [x[0] for x in ministry_parse.categories3]:  # mitu allikat
+      if category in [x[0] for x in ministry_parse.categories]:  # mitu allikat
         try:
           search_results.extend(source['results'](querywords, category, date_algus))
         except Exception, e:
@@ -299,7 +299,7 @@ def do_search(querywords, category, date_algus):
     # Otsime RSS allikatest
     if source['category'] == 'RSS allikad':
       #catlist = [key for key, value in rss_parse.categories2] rss_parse.categories2
-      if category in [x[0] for x in rss_parse.categories4]:  # mitu allikat
+      if category in [x[0] for x in rss_parse.categories]:  # mitu allikat
         search_results.extend(source['results'](querywords, category, date_algus))
 
     # Everything else
