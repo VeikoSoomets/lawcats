@@ -197,6 +197,7 @@ def parse_feed(querywords, category, date_algus='2016-01-01'):
             d = feedparser.parse(search_from)
             for a in d.entries:
               for x in querywords:
+                result_title = None
                 if ' ' in x:
                   new_x = set(x.split(' '))  # add to a set
                 elif x == '':
@@ -226,19 +227,25 @@ def parse_feed(querywords, category, date_algus='2016-01-01'):
                       pass
 
                   # Sometimes we get empty blocks, let's catch them and pass
-                  try:
-                    b = a['summary']
-                  except Exception:
-                    pass
-                  if b:
-                    if a.get('description') and \
-                            (all([x2.lower() in a['title'].lower()+a['description'].lower() for x2 in new_x])):
-                      result_title = a['summary']
-                      if 'img ' in result_title:
-                          break
-                      result_title = result_title.replace('<p>','').replace('</p>','')
-                      result_link = a['link']
-                      results.append([result_link, result_title, str(result_date), x, category])
+
+                  summary = a.get('summary')
+                  title = a.get('title')
+                  description = a.get('description')
+                  if summary or title or description:
+                    for queryword in new_x:
+                      if queryword.lower() in title.lower():
+                        result_title = title
+                      elif queryword.lower() in description.lower():
+                        result_title = description
+                      elif queryword.lower() in summary.lower():
+                        result_title = summary
+
+                      if result_title:
+                        if 'img ' in result_title:
+                            break
+                        result_title = result_title.replace('<p>','').replace('</p>','')
+                        result_link = a['link']
+                        results.append([result_link, result_title, str(result_date), x, category])
           except Exception,e:
             logging.error(e)
             pass
