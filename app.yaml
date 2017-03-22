@@ -4,8 +4,8 @@ version: 1
 threadsafe: true
 api_version: 1
 
-manual_scaling:
-  instances: 5
+#manual_scaling:
+#  instances: 5
 
 handlers:
 - url: /static
