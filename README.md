@@ -15,6 +15,7 @@ feedparser
 - Download and install google app engine sdk
 - Navgiate to app folder and run 'dev_appserver.py .'
 <br/>
+
 *Deploying App*
 appcfg.py update . -A directed-cove-374 -V 1
 <br/><br/>
