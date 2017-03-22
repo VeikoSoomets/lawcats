@@ -300,7 +300,10 @@ class RiigiTeatajaDownloadHandler():
 
       #def handle_result(rpc, url):
       #result = rpc.get_result()
+
       for url in urls:
+        """if i > 100:
+            break"""
         src = urllib2.urlopen(url['url'], timeout=10)  # why wait longer?
         soup = bs4.BeautifulSoup(src, "html5lib")
         law = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
