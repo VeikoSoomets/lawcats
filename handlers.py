@@ -153,7 +153,7 @@ class WebSearch(BaseHandler):
       if lyhendid_values_in_query_string:
         querywords.update(lyhendid_values_in_query_string)
 
-      categories = json_data['categories']
+      category = json_data['categories']
       action = json_data['action']
 
 
@@ -163,27 +163,27 @@ class WebSearch(BaseHandler):
     
     search_results = []
     search_results1 = []
-    for cat in categories:
-      if action == 'search':
-        date_algus = '2014-01-01'
-        search_results1 = do_search(querywords,cat,date_algus)
 
-      elif action == 'custom_search':
-        date_algus = '2014-01-01'
-        logging.error(email)
-        search_results1 = custom_search(querywords,cat,date_algus,email)
+    if action == 'search':
+      date_algus = '2014-01-01'
+      search_results1 = do_search(querywords, category, date_algus)
 
-      
-      # There are different result set structures for different search types
-      if search_results1:  # we don't want to add empty values to our final search list
-        for result in search_results1:
-          params = {'result_link': result[0],
-                    'result_title': result[1],
-                    'result_date': result[2],
-                    'queryword': result[3],
-                    'categories': result[4]
-                    }
-          search_results.append(params)
+    elif action == 'custom_search':
+      date_algus = '2014-01-01'
+      logging.error(email)
+      search_results1 = custom_search(querywords, category, date_algus,email)
+
+
+    # There are different result set structures for different search types
+    if search_results1:  # we don't want to add empty values to our final search list
+      for result in search_results1:
+        params = {'result_link': result[0],
+                  'result_title': result[1],
+                  'result_date': result[2],
+                  'queryword': result[3],
+                  'categories': result[4]
+                  }
+        search_results.append(params)
           
     if search_results:
       message=_('Got %s results') % str(len(search_results))

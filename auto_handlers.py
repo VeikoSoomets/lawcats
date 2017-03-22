@@ -123,16 +123,18 @@ class AddLawIndex():
         return a
 
     def batch(iterable, n = 1):
-       l = len(iterable)
-       for ndx in range(0, l, n):
-           yield iterable[ndx:min(ndx+n, l)]
+      l = len(iterable)
+      for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx+n, l)]
 
 
     """ Get laws from datastore and put to search api index """
     # TODO! fetch in batches (might need to use cursors)
     laws = models.RiigiTeatajaURLs.query().fetch()  # models.RiigiTeatajaURLs.title=='Lennundusseadus'
     put_laws = 0
-    for law in laws:
+
+    for law in batch(laws):
+      law = law[0]
       para_titles = []
       documents = []
       dbp_metas = []
@@ -141,26 +143,14 @@ class AddLawIndex():
 
       # We want to understand superscript styles and show them properly to avoid confusion in paragraph numbers
       try:
-          for e in articles.findAll('sup'):
-
-              try:
-                part1 = [y for x, y in superscript_map.iteritems() if x == int(e.get_text()[0])][0]
-              except Exception:
-                pass
-
-              try:
-                part2 = [y for x, y in superscript_map.iteritems() if x == int(e.get_text()[1])][0]
-              except Exception:
-                pass
-
-              try:
-                  if len(e.get_text())==1:
-                      e.string = part1
-                  else:
-                      e.string = part1 + part2
-              except Exception:
-                pass
-
+          for e in batch(articles.findAll('sup')):
+              e = e[0] if isinstance(e, list) else e
+              part1 = [y for x, y in superscript_map.iteritems() if x == int(e.get_text()[0])][0]
+              if len(e.get_text()) == 1:
+                  e.string = part1
+              else:
+                  part2 = [y for x, y in superscript_map.iteritems() if x == int(e.get_text()[1])][0]
+                  e.string = part1 + part2
       except Exception, e:
           logging.error(e)
           pass
@@ -171,39 +161,31 @@ class AddLawIndex():
       law_title = law.title
       # Get content
       content = articles.find_all('p')  #, attrs={'class': 'announcement-body'}
-      for c in content:
+      for c in batch(content):
+        c = c[0] if isinstance(c, list) else c
         try:
           article_link = c.find_next('a').get('name')
-          article_link = url_base + '#' + article_link
-        except:
-          pass
-
-        para_nbr = 0
-        try:
+          if article_link:
+            article_link = url_base + '#' + article_link
+          para_nbr = 0
           if (c.find_previous_sibling('h3') and c.find_previous_sibling('h3').find_next('strong')):
               paragraph = c.find_previous_sibling('h3').find_next('strong').contents[0]
               paragraph_title = c.find_previous_sibling('h3').get_text()
-        except Exception:
-          pass
-
-        try:
-          para_nbr = paragraph.split()[1].replace('.','').replace(' ','')
-
-        except Exception:
+              para_nbr = paragraph.split()[1].replace('.','').replace(' ','')
+        except Exception, e:
+          logging.error(e)
           pass
         content = c.get_text()
 
         # build document
         if article_link and paragraph_title and para_nbr:  # lets prune some crappy entries we don't need
           para_titles.append(paragraph_title)
-          para_token = ','.join(tokenize(paragraph_title))
           document = search.Document(
           fields=[
              search.AtomField(name='law_title', value=law_title),
              search.AtomField(name='law_link', value=article_link),
              search.NumberField(name='para_nbr', value=int(para_nbr)),
              search.TextField(name='para_title', value=paragraph_title),
-             search.TextField(name='para_token', value=para_token),
              search.TextField(name='content', value=content)
              ])
           documents.append(document)
@@ -219,12 +201,9 @@ class AddLawIndex():
       # TODO! truncate to < 100bytes so you'd get all laws (currently a couple missing)
       try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
         """ Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index. """
-        for x in batch(documents, 200):
-            try: # TODO! fix index names
-                index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','')[:76])  # index name must be printable ASCII
-                index.put(x)
-            except Exception:
-                pass
+        for docs in batch(documents, 200):
+            index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','')[:76])  # index name must be printable ASCII
+            index.put(docs)
       except Exception, e:
         logging.error(e)
         # pass only because sometimes index name exceed 100byte limit, but we don't care for those atm

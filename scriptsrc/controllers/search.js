@@ -119,14 +119,7 @@ class SearchController {
     this.searchedSanctions = false;
     let queryDate = new Date();
     let queryAction = '';
-    let sources = [];
     let self = this;
-
-    this.searchSources.forEach(source => {
-      if (source.checked) {
-        sources.push(source.name);
-      }
-    });
 
     switch (where.toLowerCase()) {
       case 'news': // Fallthrough
@@ -151,49 +144,55 @@ class SearchController {
       default: // Should never enter, this is for future guys.
         console.error('Entered default case in searchFrom');
     }
-    this.$http.post(this.baseUrl, {
-      action: queryAction,
-      queryword: this.querywords,
-      date_algus: queryDate,
-      // TODO: formatDate() requires date, but sometimes we are not giving date.
-      categories: sources
-    }).success(response => {
-      this.results = response.search_results;
-      setTimeout(function() {
-        $('.result-title-link').html((_, html) => {
-          function preg_quote(string) {
-              return (string+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, '\\$1');
-          }
-          var words = self.querywords.split(' ');
-          var returnHtml = html;
-          for (var querywordIndex in words){
-            var queryword = words[querywordIndex];
-            returnHtml = returnHtml.replace(new RegExp( '(' + preg_quote( queryword ) + ')' , 'gi' ),
-                '<span class="highlight-text">$1</span>');
-          }
-          return returnHtml;
+
+    this.searchSources.forEach(source => {
+      if (source.checked) {
+        this.$http.post(this.baseUrl, {
+          action: queryAction,
+          queryword: this.querywords,
+          date_algus: queryDate,
+          // TODO: formatDate() requires date, but sometimes we are not giving date.
+          categories: source.name
+        }).success(response => {
+          Array.prototype.push.apply(this.results,response.search_results);
+          setTimeout(function() {
+            $('.result-title-link').html((_, html) => {
+              function preg_quote(string) {
+                  return (string+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, '\\$1');
+              }
+              var words = self.querywords.split(' ');
+              var returnHtml = html;
+              for (var querywordIndex in words){
+                var queryword = words[querywordIndex];
+                returnHtml = returnHtml.replace(new RegExp( '(' + preg_quote( queryword ) + ')' , 'gi' ),
+                    '<span class="highlight-text">$1</span>');
+              }
+              return returnHtml;
+            });
+            let highestRank = Math.round($('.result-category-rank').first().text());
+            let upperBound = highestRank - Math.round(highestRank/3);
+            let lowerBound = Math.ceil(highestRank/3);
+            $('.result-category-rank').html((_, html) => {
+              var rank = html;
+              if (rank <= lowerBound) {
+                return '<span class="bg-gray heatbar"></span>';
+              }
+              else if (rank <= upperBound) {
+                return '<span class="bg-yellow heatbar"></span>';
+              }
+              else {
+                return '<span class="bg-green heatbar"></span>';
+              }
+            });
+          }, 500);
+          this.loading = false;
+        }).error(err => {
+          console.error(err);
+          this.loading = false;
         });
-        let highestRank = Math.round($('.result-category-rank').first().text());
-        let upperBound = highestRank - Math.round(highestRank/3);
-        let lowerBound = Math.ceil(highestRank/3);
-        $('.result-category-rank').html((_, html) => {
-          var rank = html;
-          if (rank <= lowerBound) {
-            return '<span class="bg-gray heatbar"></span>';
-          }
-          else if (rank <= upperBound) {
-            return '<span class="bg-yellow heatbar"></span>';
-          }
-          else {
-            return '<span class="bg-green heatbar"></span>';
-          }
-        });
-      }, 500);
-      this.loading = false;
-    }).error(err => {
-      console.error(err);
-      this.loading = false;
+      }
     });
+
   }
 }
 
