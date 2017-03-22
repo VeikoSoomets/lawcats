@@ -179,7 +179,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
         #logging.error(search_law_title)
         laws_titles2 = memcache.get(search_law_title)
         if not laws_titles2:
-          laws_titles2 = models.RiigiTeatajaMetainfo.query(models.RiigiTeatajaMetainfo.title == law.title).fetch()
+          laws_titles2 = models.RiigiTeatajaMetainfo2.query(models.RiigiTeatajaMetainfo2.title == law.title).fetch()
           memcache.set(search_law_title, laws_titles2)  # no expiration"""
 
           # search from paragraph title
