@@ -17,6 +17,7 @@ feedparser
 <br/>
 
 *Deploying App*
+<br/>
 appcfg.py update . -A directed-cove-374 -V 1
 <br/><br/>
 **Instructions for new languages:**<br/>
