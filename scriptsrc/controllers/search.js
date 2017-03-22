@@ -25,8 +25,9 @@ function formatDate(date) {
 */
 
 class SearchController {
-  constructor (MessagingService, $http) {
+  constructor (MessagingService, $http, $q) {
     this.$http = $http;
+    this.$q = $q;
     this.MessagingService = MessagingService;
 
     // URL for api calls
@@ -117,6 +118,8 @@ class SearchController {
     this.results = [];
     this.hasSearched = true;
     this.searchedSanctions = false;
+    this.unResolvedPromises = 0;
+    this.promises = [];
     let queryDate = new Date();
     let queryAction = '';
     let self = this;
@@ -147,55 +150,60 @@ class SearchController {
 
     this.searchSources.forEach(source => {
       if (source.checked) {
-        this.$http.post(this.baseUrl, {
-          action: queryAction,
-          queryword: this.querywords,
-          date_algus: queryDate,
-          // TODO: formatDate() requires date, but sometimes we are not giving date.
-          categories: source.name
-        }).success(response => {
-          Array.prototype.push.apply(this.results,response.search_results);
-          setTimeout(function() {
-            $('.result-title-link').html((_, html) => {
-              function preg_quote(string) {
-                  return (string+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, '\\$1');
-              }
-              var words = self.querywords.split(' ');
-              var returnHtml = html;
-              for (var querywordIndex in words){
-                var queryword = words[querywordIndex];
-                returnHtml = returnHtml.replace(new RegExp( '(' + preg_quote( queryword ) + ')' , 'gi' ),
-                    '<span class="highlight-text">$1</span>');
-              }
-              return returnHtml;
-            });
-            let highestRank = Math.round($('.result-category-rank').first().text());
-            let upperBound = highestRank - Math.round(highestRank/3);
-            let lowerBound = Math.ceil(highestRank/3);
-            $('.result-category-rank').html((_, html) => {
-              var rank = html;
-              if (rank <= lowerBound) {
-                return '<span class="bg-gray heatbar"></span>';
-              }
-              else if (rank <= upperBound) {
-                return '<span class="bg-yellow heatbar"></span>';
-              }
-              else {
-                return '<span class="bg-green heatbar"></span>';
-              }
-            });
-          }, 500);
+        this.unResolvedPromises = this.unResolvedPromises++;
+        this.promises.push(
+            this.$http.post(this.baseUrl, {
+              action: queryAction,
+              queryword: this.querywords,
+              date_algus: queryDate,
+              // TODO: formatDate() requires date, but sometimes we are not giving date.
+              categories: source.name
+            }).success(response => {
+              this.unResolvedPromises = this.unResolvedPromises--;
+              Array.prototype.push.apply(this.results,response.search_results);
+              setTimeout(function() {
+                $('.result-title-link').html((_, html) => {
+                  function preg_quote(string) {
+                      return (string+'').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, '\\$1');
+                  }
+                  var words = self.querywords.split(' ');
+                  var returnHtml = html;
+                  for (var querywordIndex in words){
+                    var queryword = words[querywordIndex];
+                    returnHtml = returnHtml.replace(new RegExp( '(' + preg_quote( queryword ) + ')' , 'gi' ),
+                        '<span class="highlight-text">$1</span>');
+                  }
+                  return returnHtml;
+                });
+                let highestRank = Math.round($('.result-category-rank').first().text());
+                let upperBound = highestRank - Math.round(highestRank/3);
+                let lowerBound = Math.ceil(highestRank/3);
+                $('.result-category-rank').html((_, html) => {
+                  var rank = html;
+                  if (rank <= lowerBound) {
+                    return '<span class="bg-gray heatbar"></span>';
+                  }
+                  else if (rank <= upperBound) {
+                    return '<span class="bg-yellow heatbar"></span>';
+                  }
+                  else {
+                    return '<span class="bg-green heatbar"></span>';
+                  }
+                });
+              }, 500);
+            }).error(err => {
+              console.error(err);
+            })
+        );
+        this.$q.all(this.promises).then(() => {
           this.loading = false;
-        }).error(err => {
-          console.error(err);
-          this.loading = false;
-        });
+        })
       }
     });
 
   }
 }
 
-SearchController.$inject = ['MessagingService', '$http'];
+SearchController.$inject = ['MessagingService', '$http', '$q'];
 
 export default SearchController;

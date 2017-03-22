@@ -10713,10 +10713,11 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var SearchController = (function () {
-  function SearchController(MessagingService, $http) {
+  function SearchController(MessagingService, $http, $q) {
     _classCallCheck(this, SearchController);
 
     this.$http = $http;
+    this.$q = $q;
     this.MessagingService = MessagingService;
 
     // URL for api calls
@@ -10820,6 +10821,8 @@ var SearchController = (function () {
       this.results = [];
       this.hasSearched = true;
       this.searchedSanctions = false;
+      this.unResolvedPromises = 0;
+      this.promises = [];
       var queryDate = new Date();
       var queryAction = '';
       var self = this;
@@ -10851,13 +10854,15 @@ var SearchController = (function () {
 
       this.searchSources.forEach(function (source) {
         if (source.checked) {
-          _this3.$http.post(_this3.baseUrl, {
+          _this3.unResolvedPromises = _this3.unResolvedPromises++;
+          _this3.promises.push(_this3.$http.post(_this3.baseUrl, {
             action: queryAction,
             queryword: _this3.querywords,
             date_algus: queryDate,
             // TODO: formatDate() requires date, but sometimes we are not giving date.
             categories: source.name
           }).success(function (response) {
+            _this3.unResolvedPromises = _this3.unResolvedPromises--;
             Array.prototype.push.apply(_this3.results, response.search_results);
             setTimeout(function () {
               $('.result-title-link').html(function (_, html) {
@@ -10886,9 +10891,10 @@ var SearchController = (function () {
                 }
               });
             }, 500);
-            _this3.loading = false;
           }).error(function (err) {
             console.error(err);
+          }));
+          _this3.$q.all(_this3.promises).then(function () {
             _this3.loading = false;
           });
         }
@@ -10899,7 +10905,7 @@ var SearchController = (function () {
   return SearchController;
 })();
 
-SearchController.$inject = ['MessagingService', '$http'];
+SearchController.$inject = ['MessagingService', '$http', '$q'];
 
 exports['default'] = SearchController;
 module.exports = exports['default'];

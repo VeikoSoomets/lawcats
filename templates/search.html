@@ -247,9 +247,10 @@
       </div>
 
       <div
-        ng-hide="sc.loading || sc.results.length"
+        ng-show="!sc.loading && sc.results.length == 0"
         class="alert alert-info"
         role="alert">
+      <span></span>
         {% trans %}No results{% endtrans %}.
       </div>
     </div>
