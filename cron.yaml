@@ -1,10 +1,10 @@
-cron:
-
-- description: craws laws from riigiteataja
-  url: '/sys/download_riigihtml'
-  schedule: every 1440 mins
-
-- description: craws laws from riigiteataja
-  url: '/sys/reindex_law'
-  schedule: every 1450 mins
+#cron:
+#
+#- description: craws laws from riigiteataja
+#  url: '/sys/download_riigihtml'
+#  schedule: every 1440 mins
+#
+#- description: craws laws from riigiteataja
+#  url: '/sys/reindex_law'
+#  schedule: every 1450 mins
 
