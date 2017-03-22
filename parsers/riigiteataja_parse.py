@@ -286,7 +286,6 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
           if search_law_name.encode('utf8').lower() != s:
             logging.error(repr(search_law_name.lower()))
             logging.error(repr(s))
-            #query_string = 'content: ~"%s" OR law_title: ~"%s" OR para_title: ~"%s" OR para_token:%s' % (s, s, s, s)
             query_string = 'content: ~"%s" OR law_title: ~"%s" OR para_title: ~"%s"' % (s, s, s)
             logging.error(repr(query_string))
             results = index.search(query_string)
@@ -308,12 +307,6 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
                       if single_query.lower() in result.field('content').value.replace(' ','').lower():
                         #logging.error(8)
                         rank += 3
-                      """if single_query.lower() in result.field('para_token').value.replace(' ','').lower():
-                        #logging.error(9)
-                        rank += 1"""
-                      """if any(x in result.field('para_token').lower().split(',') for x in single_query.lower()):
-                        #logging.error(10)
-                        rank += 1"""
 
                 except Exception:
                   pass

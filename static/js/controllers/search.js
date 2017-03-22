@@ -10822,14 +10822,7 @@ var SearchController = (function () {
       this.searchedSanctions = false;
       var queryDate = new Date();
       var queryAction = '';
-      var sources = [];
       var self = this;
-
-      this.searchSources.forEach(function (source) {
-        if (source.checked) {
-          sources.push(source.name);
-        }
-      });
 
       switch (where.toLowerCase()) {
         case 'news': // Fallthrough
@@ -10855,45 +10848,50 @@ var SearchController = (function () {
           // Should never enter, this is for future guys.
           console.error('Entered default case in searchFrom');
       }
-      this.$http.post(this.baseUrl, {
-        action: queryAction,
-        queryword: this.querywords,
-        date_algus: queryDate,
-        // TODO: formatDate() requires date, but sometimes we are not giving date.
-        categories: sources
-      }).success(function (response) {
-        _this3.results = response.search_results;
-        setTimeout(function () {
-          $('.result-title-link').html(function (_, html) {
-            function preg_quote(string) {
-              return (string + '').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, '\\$1');
-            }
-            var words = self.querywords.split(' ');
-            var returnHtml = html;
-            for (var querywordIndex in words) {
-              var queryword = words[querywordIndex];
-              returnHtml = returnHtml.replace(new RegExp('(' + preg_quote(queryword) + ')', 'gi'), '<span class="highlight-text">$1</span>');
-            }
-            return returnHtml;
+
+      this.searchSources.forEach(function (source) {
+        if (source.checked) {
+          _this3.$http.post(_this3.baseUrl, {
+            action: queryAction,
+            queryword: _this3.querywords,
+            date_algus: queryDate,
+            // TODO: formatDate() requires date, but sometimes we are not giving date.
+            categories: source.name
+          }).success(function (response) {
+            Array.prototype.push.apply(_this3.results, response.search_results);
+            setTimeout(function () {
+              $('.result-title-link').html(function (_, html) {
+                function preg_quote(string) {
+                  return (string + '').replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, '\\$1');
+                }
+                var words = self.querywords.split(' ');
+                var returnHtml = html;
+                for (var querywordIndex in words) {
+                  var queryword = words[querywordIndex];
+                  returnHtml = returnHtml.replace(new RegExp('(' + preg_quote(queryword) + ')', 'gi'), '<span class="highlight-text">$1</span>');
+                }
+                return returnHtml;
+              });
+              var highestRank = Math.round($('.result-category-rank').first().text());
+              var upperBound = highestRank - Math.round(highestRank / 3);
+              var lowerBound = Math.ceil(highestRank / 3);
+              $('.result-category-rank').html(function (_, html) {
+                var rank = html;
+                if (rank <= lowerBound) {
+                  return '<span class="bg-gray heatbar"></span>';
+                } else if (rank <= upperBound) {
+                  return '<span class="bg-yellow heatbar"></span>';
+                } else {
+                  return '<span class="bg-green heatbar"></span>';
+                }
+              });
+            }, 500);
+            _this3.loading = false;
+          }).error(function (err) {
+            console.error(err);
+            _this3.loading = false;
           });
-          var highestRank = Math.round($('.result-category-rank').first().text());
-          var upperBound = highestRank - Math.round(highestRank / 3);
-          var lowerBound = Math.ceil(highestRank / 3);
-          $('.result-category-rank').html(function (_, html) {
-            var rank = html;
-            if (rank <= lowerBound) {
-              return '<span class="bg-gray heatbar"></span>';
-            } else if (rank <= upperBound) {
-              return '<span class="bg-yellow heatbar"></span>';
-            } else {
-              return '<span class="bg-green heatbar"></span>';
-            }
-          });
-        }, 500);
-        _this3.loading = false;
-      }).error(function (err) {
-        console.error(err);
-        _this3.loading = false;
+        }
       });
     }
   }]);
