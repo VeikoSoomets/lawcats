@@ -302,7 +302,8 @@ class RiigiTeatajaDownloadHandler():
           rpc.callback = functools.partial(handle_result, rpc, url)
           urlfetch.make_fetch_call(rpc, url['url'])
           rpcs.append(rpc)
-          if i >= 2:
+          i += 1
+          if i > 5:
               break
 
       for rpc in rpcs:

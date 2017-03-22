@@ -244,17 +244,18 @@ def custom_search(querywords, category, date_algus, email=None):
 
 
     
-    
+from operator import itemgetter
 def do_search(querywords, category, date_algus):
   """ Meant to be used for monitoring news and updates. """
   search_results=[]
 
   search_list = [
     {'category': 'Riigiteataja uudised', 'results': riigiteataja_parse.search_riigiteataja_uudised},
-    {'category': 'oigusaktid', 'results': riigiteataja_parse.search_oigusaktid},
+    #{'category': 'oigusaktid', 'results': riigiteataja_parse.search_oigusaktid},
     {'category': 'RSS allikad', 'results': rss_parse.parse_feed},
     {'category': 'ministeeriumid', 'results': ministry_parse.search_ministry},
     {'category': 'Riigiteataja seadused', 'results': riigiteataja_parse.search_seadused},
+    {'category': u'Õigusaktide otsing', 'results': riigiteataja_parse.search_oigusaktid},
     {'category': 'Maa- ja ringkonnakohtu lahendid', 'results': riigiteataja_parse.search_kohtu},  # to avoid duplicates, add space to source
 
     {'category': 'Eur-Lex eestikeelsete dokumentide otsing', 'results': eurlex_parse.search_eurlex},
@@ -278,7 +279,7 @@ def do_search(querywords, category, date_algus):
 
     # Otsime riigi ja/või KOV õigusaktidest
     if source['category'] == 'oigusaktid':
-      if category in [u'Kehtivate KOV õigusaktide otsing',u'Kehtivate õigusaktide otsing']:  # mitu allikat
+      if category in [u'Kehtivate KOV õigusaktide otsing',u'Õigusaktide otsing']:  # mitu allikat
         try:
           search_results.extend(source['results'](querywords, category, date_algus))
         except Exception, e:
@@ -311,6 +312,15 @@ def do_search(querywords, category, date_algus):
         logging.error('failed with singular category search')
         logging.error(e)
         pass
-  #print search_results
-  return search_results  # link, title, date, qword, category
+
+  # Make results unique (if there are overlaps from multiple sources, eg. "Õigusaktide otsing" source
+  search_results = [list(x) for x in set(tuple(x) for x in search_results)]
+
+  # TODO! Sort results by date
+  #search_results = search_results.sort(key=lambda r: r[2])
+
+  # Sort results by rank (if there is rank)
+  search_results = sorted(search_results, key=itemgetter(5), reverse=True)
+
+  return search_results  # link, title, date, qword, category, rank
 
