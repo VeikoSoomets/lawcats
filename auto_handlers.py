@@ -211,7 +211,7 @@ class AddLawIndex():
 
       """# TODO! truncate to < 100bytes so you'd get all laws (currently a couple missing)
       try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
-        """ Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index. """
+        # Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index.
         for docs in batch(documents, 200):
             index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','')[:76])  # index name must be printable ASCII
             index.put(docs)
@@ -350,7 +350,7 @@ class DataGatherer(BaseHandler):
 
     try:
         #RiigiTeatajaDownloadHandler.get()
-        deferred.defer(RiigiTeatajaDownloadHandler.get, _countdown=590)  # max time for task, lets complete it
+        deferred.defer(RiigiTeatajaDownloadHandler.get)  # max time for task, lets complete it
         #RiigiTeatajaDownloadHandler.get()
     except Exception, e:
         logging.error(e)
@@ -370,7 +370,7 @@ class DataIndexer(BaseHandler):
 
     try:
         #AddLawIndex.get()
-        deferred.defer(AddLawIndex.get, _countdown=590)
+        deferred.defer(AddLawIndex.get)
         #AddLawIndex.get()
     except Exception, e:
         logging.error(e)
