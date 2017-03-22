@@ -65,8 +65,6 @@ class GenerateCategories(BaseHandler):
         ['Eesti Ekspress','http://ekspress.delfi.ee/','eesti'],
         ['Maaleht','http://maaleht.delfi.ee/','eesti'],
         [u'Äripäev','http://www.aripaev.ee','eesti'],
-        [u'Õigus & Kord uudised' , 'http://oiguskord.ee','eesti'],
-        [u'Õigus & Kord foorum','http://oiguskord.ee/Foorum','eesti'],
         ['raamatupidaja.ee','http://www.raamatupidaja.ee/','eesti'],
         ['juura.ee','http://juura.ee','eesti'],
         ['Riigiteataja seadusuudised', 'https://www.riigiteataja.ee/oigusuudised/seadusteUudisteNimekiri.html', 'eesti'],

@@ -22,16 +22,13 @@ file_dir = os.path.dirname(os.path.abspath(__file__))
 new_path = os.path.split(file_dir)[0]
 sys.path.insert(0, new_path) # to get utils from root folder.. this might be obsolete
 
-
-from utils import *
-
 categories = [\
 ['Delfi','http://feeds2.feedburner.com/delfiuudised?format=xml'], \
 ['Delfi','http://feeds.feedburner.com/delfimaailm?format=xml'], \
 ['Delfi','http://feeds.feedburner.com/delfi110-112?format=xml'], \
 ['Delfi','http://feeds2.feedburner.com/delfimajandus'], \
-['Postimees','http://www.postimees.ee/rss/'],\
 ['Postimees','http://majandus24.postimees.ee/rss'], # majandus \
+['Postimees','http://www.postimees.ee/rss/'],\
 ['Postimees','http://www.postimees.ee/rss/?r=128'], # kirmi \
 ['ERR','http://www.err.ee/rss'],\
 [u'Õhtuleht','http://www.ohtuleht.ee/rss'],\
@@ -40,8 +37,6 @@ categories = [\
 ['Eesti Ekspress','http://feeds.feedburner.com/EestiEkspressFeed?format=xml'],\
 ['Maaleht','http://feeds.feedburner.com/maaleht?format=xml'],\
 [u'Äripäev','http://www.aripaev.ee/rss'],\
-[u'Õigus & Kord uudised' , 'http://oiguskord.ee/feed/'],\
-[u'Õigus & Kord foorum','http://oiguskord.ee/Foorum/?feed=rss'],\
 ['juura.ee','http://juura.ee/gw.php/news/aggregate/index/format/xml'],\
 [u'Деловное Деломости','http://dv.ee/rss'],\
 [u'МК-Эстония','http://www.mke.ee/index.php?option=com_k2&view=itemlist&format=feed&type=rss'],\
@@ -95,8 +90,11 @@ categories = [\
 # ['bbc','http://feeds.bbci.co.uk/news/rss.xml?edition=int' ] \
 ]
 
+from utils import *
+
+
 # We need this because ordinary dictionaries can't have duplicate keys (check the case of delfi.ee)
-cat_dict = defaultdict(list)
+cat_dict = defaultdict(list)  # TODO! fix issue with dict removing duplicate keys (eg. multiple Postimees sources)
 for listitem in categories:
   cat_dict['categories'].append(listitem)
 
@@ -163,13 +161,14 @@ def parse_results_ilmumas(ilmumas_links,querywords):
     return results
 
 
-def parse_feed(querywords, category, date_algus='2016-01-01'): # kui kuupäeva ei määrata, siis võta tänane kuupäev
+def parse_feed(querywords, category, date_algus='2016-01-01'):
     date_algus = datetime_object(date_algus)
     results = []
     for cat in cat_dict['categories']:
 
       if category == cat[0]:  # veendume, et võtame õige allika
         search_from = cat[1]
+        logging.error(search_from)
 
         if category == u'Riigiteataja ilmumas/ilmunud seadused':  # juhul kui tegi riigiteataja ilumas/ilmunud, toimetame teisiti (neil RSS vana ja ei vasta standarditele)
           try:
@@ -235,6 +234,9 @@ def parse_feed(querywords, category, date_algus='2016-01-01'): # kui kuupäeva e
                     if a.get('description') and \
                             (all([x2.lower() in a['title'].lower()+a['description'].lower() for x2 in new_x])):
                       result_title = a['summary']
+                      if 'img ' in result_title:
+                          break
+                      result_title = result_title.replace('<p>','').replace('</p>','')
                       result_link = a['link']
                       results.append([result_link, result_title, str(result_date), x, category])
           except Exception,e:

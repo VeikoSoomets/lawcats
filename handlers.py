@@ -320,7 +320,10 @@ def do_search(querywords, category, date_algus):
   #search_results = search_results.sort(key=lambda r: r[2])
 
   # Sort results by rank (if there is rank)
-  search_results = sorted(search_results, key=itemgetter(5), reverse=True)
+  try:
+    search_results = sorted(search_results, key=itemgetter(5), reverse=True) # TODO! fix
+  except Exception:
+    pass
 
   return search_results  # link, title, date, qword, category, rank
 

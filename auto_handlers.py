@@ -129,14 +129,18 @@ class AddLawIndex():
 
 
     """ Get laws from datastore and put to search api index """
-    # TODO! fetch in batches (might need to use cursors)
-    laws = models.RiigiTeatajaURLs.query().fetch()  # models.RiigiTeatajaURLs.title=='Lennundusseadus'
+    # TODO! fetch in batches (might need to use cursors). 365 htmls to fetch to ram might be too much
+    laws = models.RiigiTeatajaMetainfo2.query().fetch()  # fetch titles
+    #laws = models.RiigiTeatajaURLs.query().fetch(50)  # models.RiigiTeatajaURLs.title=='Lennundusseadus'
     put_laws = 0
     for law in laws:
-      para_titles = []
       documents = []
+      law2 = models.RiigiTeatajaURLs.query(models.RiigiTeatajaURLs.title == law.title).fetch()
+      para_titles = []
       dbp_metas = []
-      src = law.text #.decode('utf-8')
+      src = law2[0].text
+      law_title = law2[0].title
+      url_base = law2[0].link
       articles = bs4.BeautifulSoup(src, "html5lib", from_encoding='utf8')
 
       # We want to understand superscript styles and show them properly to avoid confusion in paragraph numbers
@@ -160,15 +164,10 @@ class AddLawIndex():
                       e.string = part1 + part2
               except Exception:
                 pass
-
-      except Exception, e:
-          logging.error(e)
+      except Exception:
           pass
-      url_base = law.link
 
-      #for article in articles:
-      paragraph_title, article_link, law_title, content = None, None, None, None
-      law_title = law.title
+
       # Get content
       content = articles.find_all('p')  #, attrs={'class': 'announcement-body'}
       for c in content:
@@ -196,29 +195,38 @@ class AddLawIndex():
         # build document
         if article_link and paragraph_title and para_nbr:  # lets prune some crappy entries we don't need
           para_titles.append(paragraph_title)
-          para_token = ','.join(tokenize(paragraph_title))
+          #para_token = ','.join(tokenize(paragraph_title))
           document = search.Document(
           fields=[
              search.AtomField(name='law_title', value=law_title),
              search.AtomField(name='law_link', value=article_link),
              search.NumberField(name='para_nbr', value=int(para_nbr)),
              search.TextField(name='para_title', value=paragraph_title),
-             search.TextField(name='para_token', value=para_token),
+             #search.TextField(name='para_token', value=para_token),
              search.TextField(name='content', value=content)
              ])
-          documents.append(document)
+          #documents.append(document)
+          try:
+            index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','')[:76])  # index name must be printable ASCII
+            index.put(document)
+            document = None
+          except Exception:  # failed for some reason... too long index name?
+            pass
 
-       # TODO! instead of str(list( , why not insert list?
-      try:
+      law2, src, paragraph_title, article_link, content = None, None, None, None, None
+
+      #logging.error('constructed a document')
+      # TODO! instead of str(list( , why not insert list?
+      """try:
           dbp_meta = models.RiigiTeatajaMetainfo(title=law_title, para_title=str(list(set(para_titles))) ) # set to remove duplicates, then repr of list for later parsing
           dbp_meta.put()
       except Exception, e:
           logging.error(e)
-          pass
+          pass """
 
-      # TODO! truncate to < 100bytes so you'd get all laws (currently a couple missing)
+      """# TODO! truncate to < 100bytes so you'd get all laws (currently a couple missing)
       try:  # try is only here because "Euroopa Parlamendi ja n├Ąukogu m├ż├żruse (E├£) nr 1082/2006 ┬½Euroopa territoriaalse koost├Č├Č r├╝hmituse (ETKR) kohta┬╗ rakendamise seadus" is exceeds 100byte limit for index name
-        """ Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index. """
+        # Put documents to index in a batch (limit is 200 in one batch). Each separate law to spearata index.
         for x in batch(documents, 200):
             try: # TODO! fix index names
                 index = search.Index(name=law_title.encode('ascii', 'ignore').replace(' ','')[:76])  # index name must be printable ASCII
@@ -228,17 +236,18 @@ class AddLawIndex():
       except Exception, e:
         logging.error(e)
         # pass only because sometimes index name exceed 100byte limit, but we don't care for those atm
-        pass
+        pass"""
 
       put_laws += 1
+      #logging.error(repr(law_title))
 
 
-      #dbp_meta = models.RiigiTeatajaMetainfo(title=law_title, para_title=str(list(set(para_titles))) ) # set to remove duplicates, then repr of list for later parsing
-      #dbp_metas.append(dbp_meta)
+    #dbp_meta = models.RiigiTeatajaMetainfo(title=law_title, para_title=str(list(set(para_titles))) ) # set to remove duplicates, then repr of list for later parsing
+    #dbp_metas.append(dbp_meta)
 
-    logging.error('put %s laws to index!' % str(put_laws))
+    logging.error('successfully put %s laws to index!' % str(put_laws))
 
-    try:
+    """try:
         for future in batch(dbp_metas, 200):
             try: # TODO! fix index names
                 ndb.put_async(future)
@@ -247,7 +256,7 @@ class AddLawIndex():
     except Exception, e:
         logging.error(e)
         pass
-    logging.error('successfully put metas!')
+    logging.error('successfully put law titles to datastore!')"""
 
     #future = ndb.put_multi_async(dbp_metas)
     #ndb.Future.wait_all(future)
@@ -307,33 +316,39 @@ class RiigiTeatajaDownloadHandler():
       dbp_metas = []
       dbps = []
 
-      def handle_result(rpc, url):
-          result = rpc.get_result()
-          soup = bs4.BeautifulSoup(result.content, "html5lib")
-          law = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
-          dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=law)
-          dbps.append(dbp)  # dbp.put()
-          dbp_meta = models.RiigiTeatajaMetainfo2(title=url['title'])
-          dbp_metas.append(dbp_meta)  # dbp_meta.put()
+      #def handle_result(rpc, url):
+      #result = rpc.get_result()
+      for url in urls:
+        src = urllib2.urlopen(url['url'], timeout=10)  # why wait longer?
+        soup = bs4.BeautifulSoup(src, "html5lib")
+        law = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
+        dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=law)
+        dbp_meta = models.RiigiTeatajaMetainfo2(title=url['title'])
+        dbp.put()
+        dbp_meta.put()
+        dbp, dbp_meta = None, None
+        #dbps.append(dbp)  # dbp.put()
+        #dbp_metas.append(dbp_meta)  # dbp_meta.put()
 
-      rpcs = []
+      """rpcs = []
       i = 0
       for url in urls:
           rpc = urlfetch.create_rpc()
           rpc.callback = functools.partial(handle_result, rpc, url)
           urlfetch.make_fetch_call(rpc, url['url'])
-          rpcs.append(rpc)
+          #rpcs.append(rpc)
           i += 1
           if i > 5:
               break
 
       for rpc in rpcs:
-          rpc.wait()
+          rpc.wait() """
 
-      future = ndb.put_multi_async(dbps)
-      future2 = ndb.put_multi_async(dbp_metas)
-      ndb.Future.wait_all(future)
-      ndb.Future.wait_all(future2)
+      #future = ndb.put_multi_async(dbp_metas)
+      #future2 = ndb.put_multi_async(dbps)
+      #logging.error('waiting on futures now')
+      #ndb.Future.wait_all(future)
+      #ndb.Future.wait_all(future2)
 
   #deferred.defer(get)
 
@@ -352,7 +367,8 @@ class DataGatherer(BaseHandler):
         pass
 
     try:
-        deferred.defer(RiigiTeatajaDownloadHandler.get)
+        #RiigiTeatajaDownloadHandler.get()
+        deferred.defer(RiigiTeatajaDownloadHandler.get, _countdown=590)  # max time for task, lets complete it
         #RiigiTeatajaDownloadHandler.get()
     except Exception, e:
         logging.error(e)
@@ -371,7 +387,8 @@ class DataIndexer(BaseHandler):
         pass
 
     try:
-        deferred.defer(AddLawIndex.get)
+        #AddLawIndex.get()
+        deferred.defer(AddLawIndex.get, _countdown=590)
         #AddLawIndex.get()
     except Exception, e:
         logging.error(e)
