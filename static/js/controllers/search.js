@@ -10820,6 +10820,8 @@ var SearchController = (function () {
       this.results = [];
       this.hasSearched = true;
       this.searchedSanctions = false;
+      this.unResolvedPromises = 0;
+      this.promises = [];
       var queryDate = new Date();
       var queryAction = '';
       var self = this;
@@ -10851,6 +10853,7 @@ var SearchController = (function () {
 
       this.searchSources.forEach(function (source) {
         if (source.checked) {
+          _this3.unResolvedPromises++;
           _this3.$http.post(_this3.baseUrl, {
             action: queryAction,
             queryword: _this3.querywords,
@@ -10858,6 +10861,7 @@ var SearchController = (function () {
             // TODO: formatDate() requires date, but sometimes we are not giving date.
             categories: source.name
           }).success(function (response) {
+            _this3.unResolvedPromises--;
             Array.prototype.push.apply(_this3.results, response.search_results);
             setTimeout(function () {
               $('.result-title-link').html(function (_, html) {
@@ -10886,10 +10890,11 @@ var SearchController = (function () {
                 }
               });
             }, 500);
-            _this3.loading = false;
+            if (_this3.unResolvedPromises === 0) {
+              _this3.loading = false;
+            }
           }).error(function (err) {
             console.error(err);
-            _this3.loading = false;
           });
         }
       });

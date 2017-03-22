@@ -117,6 +117,8 @@ class SearchController {
     this.results = [];
     this.hasSearched = true;
     this.searchedSanctions = false;
+    this.unResolvedPromises = 0;
+    this.promises = [];
     let queryDate = new Date();
     let queryAction = '';
     let self = this;
@@ -147,6 +149,7 @@ class SearchController {
 
     this.searchSources.forEach(source => {
       if (source.checked) {
+        this.unResolvedPromises++;
         this.$http.post(this.baseUrl, {
           action: queryAction,
           queryword: this.querywords,
@@ -154,6 +157,7 @@ class SearchController {
           // TODO: formatDate() requires date, but sometimes we are not giving date.
           categories: source.name
         }).success(response => {
+          this.unResolvedPromises--;
           Array.prototype.push.apply(this.results,response.search_results);
           setTimeout(function() {
             $('.result-title-link').html((_, html) => {
@@ -185,11 +189,12 @@ class SearchController {
               }
             });
           }, 500);
-          this.loading = false;
+          if (this.unResolvedPromises === 0) {
+            this.loading = false;
+          }
         }).error(err => {
           console.error(err);
-          this.loading = false;
-        });
+        })
       }
     });
 
