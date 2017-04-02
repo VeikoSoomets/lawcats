@@ -1,0 +1,57 @@
+<div class="tab-pane fade" id="custom">
+  <div class="tab-content">
+    <div class="tab-pane fade in active">
+      <div class="alert alert-info alert-dismissible" role="alert">
+        {% trans %}You can add your own sources.
+        They will be tried to be implemented into the system automatically, and if that should succeed, it shouldn't take more
+        than a couple of seconds. Just give us the link and a short description of what do you want our robots to look for.
+        {% endtrans %}
+      </div>
+      <form action="#" class="form-horizontal">
+        <div class="form-group">
+          <label
+            class="control-label col-sm-2"
+            for="src_request_link">
+            {% trans %}Link to Source{% endtrans %}
+            <a tabindex="0" class="badge" role="button" data-toggle="popover" data-trigger="focus"
+             data-content="{% trans %}Make sure it begins with http or www{% endtrans %}">?</a>
+          </label>
+
+          <div class="col-sm-10">
+            <input type="text" class="form-control" ng-model="sc.newSourceUrl"/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label
+            class="control-label col-sm-2"
+            for="src_request_desc">
+            {% trans %}Brief description{% endtrans %}
+            <a tabindex="0" class="badge" role="button" data-toggle="popover" data-trigger="focus"
+             data-content="{% trans %}If our engine fails to implement your source automatically, this helps us understand what were you trying to search.{% endtrans %}">?</a>
+          </label>
+
+          <div class="col-sm-10">
+            <input type="text" class="form-control" ng-model="sc.newSourceDescription" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="col-sm-10 col-sm-offset-2">
+            <div class="progress progress-striped active" ng-show="sc.loading">
+              <div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+              </div>
+            </div>
+            <div ng-hide="sc.loading">
+              <button
+                class="btn btn-primary"
+                ng-click="sc.sendNewSource($event)">
+                {% trans %}Send request{% endtrans %}
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

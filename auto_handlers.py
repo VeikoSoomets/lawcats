@@ -10,6 +10,8 @@ import sys
 
 import functools
 
+from services import CategoryService, HTMLDownloaderService
+
 sys.path.insert(0, 'libs')
 
 import os
@@ -360,8 +362,6 @@ class DataGatherer(BaseHandler):
         pass
 
 class DataIndexer(BaseHandler):
-  """ Gets data from web and puts to Datastore. Uses "deferred" module, which uses queues.
-    Good for long-running tasks """
 
   @classmethod
   def get(self):
@@ -381,3 +381,19 @@ class DataIndexer(BaseHandler):
 
 #deferred.defer(DataGatherer.get)
 
+
+class GenerateData(BaseHandler):
+  @BaseHandler.logged_in2
+  def get(self):
+    categories_count = CategoryService.generate().get('nr_of_generated_instances')
+    laws_count = HTMLDownloaderService.riigiteataja_generate().get('nr_of_generated_instances')
+    laws_count = 0
+    self.render_template('sys.html', {'message_type': 'success', 'message': 'Data generated. Added %s categories, %s laws'
+                                                                            % (categories_count, laws_count)})
+
+class EraseData(BaseHandler):
+  @BaseHandler.logged_in2
+  def get(self):
+    CategoryService.erase()
+    HTMLDownloaderService.erase()
+    self.render_template('sys.html', {'message_type': 'success', 'message': 'Data erased'})

@@ -59,11 +59,11 @@ class SearchController {
       let currentId = 0;
       this.sources = data.sources;
       data.sources.forEach(mainCategory => {
-        mainCategory[1].forEach(subCategory => {
-          subCategory[1].forEach(category => {
+        mainCategory.sub_categories.forEach(subCategory => {
+          subCategory.child_categories.forEach(category => {
             this.searchSources.push({
               checked: false,
-              name: category.category_name
+              name: category.name
             });
             category.id = currentId;
             currentId++;

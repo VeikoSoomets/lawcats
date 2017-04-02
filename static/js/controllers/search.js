@@ -10754,11 +10754,11 @@ var SearchController = (function () {
         var currentId = 0;
         _this.sources = data.sources;
         data.sources.forEach(function (mainCategory) {
-          mainCategory[1].forEach(function (subCategory) {
-            subCategory[1].forEach(function (category) {
+          mainCategory.sub_categories.forEach(function (subCategory) {
+            subCategory.child_categories.forEach(function (category) {
               _this.searchSources.push({
                 checked: false,
-                name: category.category_name
+                name: category.name
               });
               category.id = currentId;
               currentId++;
@@ -10970,28 +10970,26 @@ var CategoriesController = (function () {
      */
   }, {
     key: 'checkAll',
-    value: function checkAll(subcategory) {
+    value: function checkAll(subcategories) {
       var counter = 0;
 
       this.ngModel.forEach(function (category) {
         var shouldBeChecked = false;
-
-        subcategory.forEach(function (subcat) {
-          if (subcat.category_name === category.name) {
+        subcategories.forEach(function (subcat) {
+          if (subcat.name === category.name) {
             shouldBeChecked = true;
           }
         });
-
         if (shouldBeChecked) {
           if (category.checked) counter++;
           category.checked = false;
         }
       });
 
-      if (counter !== subcategory.length) {
+      if (counter !== subcategories.length) {
         this.ngModel.forEach(function (category) {
-          subcategory.forEach(function (subcat) {
-            if (subcat.category_name === category.name) {
+          subcategories.forEach(function (subcat) {
+            if (subcat.name === category.name) {
               category.checked = true;
             }
           });
@@ -11017,7 +11015,7 @@ var CategoriesController = (function () {
           if (accumulator) {
             return true;
           }
-          if (category.category_name === ngCat.name && ngCat.checked) {
+          if (category.name === ngCat.name && ngCat.checked) {
             return true;
           }
           return false;

@@ -1,59 +1,31 @@
-<!-- Top form part -->
-<input
-  type="text"
-  class="form-control"
-  ng-model="catCtrl.searchQuery"
-  placeholder="Search from sources" ng-if="!catCtrl.isAllowedCategory(maincategory[0].maincategory_name)"/>
-
-<!-- Maincategories toplevel repeat. -->
-<div
-  ng-repeat="maincategory in catCtrl.categories | filter:catCtrl.searchQuery track by $index"
+<!-- Maincategories -->
+<div ng-repeat="maincategory in catCtrl.categories track by $index"
   ng-if="catCtrl.isAllowedCategory(maincategory[0].maincategory_name)">
-  <!-- insides of every maincategory -->
-
-  <!-- Every subcategory -->
-  <div
-    class="panel-group panel-group-lists">
-    <!--Subcategory tablist -->
-    <div
-      class="panel"
-      ng-repeat="subcategory in maincategory[1] | filter:catCtrl.searchQuery">
-
+  <div class="panel-group panel-group-lists">
+    <!-- Subcategories -->
+    <div class="panel" ng-repeat="subcategory in maincategory.sub_categories">
       <!-- Collapsible for every subcategory listing -->
       <div
         class="panel-heading">
         <h4 class="panel-title">
           <button
             type="button"
-            class="{{'btn btn-sm pull-right ' + (catCtrl.areAllChecked(subcategory[1]) ? 'btn-primary' : 'btn-default')}}"
-            ng-click="catCtrl.checkAll(subcategory[1])">
+            class="{{'btn btn-sm pull-right ' + (catCtrl.areAllChecked(subcategory.child_categories) ? 'btn-primary' : 'btn-default')}}"
+            ng-click="catCtrl.checkAll(subcategory.child_categories)">
             <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
           </button>
-          <a
-            data-toggle="collapse"
-            ng-bind="subcategory[0].subcategory_name"
-            href="{{ '#' + catCtrl.getIdFromCategory(subcategory[0].subcategory_name) }}">
+          <a data-toggle="collapse" ng-bind="subcategory.name" href="{{ '#' + catCtrl.getIdFromCategory(subcategory.name) }}">
           </a>
         </h4>
       </div>
 
-      <div
-        class="panel-collapse collapse"
-        id="{{ catCtrl.getIdFromCategory(subcategory[0].subcategory_name) }}">
-
+      <div class="panel-collapse collapse" id="{{ catCtrl.getIdFromCategory(subcategory.name) }}">
         <div class="panel-body">
-          <!-- actual categories finally -->
-          <div
-            ng-repeat="category in subcategory[1] | filter:catCtrl.searchQuery">
-            <input
-              type="checkbox"
-              id="checkbox-{{category.category_name}}"
-              ng-model="catCtrl.ngModel[category.id].checked"/>
-          
-            <label
-              for="checkbox-{{category.category_name}}"
-              ng-bind="category.category_name"></label>
-            - <a href="{{category.category_link}}" target="_blank">link</a>
+          <!-- Child categories -->
+          <div ng-repeat="category in subcategory.child_categories">
+            <input type="checkbox" id="checkbox-{{category.category_name}}" ng-model="catCtrl.ngModel[category.id].checked"/>
+            <label for="checkbox-{{category.name}}" ng-bind="category.name"></label>
+            - <a href="{{category.link}}" target="_blank">link</a>
           </div>
         </div>
       </div>

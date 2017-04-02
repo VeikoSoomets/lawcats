@@ -3,6 +3,8 @@
 import models
 from google.appengine.ext import ndb
 from base_handler import BaseHandler
+
+
 """ TODO: 
 1) separate 'instructions/guidelines' and 'streams' ... does the user need to search for all new listings or just selected
   * only a select few sources can have an option to search for all
@@ -25,7 +27,7 @@ class GenerateCategories(BaseHandler):
       dbp = models.MainCategories(maincategory_name=cat, id=cat)
       dbps_main.append(dbp)
     ndb.put_multi(dbps_main)
-    
+
     dbps_sub=[]
     sub_categories = [
     {'maincategory_name':'Eesti',
@@ -51,9 +53,9 @@ class GenerateCategories(BaseHandler):
         #dbp = models.Category(category_name=key1, category_link=value1,  subcategory_name=subcat_name)
         dbp = models.SubCategories(subcategory_name=subcat, id=subcat, parent=ndb.Key('MainCategories', maincat_name))
         dbps_sub.append(dbp)
-    
+
     ndb.put_multi(dbps_sub)
-    
+
     child_categories = [
     {'subcategory_name': 'Uudised ja foorumid',
       'categories': [
@@ -86,7 +88,7 @@ class GenerateCategories(BaseHandler):
          [u'Eur-Lex Parlamendi ja Nõukogu rss', 'http://eur-lex.europa.eu', 'eesti'],
          ['Eur-Lex eestikeelsete dokumentide otsing', 'http://eur-lex.europa.eu/advanced-search-form.html', 'eesti'],
      ]},
-    {'subcategory_name': 'Ministeeriumid', 
+    {'subcategory_name': 'Ministeeriumid',
       'categories': [
       ['Kaitseministeerium','http://www.kaitseministeerium.ee','eesti'],
       ['Finantsministeerium','http://www.fin.ee','eesti'],
@@ -109,7 +111,7 @@ class GenerateCategories(BaseHandler):
       ['Maa- ja ringkonnakohtu lahendid','https://www.riigiteataja.ee/kohtuteave/maa_ringkonna_kohtulahendid/otsi.html','eesti',0],
     ]},
     ]
-    
+
     count=0
     dbps=[]
     for a in child_categories:
@@ -122,7 +124,7 @@ class GenerateCategories(BaseHandler):
         cat_lang=cat[2]
         dbp = models.Category(category_name=cat_name, category_link=cat_link,  subcategory_name=subcat_name, language=cat_lang)
         dbps.append(dbp)
-    
+
     """count=0
     for a in child_categories:
       subcat_name=a['subcategory_name']
@@ -134,9 +136,8 @@ class GenerateCategories(BaseHandler):
 
             dbp = models.Category(category_name=key1, category_link=value1,  subcategory_name=subcat_name)
             dbps.append(dbp) """
-                        
+
     ndb.put_multi(dbps)
-            
+
     message="Operation successful, added %s categories, %s subcategories and %s maincategories!" % ( str(count), str(count_sub), str(count_main))
     self.render_template('sys.html',{'message_type':'success','message':message})
-    

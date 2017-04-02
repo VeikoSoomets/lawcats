@@ -10,7 +10,7 @@
 
 from admin_handlers import *
 from auto_handlers import *
-from handlers import WebSearch
+from handlers import WebSearch, Search
 from secrets import SESSION_KEY
 from categories import GenerateCategories
 
@@ -39,9 +39,12 @@ application = webapp2.WSGIApplication(
     [
         ('/app/terms', TermsHandler),
         ('/app/custom_cats', CustomCats),
-        ('/app/search', WebSearch),
-        ('/app/search/data', WebSearch),
+        #('/app/search', WebSearch),
+        #('/app/search/data', WebSearch),
         ('/app/request_source', RequestSource),
+        ('/sys/generate_data', GenerateData),
+        ('/sys/erase_data', EraseData),
+        ('/app/search', Search),
         ('/sys/create_categories', GenerateCategories),  # generate categories
         ('/sys/delete_categories', DeleteCategories),  # generate categories
         ('/app/admin', SiteAdmin),

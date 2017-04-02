@@ -23,10 +23,6 @@ new_path = os.path.split(file_dir)[0]
 sys.path.insert(0, new_path) # to get utils from root folder.. this might be obsolete
 
 categories = [\
-['Delfi','http://feeds2.feedburner.com/delfiuudised?format=xml'], \
-['Delfi','http://feeds.feedburner.com/delfimaailm?format=xml'], \
-['Delfi','http://feeds.feedburner.com/delfi110-112?format=xml'], \
-['Delfi','http://feeds2.feedburner.com/delfimajandus'], \
 ['Postimees','http://majandus24.postimees.ee/rss'], # majandus \
 ['Postimees','http://www.postimees.ee/rss/'],\
 ['Postimees','http://www.postimees.ee/rss/?r=128'], # kirmi \

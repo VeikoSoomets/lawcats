@@ -22,7 +22,8 @@ from webapp2_extras.i18n import gettext as _
 
 from parsers.custom_source import *
 import models
-import constants
+from constants import Abbreviations
+from services import CategoryService, SearchService
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -135,31 +136,26 @@ class WebSearch(BaseHandler):
   
   def post(self):
     email = self.get_user_email()
-    try:
-      json_data = json.loads(self.request.body)
-      query = json_data['queryword']
-      query_string = query.upper().encode('utf-8')
-      querywords = set(query.split(' '))
 
-      # This variables in for shorter law names like 'KarS' etc
-      lyhendid_in_query_string = [constants.Lyhendid.get_value_by_name(lyhend).decode('utf-8') for lyhend in
-                                  constants.Lyhendid.get_constant_names(uppercase=True) if lyhend in query_string.split(' ')]
-      # This variables in for longer law names like 'Karistusseadustik' etc
-      lyhendid_values_in_query_string = [constants.Lyhendid.get_name_by_value(lyhend).decode('utf-8') for lyhend in
-                                         constants.Lyhendid.get_constant_values(uppercase=True) if lyhend in query_string.split(' ')]
+    json_data = json.loads(self.request.body)
+    query = json_data['queryword']
+    query_string = query.upper().encode('utf-8')
+    querywords = set(query.split(' '))
 
-      if lyhendid_in_query_string:
-        querywords.update(lyhendid_in_query_string)
-      if lyhendid_values_in_query_string:
-        querywords.update(lyhendid_values_in_query_string)
+    # List for shorter law names like 'KarS' etc
+    lyhendid_in_query_string = [Abbreviations.get_value_by_name(lyhend).decode('utf-8') for lyhend in
+                                Abbreviations.get_constant_names(uppercase=True) if lyhend in query_string.split(' ')]
+    # List for longer law names like 'Karistusseadustik' etc
+    lyhendid_values_in_query_string = [Abbreviations.get_name_by_value(lyhend).decode('utf-8') for lyhend in
+                                       Abbreviations.get_constant_values(uppercase=True) if lyhend in query_string.split(' ')]
 
-      category = json_data['categories']
-      action = json_data['action']
+    if lyhendid_in_query_string:
+      querywords.update(lyhendid_in_query_string)
+    if lyhendid_values_in_query_string:
+      querywords.update(lyhendid_values_in_query_string)
 
-
-    except Exception, e:  # TODO! don't even need this here
-      logging.error(e)
-      self.response.out.write('{}')
+    category = json_data['categories']
+    action = json_data['action']
     
     search_results = []
     search_results1 = []
@@ -172,7 +168,6 @@ class WebSearch(BaseHandler):
       date_algus = '2014-01-01'
       logging.error(email)
       search_results1 = custom_search(querywords, category, date_algus,email)
-
 
     # There are different result set structures for different search types
     if search_results1:  # we don't want to add empty values to our final search list
@@ -199,6 +194,70 @@ class WebSearch(BaseHandler):
       logging.error('did not get data')
     
     self.response.out.write(data)
+
+
+class Search(BaseHandler):
+  """Searches from the web (from implemented sources) """
+
+  @BaseHandler.logged_in2
+  def get(self):
+    email = self.get_user_email()
+    if 'application/json' in self.request.headers['Accept']:
+      categories = CategoryService.get(email)
+      data = JSONEncoder().encode({'sources': categories})
+      self.response.out.write(data)
+    else:
+      categories = CategoryService.get(email)
+      self.render_template('search.html', {
+        'categories': categories,
+        'current_page': 'search'
+      })
+
+  @BaseHandler.logged_in2
+  def post(self):
+    email = self.get_user_email()
+
+    json_data = json.loads(self.request.body)
+    query = json_data['queryword']
+    categories = json_data['categories']
+    action = json_data['action']
+
+    query_words = SearchService.get_querywords(query)
+    # search_results1 = []
+    #
+    if action == 'search':
+      search_results = SearchService.search(query_words, categories, '2014-01-01')
+
+    # elif action == 'custom_search':
+    #   date_algus = '2014-01-01'
+    #   logging.error(email)
+    #   search_results1 = custom_search(querywords, category, date_algus, email)
+    #
+    # # There are different result set structures for different search types
+    # if search_results1:  # we don't want to add empty values to our final search list
+    #   for result in search_results1:
+    #     params = {'result_link': result[0],
+    #               'result_title': result[1],
+    #               'result_date': result[2],
+    #               'queryword': result[3],
+    #               'categories': result[4]
+    #               }
+    #     search_results.append(params)
+    #
+    # if search_results:
+    #   message = _('Got %s results') % str(len(search_results))
+    #   message_type = 'success'
+    # else:
+    #   message = _('Did not find any results - try changing your query or add more sources')
+    #   message_type = 'danger'
+    #
+    # resultsdict = {'search_results': search_results, 'message': message, 'message_type': message_type}
+    # data = JSONEncoder().encode(resultsdict)
+    #
+    # if not data:
+    #   logging.error('did not get data')
+    #
+    # self.response.out.write(data)
 
 
 def custom_search(querywords, category, date_algus, email=None):

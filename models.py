@@ -77,7 +77,6 @@ class CustomCategory(ndb.Model):
 
   @classmethod
   def create(cls, params):  # not used
-    # logging.error(params)
     # Create a new folder.
     prod = cls(
         user_id=params['user_id'],
@@ -106,35 +105,13 @@ class SourceRequest(ModelUtils, ndb.Model):
     return
 
 
-class Groupmember(ndb.Model):
-  user_email = ndb.StringProperty()
-  agreed = ndb.BooleanProperty()
-  monthly_searches = ndb.IntegerProperty()
-  # group_name = ndb.StringProperty()
-
-  @classmethod
-  def delete(cls, params):
-    pass
-
-
-class Usergroup(ndb.Model):
-  group_name = ndb.StringProperty()  # consider KeyProperty (since this needs to be unique)
-  group_master = ndb.StringProperty()
-  group_date_limit = ndb.DateProperty()  # date limit
-  q_word_limit = ndb.IntegerProperty()  # searches/qword limit
-  packet = ndb.IntegerProperty()
-  users = ndb.StructuredProperty(Groupmember, repeated=True)
-  #total_monthly_searches = ndb.ComputedProperty(
-  #  lambda self: sum(e.monthly_searches for e in self.users))  # sum individual monthly searches
-
-
 class MainCategories(ndb.Model):
   maincategory_name = ndb.StringProperty()
 
   @classmethod
   def create(cls, params):
     logging.error(params)
-    # Create a new folder. 
+    # Create a new folder.
     prod = cls(
       maincategory_name=params['maincategory_name']
     )
@@ -144,7 +121,7 @@ class MainCategories(ndb.Model):
   @classmethod
   def create(cls, params):  # not used
     logging.error(params)
-    # Create a new folder. 
+    # Create a new folder.
     prod = cls(
         maincategory_name=params['maincategory_name']
     )
@@ -154,13 +131,11 @@ class MainCategories(ndb.Model):
 
 class SubCategories(ndb.Model):
   subcategory_name = ndb.StringProperty()
-  # language = ndb.StringProperty()
-  # maincategory_key = ndb.KeyProperty(kind=MainCategories)
 
   @classmethod
   def create(cls, params):  # not used
     logging.error(params)
-    # Create a new folder. 
+    # Create a new folder.
     prod = cls(
         subcategory_name=params['subcategory_name'],
         language=params['language']
@@ -171,11 +146,10 @@ class SubCategories(ndb.Model):
 
 
 class Category(ndb.Model):
-  category_name = ndb.StringProperty()
-  category_link = ndb.StringProperty()
-  subcategory_name = ndb.StringProperty()
-  language = ndb.StringProperty()
-  # subcategory_key = ndb.KeyProperty(kind=SubCategories)
+  name = ndb.StringProperty()
+  link = ndb.StringProperty()
+  lang = ndb.StringProperty()
+  level = ndb.IntegerProperty()
 
   @classmethod
   def create(cls, params):  # not used
@@ -288,12 +262,6 @@ class UserEvents(ndb.Model):
     raise ndb.Return(prod)
 
 
-class FAQ(ndb.Model):
-  question = ndb.StringProperty()
-  answer = ndb.StringProperty()
-  answered = ndb.BooleanProperty()
-
-
 class UserResult(ndb.Model):
   user_id = ndb.StringProperty()
   result_key = ndb.KeyProperty(kind=Results)
@@ -319,42 +287,8 @@ class UserResult(ndb.Model):
         user_id=params['user_id'],
         result_key=params['result_key']
     )
-
-    # key = ndb.Key(cls, params['result_key'].id())
-    # ent = key.get()
-    # if ent is None:
     yield prod.put_async(use_memcache=False)
     raise ndb.Return(prod)
-
-
-class Lahendid(ndb.Model):  # not in use
-  """Model for Review data. Associated with a product entity via the product
-  key."""
-  doc_id = ndb.StringProperty()  # the id of the associated document
-  queryword = ndb.StringProperty()
-  date = ndb.DateProperty()
-  link = ndb.StringProperty()
-
-  @classmethod
-  def create(cls, params, doc_id):
-    """Create a new product entity from a subset of the given params dict
-    values, and the given doc_id."""
-    prod = cls(
-        id=params['pid'],
-        queryword=params['queryword'],
-        category=params['category'],
-        date=params['date'],
-        link=params['link'])
-    prod.put()
-    return prod
-
-  @classmethod
-  @ndb.tasklet
-  def get_comment_async(comment):
-    result = comment.to_dict()
-    queryword = yield comment.user.get_async()
-    result['user'] = {'name': user.name, 'photo': user.photo_path}
-    raise ndb.Return(result)
 
 
 class UTF8BlobProperty(ndb.BlobProperty):
@@ -369,25 +303,9 @@ class UTF8BlobProperty(ndb.BlobProperty):
         if not isinstance(text, basestring):
             raise TypeError("Expected a basestring, got %s" % text)
 
-    """def _to_base_type(self, text):
-        return text.encode("utf-8")
-
-    def _from_base_type(self, text):
-        return text.decode("utf-8") """
-
-
-class RiigiTeatajaMetainfo(ndb.Model):  # consider the value of having more metainfo about a law, and showing
-    title = ndb.StringProperty()
-    para_title = UTF8BlobProperty()
-
-
-class RiigiTeatajaMetainfo2(ndb.Model):  # consider the value of having more metainfo about a law, and showing
-    title = ndb.StringProperty()
-
 
 # Alternative to saving files to filesystem
 class RiigiTeatajaURLs(ndb.Model):
     title = ndb.StringProperty()
     link = ndb.StringProperty()
     text = UTF8BlobProperty()  # http://stackoverflow.com/questions/29148054/the-request-to-api-call-datastore-v3-put-was-too-large-using-objectify-datas
-

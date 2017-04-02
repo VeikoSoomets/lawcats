@@ -42,28 +42,26 @@ class CategoriesController {
    * Check all the sources under a given subcategory.
    * @param  {Array} subcategory All categories under subcategory.
    */
-  checkAll(subcategory) {
+  checkAll(subcategories) {
     let counter = 0;
     
     this.ngModel.forEach(category => {
       let shouldBeChecked = false;
-      
-      subcategory.forEach(subcat => {
-        if (subcat.category_name === category.name) {
+      subcategories.forEach(subcat => {
+        if (subcat.name === category.name) {
           shouldBeChecked = true;
         }
       });
-      
       if (shouldBeChecked) {
         if (category.checked) counter++;
         category.checked = false;
       }
     });
 
-    if (counter !== subcategory.length) {
+    if (counter !== subcategories.length) {
       this.ngModel.forEach(category => {
-        subcategory.forEach(subcat => {
-          if (subcat.category_name === category.name) {
+        subcategories.forEach(subcat => {
+          if (subcat.name === category.name) {
             category.checked = true;
           }
         });
@@ -85,7 +83,7 @@ class CategoriesController {
         if (accumulator) {
           return true;
         }
-        if (category.category_name === ngCat.name && ngCat.checked) {
+        if (category.name === ngCat.name && ngCat.checked) {
           return true;
         }
         return false;
