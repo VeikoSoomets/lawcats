@@ -122,7 +122,7 @@ class GenerateCategories(BaseHandler):
         cat_name=cat[0]
         cat_link=cat[1]
         cat_lang=cat[2]
-        dbp = models.Category(category_name=cat_name, category_link=cat_link,  subcategory_name=subcat_name, language=cat_lang)
+        dbp = models.Category(name=cat_name, link=cat_link, lang=cat_lang)
         dbps.append(dbp)
 
     """count=0

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import urllib2
 
 import bs4
@@ -106,6 +107,7 @@ class HTMLDownloaderService():
 
 class SearchService():
 
+
   @classmethod
   def get_querywords(cls, query):
     query = query.encode('utf-8')
@@ -121,8 +123,9 @@ class SearchService():
 
   @classmethod
   def search(cls, querywords, categories, date_start):
+    from parsers import rss_parse, ministry_parse, riigiteataja_parse, eurlex_parse
+    from parsers.bureau_parse import LawfirmParsers
     search_results = []
-
     search_list = [
       {'category': 'RSS allikad', 'results': rss_parse.parse_feed},
       {'category': 'ministeeriumid', 'results': ministry_parse.search_ministry},
