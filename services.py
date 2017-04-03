@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 import urllib2
 from operator import itemgetter
@@ -191,6 +192,7 @@ class LawService():
       logging.info("Finished generating metainfo for law %s" % law.title)
     ndb.put_multi(law_metainfo_models)
     return {'message_type': 'success', 'nr_of_generated_instances': len(law_metainfo_models)}
+
 
   @classmethod
   def erase_laws(cls):
