@@ -218,15 +218,17 @@ class Search(BaseHandler):
     email = self.get_user_email()
 
     json_data = json.loads(self.request.body)
-    query = json_data['queryword']
-    categories = json_data['categories']
+    query = json_data.get('queryword')
+    category = json_data.get('category')
     action = json_data['action']
 
+    if not query or len(query) == 0 or not category:
+      return
     query_words = SearchService.get_querywords(query)
     # search_results1 = []
     #
     if action == 'search':
-      search_results = SearchService.search(query_words, categories, '2014-01-01')
+      search_results = SearchService.search(query_words, category, '2014-01-01')
 
     # elif action == 'custom_search':
     #   date_algus = '2014-01-01'

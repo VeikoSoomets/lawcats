@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from parsers import riigiteataja_parse, rss_parse
+from parsers import riigiteataja_parse, rss_parse, ministry_parse, eurlex_parse
 
 
 class Constant():
@@ -401,37 +401,58 @@ class Categories(ConstantMixin):
     Constant('Eesti kohtulahendid', [
       Constant('Riigiteataja kohtuuudised', values={'link': 'https://www.riigiteataja.ee/oigusuudised/kohtuuudiste_nimekiri.html',
                                                     'lang': 'eesti', 'search_function': riigiteataja_parse.search_riigiteataja_uudised}),
-      Constant('Hiljutised Riigikohtu lahendid', values={'link': 'http://www.nc.ee', 'lang': 'eesti'}),
+      Constant('Hiljutised Riigikohtu lahendid', values={'link': 'http://www.nc.ee', 'lang': 'eesti',
+                                                         'search_function': rss_parse.parse_feed, 'rss_sources': ['http://www.nc.ee/rss/?lahendid=1&tyyp=K']}),
       Constant('Riigikohtu lahendite arhiiv', values={'link': 'http://www.nc.ee', 'lang': 'eesti'}),
-      Constant('Maa- ja ringkonnakohtu lahendid', values={'link': 'https://www.riigiteataja.ee/kohtuteave/maa_ringkonna_kohtulahendid/otsi.html', 'lang': 'eesti'})
+      Constant('Maa- ja ringkonnakohtu lahendid', values={'link': 'https://www.riigiteataja.ee/kohtuteave/maa_ringkonna_kohtulahendid/otsi.html', 'lang': 'eesti',
+                                                          'search_function': riigiteataja_parse.search_kohtu})
     ]),
     Constant('Ministeeriumid', [
-      Constant('Kaitseministeerium', values={'link': 'http://www.kaitseministeerium.ee', 'lang': 'eesti'}),
-      Constant('Finantsministeerium', values={'link': 'http://www.fin.ee', 'lang': 'eesti'}),
-      Constant('Justiitsministeerium', values={'link': 'http://www.just.ee', 'lang': 'eesti'}),
-      Constant('Keskkonnaministeerium', values={'link': 'http://www.envir.ee', 'lang': 'eesti'}),
-      Constant('Kultuuriministeerium', values={'link': 'http://www.kul.ee', 'lang': 'eesti'}),
-      Constant('Põllumajandusministeerium', values={'link': 'http://www.agri.ee', 'lang': 'eesti'}),
-      Constant('Siseministeerium', values={'link': 'https://www.siseministeerium.ee', 'lang': 'eesti'}),
-      Constant('Sotsiaalministeerium', values={'link': 'http://www.sm.ee', 'lang': 'eesti'}),
-      Constant('Välisministeerium', values={'link': 'http://vm.ee', 'lang': 'eesti'}),
-      Constant('Riigikogu pressiteated', values={'link': 'http://www.riigikogu.ee/index.php?id=31549', 'lang': 'eesti'})
+      Constant('Kaitseministeerium', values={'link': 'http://www.kaitseministeerium.ee', 'lang': 'eesti',
+                                             'search_function': rss_parse.parse_feed, 'rss_sources': ['http://www.kaitseministeerium.ee/et/rss-uudiste-voog']}),
+      Constant('Finantsministeerium', values={'link': 'http://www.fin.ee', 'lang': 'eesti',
+                                              'search_function': rss_parse.parse_feed, 'rss_sources': ['http://www.fin.ee/rss_uudised']}),
+      Constant('Justiitsministeerium', values={'link': 'http://www.just.ee', 'lang': 'eesti',
+                                               'search_function': ministry_parse.search_ministry}),
+      Constant('Keskkonnaministeerium', values={'link': 'http://www.envir.ee', 'lang': 'eesti',
+                                                'search_function': ministry_parse.search_ministry}),
+      Constant('Kultuuriministeerium', values={'link': 'http://www.kul.ee', 'lang': 'eesti',
+                                               'search_function': ministry_parse.search_ministry}),
+      Constant('Põllumajandusministeerium', values={'link': 'http://www.agri.ee', 'lang': 'eesti',
+                                                    'search_function': ministry_parse.search_ministry}),
+      Constant('Siseministeerium', values={'link': 'https://www.siseministeerium.ee', 'lang': 'eesti',
+                                           'search_function': ministry_parse.search_ministry}),
+      Constant('Sotsiaalministeerium', values={'link': 'http://www.sm.ee', 'lang': 'eesti',
+                                               'search_function': ministry_parse.search_ministry}),
+      Constant('Välisministeerium', values={'link': 'http://vm.ee', 'lang': 'eesti',
+                                            'search_function': ministry_parse.search_ministry}),
+      Constant('Riigikogu pressiteated', values={'link': 'http://www.riigikogu.ee/index.php?id=31549', 'lang': 'eesti',
+                                                 'search_function': rss_parse.parse_feed, 'rss_sources': ['http://feeds.feedburner.com/RiigikoguPressiteated?format=xml']})
     ]),
     Constant('Õigusaktid ja eelnõud', [
-      Constant('Kooskõlastamiseks esitatud eelnõud', values={'link': 'http://eelnoud.valitsus.ee/main#SKixD73F', 'lang': 'eesti'}),
-      Constant('Valitsusele esitatud eelnõud', values={'link': 'http://eelnoud.valitsus.ee/main#SKixD73F', 'lang': 'eesti'}),
+      Constant('Kooskõlastamiseks esitatud eelnõud', values={'link': 'http://eelnoud.valitsus.ee/main#SKixD73F', 'lang': 'eesti',
+                                                             'search_function': rss_parse.parse_feed, 'rss_sources': ['http://eelnoud.valitsus.ee/main/mount/rss/home/review.rss']}),
+      Constant('Valitsusele esitatud eelnõud', values={'link': 'http://eelnoud.valitsus.ee/main#SKixD73F', 'lang': 'eesti',
+                                                       'search_function': rss_parse.parse_feed, 'rss_sources': ['http://eelnoud.valitsus.ee/main/mount/rss/home/submission.rss']}),
       Constant('Riigiteataja ilmumas/ilmunud seadused', values={'link': 'https://www.riigiteataja.ee/', 'lang': 'eesti'}),
-      Constant('Õigusaktide otsing', values={'link': 'https://www.riigiteataja.ee/', 'lang': 'eesti'}),
-      Constant('Riigiteataja seadused', values={'link': 'https://www.riigiteataja.ee/', 'lang': 'eesti'})
+      Constant('Õigusaktide otsing', values={'link': 'https://www.riigiteataja.ee/', 'lang': 'eesti',
+                                             'search_function': riigiteataja_parse.search_oigusaktid}),
+      Constant('Riigiteataja seadused', values={'link': 'https://www.riigiteataja.ee/', 'lang': 'eesti',
+                                                'search_function': riigiteataja_parse.search_seadused})
     ]),
     Constant('Euroopa õigus', [
-      Constant('Eur-Lex kohtuasjade rss', values={'link': 'http://eur-lex.europa.eu', 'lang': 'eesti'}),
-      Constant('Eur-Lex Komisjoni ettepanekute rss', values={'link': 'http://eur-lex.europa.eu', 'lang': 'eesti'}),
-      Constant('Eur-Lex Parlamendi ja Nõukogu rss', values={'link': 'http://eur-lex.europa.eu', 'lang': 'eesti'}),
-      Constant('Eur-Lex eestikeelsete dokumentide otsing', values={'link': 'http://eur-lex.europa.eu/advanced-search-form.html', 'lang': 'eesti'})
+      Constant('Eur-Lex kohtuasjade rss', values={'link': 'http://eur-lex.europa.eu', 'lang': 'eesti',
+                                                  'search_function': rss_parse.parse_feed, 'rss_sources': ['http://eur-lex.europa.eu/ET/display-feed.rss?rssId=163']}), # NB! siin on võimalik keelt muuta\
+      Constant('Eur-Lex Komisjoni ettepanekute rss', values={'link': 'http://eur-lex.europa.eu', 'lang': 'eesti',
+                                                             'search_function': rss_parse.parse_feed, 'rss_sources': ['http://eur-lex.europa.eu/ET/display-feed.rss?rssId=161']}),
+      Constant('Eur-Lex Parlamendi ja Nõukogu rss', values={'link': 'http://eur-lex.europa.eu', 'lang': 'eesti',
+                                                            'search_function': rss_parse.parse_feed, 'rss_sources': ['http://eur-lex.europa.eu/ET/display-feed.rss?rssId=162']}),
+      Constant('Eur-Lex eestikeelsete dokumentide otsing', values={'link': 'http://eur-lex.europa.eu/advanced-search-form.html', 'lang': 'eesti',
+                                                                   'search_function': eurlex_parse.search_eurlex})
     ]),
     Constant('Uudised ja foorumid', [
-      Constant('ERR', values={'link': 'http://www.err.ee', 'lang': 'eesti'}),
+      Constant('ERR', values={'link': 'http://www.err.ee', 'lang': 'eesti',
+                              'search_function': rss_parse.parse_feed, 'rss_sources': ['http://www.err.ee/rss']}),
       Constant('Delfi', values={'link': 'http://www.delfi.ee', 'lang': 'eesti',
                                 'search_function': rss_parse.parse_feed, 'rss_sources': [
                                   'http://feeds2.feedburner.com/delfiuudised?format=xml',
@@ -445,18 +466,26 @@ class Categories(ConstantMixin):
                                       'http://www.postimees.ee/rss/',
                                       'http://www.postimees.ee/rss/?r=128'
         ]}),
-      Constant('Õhtuleht', values={'link': 'http://www.ohtuleht.ee', 'lang': 'eesti'}),
-      Constant('Päevaleht', values={'link': 'http://epl.delfi.ee/', 'lang': 'eesti'}),
-      Constant('Eesti Ekspress', values={'link': 'http://ekspress.delfi.ee/', 'lang': 'eesti'}),
-      Constant('Maaleht', values={'link': 'http://maaleht.delfi.ee/', 'lang': 'eesti'}),
-      Constant('Äripäev', values={'link': 'http://www.aripaev.ee', 'lang': 'eesti'}),
-      Constant('raamatupidaja.ee', values={'link': 'http://www.raamatupidaja.ee/', 'lang': 'eesti'}),
-      Constant('juura.ee', values={'link': 'http://juura.ee', 'lang': 'eesti'}),
+      Constant('Õhtuleht', values={'link': 'http://www.ohtuleht.ee', 'lang': 'eesti',
+                                   'search_function': rss_parse.parse_feed, 'rss_sources': ['http://www.ohtuleht.ee/rss']}),
+      Constant('Päevaleht', values={'link': 'http://epl.delfi.ee/', 'lang': 'eesti',
+                                    'search_function': rss_parse.parse_feed, 'rss_sources': ['http://feeds.feedburner.com/eestipaevaleht?format=xml']}),
+      Constant('Eesti Ekspress', values={'link': 'http://ekspress.delfi.ee/', 'lang': 'eesti',
+                                         'search_function': rss_parse.parse_feed, 'rss_sources': ['http://feeds.feedburner.com/EestiEkspressFeed?format=xml']}),
+      Constant('Maaleht', values={'link': 'http://maaleht.delfi.ee/', 'lang': 'eesti',
+                                  'search_function': rss_parse.parse_feed, 'rss_sources': ['http://feeds.feedburner.com/maaleht?format=xml']}),
+      Constant('Äripäev', values={'link': 'http://www.aripaev.ee', 'lang': 'eesti',
+                                  'search_function': rss_parse.parse_feed, 'rss_sources': ['http://www.aripaev.ee/rss']}),
+      Constant('raamatupidaja.ee', values={'link': 'http://www.raamatupidaja.ee/', 'lang': 'eesti',
+                                           'search_function': rss_parse.parse_feed, 'rss_sources': ['http://raamatupidaja.ee/RSS.aspx']}),
+      Constant('juura.ee', values={'link': 'http://juura.ee', 'lang': 'eesti',
+                                   'search_function': rss_parse.parse_feed, 'rss_sources': ['http://juura.ee/gw.php/news/aggregate/index/format/xml']}),
       Constant('Riigiteataja seadusuudised', values={'link': 'https://www.riigiteataja.ee/oigusuudised/seadusteUudisteNimekiri.html',
                                                      'lang': 'eesti', 'search_function': riigiteataja_parse.search_riigiteataja_uudised}),
       Constant('Riigiteataja õigusuudised', values={'link': 'https://www.riigiteataja.ee/oigusuudised/muuOigusuudisteNimekiri.html',
                                                     'lang': 'eesti', 'search_function': riigiteataja_parse.search_riigiteataja_uudised}),
-      Constant('Riigikohtu uudised', values={'link': 'http://www.nc.ee', 'lang': 'eesti'})
+      Constant('Riigikohtu uudised', values={'link': 'http://www.nc.ee', 'lang': 'eesti',
+                                             'search_function': rss_parse.parse_feed, 'rss_sources': ['http://www.nc.ee/rss/?uudised=1']})
     ])
   ])
   ARHIIVID = Constant('Arhiivid')

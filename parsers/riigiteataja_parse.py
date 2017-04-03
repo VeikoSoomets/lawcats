@@ -8,6 +8,10 @@ import urllib2
 import logging
 import urllib
 
+from operator import itemgetter
+import models
+from google.appengine.api import search
+from google.appengine.api import memcache
 
 from google.appengine.api import urlfetch
 urlfetch.set_default_fetch_deadline(45)
@@ -32,14 +36,7 @@ categories_seadused = {
 
 
 def search_seadused(querywords, category, date_algus='2010-01-01'):
-    date_algus = datetime_object(date_algus)
-    results = []
-    #for query in querywords:
-    querywords = ' '.join(querywords)
-    result = parse_results_seadused(querywords, category, date_algus)
-    if result:
-      results.extend(result)
-
+    results = parse_results_seadused2(querywords, category, date_algus)
     return results
 
 
@@ -122,12 +119,6 @@ def search_riigiteataja_uudised(querywords,category,date_algus='2010-01-01'):
     return results
 
 
-from operator import itemgetter
-import models
-from google.appengine.api import search
-from google.appengine.api import memcache
-
-
 def parse_results_seadused(query=None, category=None, date_algus=None):
   #logging.error(repr(query))
   #logging.error('-----------------')
@@ -150,7 +141,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
   laws_titles = memcache.get('law_titles')
   if not laws_titles:
-    laws_titles = models.RiigiTeatajaMetainfo2.query().fetch()
+    laws_titles = models.RiigiTeatajaURLs.query().fetch(projection=[models.RiigiTeatajaURLs.title])
     memcache.set('law_titles', laws_titles)  # no expiration
 
   for law in laws_titles:
@@ -236,48 +227,6 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
                                     result.field('law_title').value, rank])
 
 
-      """if len(final_results) < 2:
-        for single_query in a:
-            law_title = search_law_name
-
-            single_query = single_query.decode('utf8')
-            query_string = 'para_title: ~"%s" OR para_token: %s' % (single_query, single_query)
-            logging.error(repr(query_string))
-            #logging.error(repr(query_string))
-            results = index.search(query_string)
-            for result in results:
-              rank = 0  # TODO! ranking function
-              try:
-                # rank results
-                rank = 0
-                if str(single_query) in result.field('para_title').value.replace(' ','').lower():
-                  #logging.error(5)
-                  rank += 1
-                if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
-                  #logging.error(6)
-                  rank += 1
-                if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
-                  #logging.error(7)
-                  rank += 1
-                if single_query.lower() in result.field('content').value.replace(' ','').lower():
-                  #logging.error(8)
-                  rank += 3
-                if single_query.lower() in result.field('para_token').value.replace(' ','').lower():
-                  #logging.error(9)
-                  rank += 1
-                if any(x in result.field('para_token').lower().split(',') for x in single_query.lower()):
-                  #logging.error(10)
-                  rank += 1
-
-              except Exception:
-                pass
-              if rank > 0:
-                final_results.append([result.field('law_link').value,
-                                            result.field('content').value,
-                                            result.field('para_title').value,
-                                            result.field('law_title').value,
-                                            rank, rank]) """
-
       if len(final_results) < 2:  # didn't get search_para
         logging.error('we have law, checking stuff now')
         search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
@@ -329,6 +278,114 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     final_results = sorted(final_results, key=itemgetter(5), reverse=True)
     return final_results
 
+def parse_results_seadused2(query_words, category=None, date_algus=None):
+  search_law_names = []
+  query_words_joined = ' '.join(query_words)
+  query_words = [query_word.upper() for query_word in query_words]
+  paragraph_words =  ['paragraaf','paragrahv','§','para']
+  get_digit = lambda string: filter(str.isdigit, string)
+  paragraph_number = None
+
+  # if any of the paragraph words exists in any of the query words or digit exists in any of the query words then lets gets the paragraph number
+  if any(paragraph_word in query_words_joined for paragraph_word in paragraph_words) or get_digit(query_words_joined):
+    paragraph_number = get_digit(query_words_joined)
+
+  laws_titles = memcache.get('law_titles')
+  if not laws_titles:
+    laws_query = models.RiigiTeatajaURLs.query().fetch(projection=[models.RiigiTeatajaURLs.title])
+    laws_titles = [law.title for law in laws_query]
+    memcache.set('law_titles', laws_titles)
+
+  for law_title in laws_titles:
+    law_title = law_title.encode('utf-8')
+    for query_word in query_words:
+      if query_word in law_title.upper():
+        search_law_names.append(law_title)
+
+  # if len(search_law_names) > 0:
+  #   final_results = []
+  #   for search_law_name in search_law_names:
+  #     index = search.Index(name=search_law_name.encode('ascii', 'ignore').replace(' ','')[:76])  # index name is printable ASCII
+  #
+  #     if search_para_nbr and search_para_nbr != 'missing':
+  #       query_string = 'para_nbr=%s' % search_para_nbr
+  #       #logging.error(query_string)
+  #       results = index.search(query_string)
+  #       for result in results:
+  #         rank = 0
+  #         for single_query in a:
+  #           try:
+  #             if int(result.field('para_nbr').value) == int(search_para_nbr):
+  #               rank += 2
+  #             if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
+  #               rank += 3
+  #             if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
+  #               rank += 2
+  #             if single_query.lower() in result.field('law_title').value.lower().split():
+  #               rank += 3
+  #             if single_query.lower() in result.field('content').value.replace(' ','').lower():
+  #               rank += 1
+  #           except Exception:
+  #             pass
+  #
+  #         if rank > 0:
+  #             final_results.append([result.field('law_link').value,
+  #                                   result.field('content').value,
+  #                                   result.field('para_title').value,
+  #                                   result.field('law_title').value,
+  #                                   result.field('law_title').value, rank])
+  #
+  # #
+  #     if len(final_results) < 2:  # didn't get search_para
+  #       logging.error('we have law, checking stuff now')
+  #       search_para_nbr = 'missing' if not search_para_nbr else search_para_nbr
+  #       for single_query in a:
+  #         s = single_query
+  #         if search_law_name.encode('utf8').lower() != s:
+  #           logging.error(repr(search_law_name.lower()))
+  #           logging.error(repr(s))
+  #           query_string = 'content: ~"%s" OR law_title: ~"%s" OR para_title: ~"%s"' % (s, s, s)
+  #           logging.error(repr(query_string))
+  #           results = index.search(query_string)
+  #           if results:
+  #             for result in results:
+  #               try:
+  #                 # rank results
+  #                 rank = 0
+  #                 for single_query in a:
+  #                     if str(search_para_nbr) in result.field('para_title').value.replace(' ','').lower():
+  #                       #logging.error(5)
+  #                       rank += 1
+  #                     if single_query.lower() in result.field('law_title').value.replace(' ','').lower():
+  #                       #logging.error(6)
+  #                       rank += 1
+  #                     if single_query.lower() in result.field('para_title').value.replace(' ','').lower():
+  #                       #logging.error(7)
+  #                       rank += 1
+  #                     if single_query.lower() in result.field('content').value.replace(' ','').lower():
+  #                       #logging.error(8)
+  #                       rank += 3
+  #
+  #               except Exception:
+  #                 pass
+  #
+  #               if rank > 0:
+  #                   final_results.append([result.field('law_link').value,
+  #                                         result.field('content').value,
+  #                                         result.field('para_title').value,
+  #                                         result.field('law_title').value,
+  #                                         result.field('law_title').value, rank])
+  #
+  #
+  #
+  #
+  #     """except Exception, e:
+  #       logging.error(e)
+  #       pass"""
+  #
+  #   logging.error("total results: %d" % len(final_results))
+  #   final_results = sorted(final_results, key=itemgetter(5), reverse=True)
+  #  return final_results
 
 def parse_riigiteataja_uudised(url, query=None, category=None, date_algus=None):
     #url_base="https://www.riigiteataja.ee/oigusuudised/"

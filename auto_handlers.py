@@ -10,7 +10,7 @@ import sys
 
 import functools
 
-from services import CategoryService, HTMLDownloaderService
+from services import CategoryService, LawService
 
 sys.path.insert(0, 'libs')
 
@@ -382,18 +382,51 @@ class DataIndexer(BaseHandler):
 #deferred.defer(DataGatherer.get)
 
 
-class GenerateData(BaseHandler):
+class GenerateCategories(BaseHandler):
   @BaseHandler.logged_in2
   def get(self):
     categories_count = CategoryService.generate().get('nr_of_generated_instances')
-    laws_count = HTMLDownloaderService.riigiteataja_generate().get('nr_of_generated_instances')
-    laws_count = 0
+    self.render_template('sys.html',
+                         {'message_type': 'success', 'message': 'Data generated. Added %s categories' % (categories_count)})
+
+
+class GenerateLaws(BaseHandler):
+  @BaseHandler.logged_in2
+  def get(self):
+    #laws_count = LawService.generate_laws().get('nr_of_generated_instances')
+    LawService.generate_metainfo()
+    self.render_template('sys.html', {'message_type': 'success', 'message': 'Data generated. Added %s laws' % (2)})
+
+
+class GenerateAllData(BaseHandler):
+  @BaseHandler.logged_in2
+  def get(self):
+    categories_count = CategoryService.generate().get('nr_of_generated_instances')
+    laws_count = LawService.generate_laws().get('nr_of_generated_instances')
+    LawService.generate_metainfo().get('nr_of_generated_instances')
     self.render_template('sys.html', {'message_type': 'success', 'message': 'Data generated. Added %s categories, %s laws'
                                                                             % (categories_count, laws_count)})
 
-class EraseData(BaseHandler):
+
+class EraseCategories(BaseHandler):
   @BaseHandler.logged_in2
   def get(self):
     CategoryService.erase()
-    HTMLDownloaderService.erase()
+    self.render_template('sys.html', {'message_type': 'success', 'message': 'Data erased'})
+
+
+class EraseLaws(BaseHandler):
+  @BaseHandler.logged_in2
+  def get(self):
+    LawService.erase_laws()
+    LawService.erase_metainfo()
+    self.render_template('sys.html', {'message_type': 'success', 'message': 'Data erased'})
+
+
+class EraseAllData(BaseHandler):
+  @BaseHandler.logged_in2
+  def get(self):
+    CategoryService.erase()
+    LawService.erase_laws()
+    LawService.erase_metainfo()
     self.render_template('sys.html', {'message_type': 'success', 'message': 'Data erased'})

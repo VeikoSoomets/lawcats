@@ -155,7 +155,7 @@ class SearchController {
           queryword: this.querywords,
           date_algus: queryDate,
           // TODO: formatDate() requires date, but sometimes we are not giving date.
-          categories: source.name
+          category: source.name
         }).success(response => {
           this.unResolvedPromises--;
           Array.prototype.push.apply(this.results,response.search_results);

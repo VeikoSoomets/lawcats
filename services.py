@@ -1,7 +1,10 @@
+import logging
 import urllib2
+from operator import itemgetter
 
 import bs4
-from google.appengine.api import memcache
+import functools
+from google.appengine.api import memcache, urlfetch
 
 import models
 from google.appengine.ext import ndb
@@ -12,28 +15,28 @@ class CategoryService():
 
   @classmethod
   def generate(cls):
-    dbps = []
+    category_models = []
 
-    def create_model_instances(dbps, category, level, parent_category_key=None, link=None, lang=None):
+    def create_category_instances(category, level, parent_category_key=None, link=None, lang=None):
       category_id = ndb.Model.allocate_ids(size=1, parent=parent_category_key)[0]
       category_key = ndb.Key('Category', category_id, parent=parent_category_key)
-      dbp = models.Category(name=category.name, level=level, key=category_key, link=link, lang=lang)
-      dbps.append(dbp)
+      category_model = models.Category(name=category.name, level=level, key=category_key, link=link, lang=lang)
+      category_models.append(category_model)
       if category.child_constants:
         level += 1
         for sub_category in category.child_constants:
-          create_model_instances(dbps, sub_category, level, category_key, link=sub_category.values.get('link'),
+          create_category_instances(sub_category, level, category_key, link=sub_category.values.get('link'),
                                  lang=sub_category.values.get('lang'))
 
     for main_category in Categories.get_constants():
-      create_model_instances(dbps, main_category, 1)
-    ndb.put_multi(dbps)
-    return {'message_type': 'success', 'nr_of_generated_instances': len(dbps)}
+      create_category_instances(main_category, 1)
+    ndb.put_multi(category_models)
+    return {'message_type': 'success', 'nr_of_generated_instances': len(category_models)}
 
   @classmethod
   def get(cls, email=None):
-    cat_mem_name = email.encode('ascii', 'ignore').replace('.', '').replace('@', '')
-    categories = memcache.get(cat_mem_name + 'Categories')
+    catergory_memcache_name = email.encode('ascii', 'ignore').replace('.', '').replace('@', '')
+    categories = memcache.get(catergory_memcache_name + 'Categories')
     if not categories:
       categories = []
       main_categories = models.Category.query(models.Category.level == 1).fetch()
@@ -59,49 +62,13 @@ class CategoryService():
           custom_categories.append({'name': 'Custom', 'sub_categories': [{'name': 'Custom Sources',
                                                                           'child_categories': custom_child_categories}]})
           categories.extend(custom_categories)
-      memcache.set(cat_mem_name + 'Categories', categories)
+      memcache.set(catergory_memcache_name + 'Categories', categories)
     return categories
 
   @classmethod
   def erase(cls):
     categories = models.Category.query().fetch(keys_only=True)
     ndb.delete_multi(categories)
-
-
-class HTMLDownloaderService():
-
-  @classmethod
-  def riigiteataja_generate(cls):
-    dbps = []
-
-    def get_urls():
-      urllist = []
-      src = urllib2.urlopen('https://www.riigiteataja.ee/lyhendid.html', timeout=60)
-      soup = bs4.BeautifulSoup(src, "html5lib")
-      soup = soup.find('tbody')
-      for result in soup.findAll('tr'):
-        law = result.findAll('td')[0]
-        link = law.findNext('a', href=True).get('href')
-        title = law.findNext('a', href=True).get_text()
-        url = "https://www.riigiteataja.ee/%s?leiaKehtiv" % link
-        urllist.append({'title': title, 'url': url})
-      src.close()
-      return urllist
-
-    urls = get_urls()
-    for url in urls:
-      src = urllib2.urlopen(url['url'], timeout=10)
-      soup = bs4.BeautifulSoup(src, "html5lib")
-      law = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
-      dbp = models.RiigiTeatajaURLs(title=url['title'], link=url['url'], text=law)
-      dbps.append(dbp)
-    ndb.put_multi(dbps)
-    return {'message_type': 'success', 'nr_of_generated_instances': len(dbps)}
-
-  @classmethod
-  def erase(cls):
-    riigiTeatajaURLs = models.RiigiTeatajaURLs.query().fetch(keys_only=True)
-    ndb.delete_multi(riigiTeatajaURLs)
 
 
 class SearchService():
@@ -120,82 +87,117 @@ class SearchService():
     return querywords
 
   @classmethod
-  def search(cls, querywords, categories, date_start):
+  def search(cls, query_words, search_category, date_start):
     search_results = []
+    search_category = search_category.encode('utf-8')
 
-    search_list = [
-      {'category': 'RSS allikad', 'results': rss_parse.parse_feed},
-      {'category': 'ministeeriumid', 'results': ministry_parse.search_ministry},
-      {'category': 'Riigiteataja seadused', 'results': riigiteataja_parse.search_seadused},
-      {'category': u'Õigusaktide otsing', 'results': riigiteataja_parse.search_oigusaktid},
-      {'category': 'Maa- ja ringkonnakohtu lahendid', 'results': riigiteataja_parse.search_kohtu},
-      # to avoid duplicates, add space to source
+    for main_category in Categories.EESTI.child_constants:
+      for category in main_category.child_constants:
+        if search_category == category.name:
+          try:
+            search_results.extend(category.values.get('search_function')(query_words, category, date_start))
+          except Exception, e:
+            logging.error("Search from category %s failed with error % " (category.name, e.message))
+            pass
 
-      {'category': 'Eur-Lex eestikeelsete dokumentide otsing', 'results': eurlex_parse.search_eurlex},
+    search_results = [list(x) for x in set(tuple(x) for x in search_results)]
 
-      # advokaadibürood (need, mida mainitud pole, on RSS allikate all)
-      {'category': u'Advokaadi- ja õigusbürood', 'results': LawfirmParsers.search_bureau},  # map async to tasklet
+    # TODO! Sort results by date
 
-    ]
-
-    # for source in search_list:
-    #
-    #   # Otsime ministeeriumitest (mis ei ole RSS)
-    #   if source['category'] == 'ministeeriumid':
-    #     if category in [x[0] for x in ministry_parse.categories]:  # mitu allikat
-    #       try:
-    #         search_results.extend(source['results'](querywords, category, date_algus))
-    #       except Exception, e:
-    #         logging.error('failed with ministeeriumid')
-    #         logging.error(e)
-    #         pass
-    #
-    #   # Otsime riigi ja/või KOV õigusaktidest
-    #   if source['category'] == 'oigusaktid':
-    #     if category in [u'Kehtivate KOV õigusaktide otsing', u'Õigusaktide otsing']:  # mitu allikat
-    #       try:
-    #         search_results.extend(source['results'](querywords, category, date_algus))
-    #       except Exception, e:
-    #         logging.error('failed with FI oigusaktid')
-    #         logging.error(e)
-    #         pass
-    #
-    #   # Otsime riigiteataja uudistest ( seadusuudised; kohtuuudised; õigusuudised )
-    #   if source['category'] == 'Riigiteataja uudised':
-    #     if category in riigiteataja_parse.categories_uudised:  # mitu allikat
-    #       try:
-    #         search_results.extend(source['results'](querywords, category, date_algus))
-    #       except Exception, e:
-    #         logging.error('failed with riigiteataja uudised')
-    #         logging.error(e)
-    #         pass
-    #
-    #   # Otsime RSS allikatest
-    #   if source['category'] == 'RSS allikad':
-    #     # catlist = [key for key, value in rss_parse.categories2] rss_parse.categories2
-    #     if category in [x[0] for x in rss_parse.categories]:  # mitu allikat
-    #       search_results.extend(source['results'](querywords, category, date_algus))
-    #
-    #   # Everything else
-    #   if category == source['category']:
-    #     search_results.extend(source['results'](querywords, category, date_algus))
-    #     try:
-    #       search_results.extend(source['results'](querywords, category, date_algus))
-    #     except Exception, e:
-    #       logging.error('failed with singular category search')
-    #       logging.error(e)
-    #       pass
-    #
-    # # Make results unique (if there are overlaps from multiple sources, eg. "Õigusaktide otsing" source
-    # search_results = [list(x) for x in set(tuple(x) for x in search_results)]
-    #
-    # # TODO! Sort results by date
-    # # search_results = search_results.sort(key=lambda r: r[2])
-    #
-    # # Sort results by rank (if there is rank)
-    # try:
-    #   search_results = sorted(search_results, key=itemgetter(5), reverse=True)  # TODO! fix
-    # except Exception:
-    #   pass
+    # Sort results by rank (if there is rank)
+    try:
+      search_results = sorted(search_results, key=itemgetter(5), reverse=True)  # TODO! fix
+    except Exception:
+      pass
 
     return search_results  # link, title, date, qword, category, rank
+
+
+class LawService():
+  RIIGITEATAJA_SRC_URL = 'https://www.riigiteataja.ee/lyhendid.html'
+  RIIGITEATAJA_LAW_BASE_URL = 'https://www.riigiteataja.ee/%s?leiaKehtiv'
+
+  @classmethod
+  def generate_laws(cls):
+    law_models = []
+    rpcs = []
+
+    def get_urls():
+      urllist = []
+      src = urllib2.urlopen(cls.RIIGITEATAJA_SRC_URL, timeout=60)
+      soup = bs4.BeautifulSoup(src, "html5lib")
+      soup = soup.find('tbody')
+      for result in soup.findAll('tr'):
+        law = result.findAll('td')[0]
+        link = law.findNext('a', href=True).get('href')
+        title = law.findNext('a', href=True).get_text()
+        url = cls.RIIGITEATAJA_LAW_BASE_URL % link
+        urllist.append({'title': title, 'url': url})
+      src.close()
+      return urllist
+
+    def handle_result(rpc, url):
+      logging.info("Retrieved result for URL %s with title %s" % (url['url'], url['title']))
+      result = rpc.get_result()
+      soup = bs4.BeautifulSoup(result.content, "html5lib")
+      law = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
+      law_model = models.Law(title=url['title'], link=url['url'], text=law)
+      law_models.append(law_model)
+      logging.info("Persisted law to database for URL %s with title %s" % (url['url'], url['title']))
+
+    urls = get_urls()
+    for url in urls:
+      logging.info("Requesting source from URL %s with title %s" % (url['url'], url['title']))
+      rpc = urlfetch.create_rpc()
+      rpc.callback = functools.partial(handle_result, rpc, url)
+      urlfetch.make_fetch_call(rpc, url['url'])
+      rpcs.append(rpc)
+
+    for rpc in rpcs:
+      rpc.wait()
+
+    ndb.put_multi(law_models)
+    return {'message_type': 'success', 'nr_of_generated_instances': len(law_models)}
+
+  @classmethod
+  def generate_metainfo(cls):
+    laws = models.Law.query().fetch()
+    law_metainfo_models = []
+    for law in laws:
+      articles = bs4.BeautifulSoup(law.text, "html5lib", from_encoding='utf8')
+      paragraph_elements = articles.find_all('p')
+      logging.info("Generating metainfo for law %s" % law.title)
+      for paragraph_element in paragraph_elements:
+        link_element = paragraph_element.find_next('a')
+        if not link_element:
+          continue
+        paragraph_link = link_element.get('name')
+        if paragraph_link:
+          paragraph_link = law.link + '#' + paragraph_link
+        else:
+          continue
+        if paragraph_element.find_previous_sibling('h3') and paragraph_element.find_previous_sibling('h3').find_next('strong'):
+          paragraph = paragraph_element.find_previous_sibling('h3').find_next('strong').contents[0]
+          paragraph_title = paragraph_element.find_previous_sibling('h3').get_text()
+          paragraph_number = paragraph.split()[1].replace('.', '').replace(' ', '')
+        else:
+          continue
+
+        paragraph_content = paragraph_element.get_text().encode('utf-8')
+        law_metainfo_model = models.LawMetaInfo(paragraph_number=int(paragraph_number), paragraph_link=paragraph_link,
+                                                paragraph_title=paragraph_title, paragraph_content=paragraph_content,
+                                                parent=law.key)
+        law_metainfo_models.append(law_metainfo_model)
+      logging.info("Finished generating metainfo for law %s" % law.title)
+    ndb.put_multi(law_metainfo_models)
+    return {'message_type': 'success', 'nr_of_generated_instances': len(law_metainfo_models)}
+
+  @classmethod
+  def erase_laws(cls):
+    laws = models.Law.query().fetch(keys_only=True)
+    ndb.delete_multi(laws)
+
+  @classmethod
+  def erase_metainfo(cls):
+    laws_metainfo = models.LawMetaInfo.query().fetch(keys_only=True)
+    ndb.delete_multi(laws_metainfo)

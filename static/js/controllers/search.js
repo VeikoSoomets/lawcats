@@ -10859,7 +10859,7 @@ var SearchController = (function () {
             queryword: _this3.querywords,
             date_algus: queryDate,
             // TODO: formatDate() requires date, but sometimes we are not giving date.
-            categories: source.name
+            category: source.name
           }).success(function (response) {
             _this3.unResolvedPromises--;
             Array.prototype.push.apply(_this3.results, response.search_results);
