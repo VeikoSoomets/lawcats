@@ -157,9 +157,16 @@ class LawService():
       raise ndb.Return({'key': law_model_key, 'title': url['title'], 'link': url['url'], 'text': law_html})
 
     @ndb.tasklet
+    def persist_law_metainfo(law, paragraph):
+      law_metainfo_key = yield models.LawMetaInfo(paragraph_number=paragraph.get('number'), paragraph_link=paragraph.get('link'),
+                               paragraph_title=paragraph.get('title'), paragraph_content=paragraph.get('content'),
+                               parent=law.get('key')).put_async()
+      raise ndb.Return(law_metainfo_key)
+
     def generate_law_metainfo(law):
       articles = bs4.BeautifulSoup(law.get('text'), "html5lib", from_encoding='utf8')
       paragraph_elements = articles.find_all('p')
+      futures = []
       for paragraph_element in paragraph_elements:
         link_element = paragraph_element.find_next('a')
         if not link_element:
@@ -177,10 +184,14 @@ class LawService():
         else:
           continue
         paragraph_content = paragraph_element.get_text().encode('utf-8')
-        law_metainfo_model = yield models.LawMetaInfo(paragraph_number=int(paragraph_number), paragraph_link=paragraph_link,
-                                                paragraph_title=paragraph_title, paragraph_content=paragraph_content,
-                                                parent=law.get('key')).put_async()
-        raise ndb.Return(law_metainfo_model)
+        paragraph = {
+          'number': int(paragraph_number),
+          'link': paragraph_link,
+          'title': paragraph_title,
+          'content': paragraph_content
+        }
+        futures.append(persist_law_metainfo(law, paragraph))
+      return futures
 
     urls = get_urls()
     for url_batch in batch(urls, batch_max_size):
@@ -194,15 +205,14 @@ class LawService():
       ndb.Future.wait_all(fetch_futures)
       for fetch_future in fetch_futures:
         future_result = fetch_future.get_result()
-        logging.info("Generating a new law for title %s" % (future_result.get('url').get('title')))
+        logging.info("Generating new law for title %s" % (future_result.get('url').get('title')))
         law_future = generate_law(future_result.get('url'), future_result.get('response'))
         law_futures.append(law_future)
       ndb.Future.wait_all(law_futures)
       for law_future in law_futures:
         law_future_result = law_future.get_result()
         logging.info("Generating new metainfo for law %s" % (law_future_result.get('title')))
-        law_metainfo_future = generate_law_metainfo(law_future_result)
-        law_metainfo_futures.append(law_metainfo_future)
+        law_metainfo_futures += generate_law_metainfo(law_future_result)
       ndb.Future.wait_all(law_metainfo_futures)
     logging.info("Batches completed")
     return {'message_type': 'success', 'nr_of_generated_instances': len(urls)}
