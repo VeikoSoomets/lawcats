@@ -120,8 +120,7 @@ class LawService():
 
   @classmethod
   def generate_laws(cls):
-    law_models = []
-    rpcs = []
+    batch_max_size = 50
 
     def get_urls():
       urllist = []
@@ -137,62 +136,76 @@ class LawService():
       src.close()
       return urllist
 
-    def handle_result(rpc, url):
-      logging.info("Retrieved result for URL %s with title %s" % (url['url'], url['title']))
-      result = rpc.get_result()
-      soup = bs4.BeautifulSoup(result.content, "html5lib")
-      law = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
-      law_model = models.Law(title=url['title'], link=url['url'], text=law)
-      law_models.append(law_model)
-      logging.info("Persisted law to database for URL %s with title %s" % (url['url'], url['title']))
+    def batch(iterable, n=1):
+      l = len(iterable)
+      for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx + n, l)]
 
-    urls = get_urls()
-    for url in urls:
-      logging.info("Requesting source from URL %s with title %s" % (url['url'], url['title']))
-      rpc = urlfetch.create_rpc()
-      rpc.callback = functools.partial(handle_result, rpc, url)
-      urlfetch.make_fetch_call(rpc, url['url'])
-      rpcs.append(rpc)
+    @ndb.tasklet
+    def fetch_url(url):
+      result = yield ndb.get_context().urlfetch(url['url'])
+      if result.status_code == 200:
+        raise ndb.Return({'url':url, 'response':result.content})
 
-    for rpc in rpcs:
-      rpc.wait()
+    @ndb.tasklet
+    def generate_law(url, url_response):
+      soup = bs4.BeautifulSoup(url_response, "html5lib")
+      law_html = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
+      law_id = ndb.Model.allocate_ids(size=1)[0]
+      law_key = ndb.Key('Law', law_id)
+      law_model_key = yield models.Law(title=url['title'], link=url['url'], text=law_html, key=law_key).put_async()
+      raise ndb.Return({'key': law_model_key, 'title': url['title'], 'link': url['url'], 'text': law_html})
 
-    ndb.put_multi(law_models)
-    return {'message_type': 'success', 'nr_of_generated_instances': len(law_models)}
-
-  @classmethod
-  def generate_metainfo(cls):
-    laws = models.Law.query().fetch()
-    law_metainfo_models = []
-    for law in laws:
-      articles = bs4.BeautifulSoup(law.text, "html5lib", from_encoding='utf8')
+    @ndb.tasklet
+    def generate_law_metainfo(law):
+      articles = bs4.BeautifulSoup(law.get('text'), "html5lib", from_encoding='utf8')
       paragraph_elements = articles.find_all('p')
-      logging.info("Generating metainfo for law %s" % law.title)
       for paragraph_element in paragraph_elements:
         link_element = paragraph_element.find_next('a')
         if not link_element:
           continue
         paragraph_link = link_element.get('name')
         if paragraph_link:
-          paragraph_link = law.link + '#' + paragraph_link
+          paragraph_link = law.get('link') + '#' + paragraph_link
         else:
           continue
-        if paragraph_element.find_previous_sibling('h3') and paragraph_element.find_previous_sibling('h3').find_next('strong'):
+        if paragraph_element.find_previous_sibling('h3') and paragraph_element.find_previous_sibling('h3').find_next(
+                'strong'):
           paragraph = paragraph_element.find_previous_sibling('h3').find_next('strong').contents[0]
           paragraph_title = paragraph_element.find_previous_sibling('h3').get_text()
           paragraph_number = paragraph.split()[1].replace('.', '').replace(' ', '')
         else:
           continue
-
         paragraph_content = paragraph_element.get_text().encode('utf-8')
-        law_metainfo_model = models.LawMetaInfo(paragraph_number=int(paragraph_number), paragraph_link=paragraph_link,
+        law_metainfo_model = yield models.LawMetaInfo(paragraph_number=int(paragraph_number), paragraph_link=paragraph_link,
                                                 paragraph_title=paragraph_title, paragraph_content=paragraph_content,
-                                                parent=law.key)
-        law_metainfo_models.append(law_metainfo_model)
-      logging.info("Finished generating metainfo for law %s" % law.title)
-    ndb.put_multi(law_metainfo_models)
-    return {'message_type': 'success', 'nr_of_generated_instances': len(law_metainfo_models)}
+                                                parent=law.get('key')).put_async()
+        raise ndb.Return(law_metainfo_model)
 
+    urls = get_urls()
+    for url_batch in batch(urls, batch_max_size):
+      fetch_futures = []
+      law_futures = []
+      law_metainfo_futures = []
+      for url in url_batch:
+        logging.info("Requesting source from URL with title %s" % (url.get('title')))
+        fetch_future = fetch_url(url)
+        fetch_futures.append(fetch_future)
+      ndb.Future.wait_all(fetch_futures)
+      for fetch_future in fetch_futures:
+        future_result = fetch_future.get_result()
+        logging.info("Generating a new law for title %s" % (future_result.get('url').get('title')))
+        law_future = generate_law(future_result.get('url'), future_result.get('response'))
+        law_futures.append(law_future)
+      ndb.Future.wait_all(law_futures)
+      for law_future in law_futures:
+        law_future_result = law_future.get_result()
+        logging.info("Generating new metainfo for law %s" % (law_future_result.get('title')))
+        law_metainfo_future = generate_law_metainfo(law_future_result)
+        law_metainfo_futures.append(law_metainfo_future)
+      ndb.Future.wait_all(law_metainfo_futures)
+    logging.info("Batches completed")
+    return {'message_type': 'success', 'nr_of_generated_instances': len(urls)}
 
   @classmethod
   def erase_laws(cls):
@@ -202,4 +215,4 @@ class LawService():
   @classmethod
   def erase_metainfo(cls):
     laws_metainfo = models.LawMetaInfo.query().fetch(keys_only=True)
-    ndb.delete_multi(laws_metainfo)
+    ndb.delete_multi_async(laws_metainfo)

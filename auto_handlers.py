@@ -393,9 +393,8 @@ class GenerateCategories(BaseHandler):
 class GenerateLaws(BaseHandler):
   @BaseHandler.logged_in2
   def get(self):
-    #laws_count = LawService.generate_laws().get('nr_of_generated_instances')
-    LawService.generate_metainfo()
-    self.render_template('sys.html', {'message_type': 'success', 'message': 'Data generated. Added %s laws' % (2)})
+    laws_count = LawService.generate_laws().get('nr_of_generated_instances')
+    self.render_template('sys.html', {'message_type': 'success', 'message': 'Data generated. Added %s laws' % (laws_count)})
 
 
 class GenerateAllData(BaseHandler):
@@ -403,7 +402,6 @@ class GenerateAllData(BaseHandler):
   def get(self):
     categories_count = CategoryService.generate().get('nr_of_generated_instances')
     laws_count = LawService.generate_laws().get('nr_of_generated_instances')
-    LawService.generate_metainfo().get('nr_of_generated_instances')
     self.render_template('sys.html', {'message_type': 'success', 'message': 'Data generated. Added %s categories, %s laws'
                                                                             % (categories_count, laws_count)})
 

@@ -321,4 +321,4 @@ class LawMetaInfo(ndb.Model):
     paragraph_number = ndb.IntegerProperty()
     paragraph_link = ndb.StringProperty()
     paragraph_title = ndb.StringProperty()
-    paragraph_content = UTF8BlobProperty()
+    paragraph_content = ndb.TextProperty()
