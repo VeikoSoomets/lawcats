@@ -245,7 +245,7 @@ def parse_feed(querywords, category, date_algus='2016-01-01'):
           except Exception,e:
             logging.error(e)
             pass
-        return results  #results if results else None
+    return results  #results if results else None
 
 
 # TESTING #####
