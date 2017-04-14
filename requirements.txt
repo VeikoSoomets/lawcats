@@ -1,0 +1,6 @@
+SQLAlchemy
+psycopg2
+bs4
+Babel
+pytz
+feedparser
