@@ -1,0 +1,9 @@
+# -*- coding: utf-8 -*-
+
+postgres_connectors = {
+'host' : '',
+'port' : 5432,
+'db' : '',
+'user' : '',
+'passwd' : ''
+}

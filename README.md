@@ -17,6 +17,9 @@ feedparser
 <br/>
 
 *Deploying App*
+- database connection... (fill config.py)
+
+*Deploying App*
 <br/>
 appcfg.py update . -A directed-cove-374 -V 1
 <br/><br/>
