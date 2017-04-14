@@ -104,7 +104,6 @@ class SearchService():
     search_results = [list(x) for x in set(tuple(x) for x in search_results)]
 
     # TODO! Sort results by date
-
     # Sort results by rank (if there is rank)
     try:
       search_results = sorted(search_results, key=itemgetter(5), reverse=True)  # TODO! fix

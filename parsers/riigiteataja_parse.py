@@ -422,14 +422,14 @@ def parse_riigiteataja_uudised(url, query=None, category=None, date_algus=None):
           #print doc
           #logging.error(str(doc))
           #logging.error(term)
-          if category == 'Riigiteataja kohtuuudised': # kohtuuudised
+          if category.name == 'Riigiteataja kohtuuudised': # kohtuuudised
             #logging.error(results)
             item_date = doc[4]
             item_title = doc[5]
-          elif category == u'Riigiteataja õigusuudised': # muud õigusuudised
+          elif category.name == u'Riigiteataja õigusuudised': # muud õigusuudised
             item_date = doc[2]
             item_title = doc[3]
-          elif category == 'Riigiteataja seadusuudised': # seadusuudised
+          elif category.name == 'Riigiteataja seadusuudised': # seadusuudised
             item_date = doc[2]
             item_title = doc[1]
           

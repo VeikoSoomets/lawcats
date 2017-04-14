@@ -246,20 +246,14 @@ class Search(BaseHandler):
     #               }
     #     search_results.append(params)
     #
-    # if search_results:
-    #   message = _('Got %s results') % str(len(search_results))
-    #   message_type = 'success'
-    # else:
-    #   message = _('Did not find any results - try changing your query or add more sources')
-    #   message_type = 'danger'
-    #
-    # resultsdict = {'search_results': search_results, 'message': message, 'message_type': message_type}
-    # data = JSONEncoder().encode(resultsdict)
-    #
-    # if not data:
-    #   logging.error('did not get data')
-    #
-    # self.response.out.write(data)
+
+    if search_results:
+      logging.error(search_results)
+      message = _('Got %s results') % str(len(search_results))
+      message_type = 'success'
+      resultsdict = {'search_results': search_results, 'message': message, 'message_type': message_type}
+      data = JSONEncoder().encode(resultsdict)
+      self.response.out.write(data)
 
 
 def custom_search(querywords, category, date_algus, email=None):

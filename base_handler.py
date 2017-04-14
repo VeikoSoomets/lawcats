@@ -51,6 +51,21 @@ import webob.multidict
 DEFAULT_AVATAR_URL = '/static/images/default-avatar.jpg'
 
 
+def get_connection():
+  # Get SQL connection. Check if we have to connect remotely or not.
+  if (os.getenv('SERVER_SOFTWARE') and
+        os.getenv('SERVER_SOFTWARE').startswith('Google App Engine/')):
+    db2 = MySQLdb.connect(unix_socket='/cloudsql/directed-cove-374:lawcats', db=mc['db'], user=mc['user'],passwd=mc['passwd'],charset='utf8')
+  else:
+    try:
+      db2 = MySQLdb.connect(host=mc['host'], port=mc['port'], db=mc['db'], user=mc['user'], passwd=mc['passwd'], charset='utf8')
+    except Exception, e:
+      logging.error(e)
+      logging.error('MySQL login failed. Your IP or CIDR range needs to be authorized!')
+      db2 = 'MySQL login failed. Your IP or CIDR range needs to be authorized!'
+  return db2
+
+
 def sendmail(mailto,subject_,*args):
   message = mail.EmailMessage(sender="kasparg@gmail.com",
       subject=unicode((subject_)))
