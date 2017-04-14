@@ -23,6 +23,10 @@ new_path = os.path.split(file_dir)[0]
 sys.path.insert(0, new_path) # to get utils from root folder.. this might be obsolete
 
 categories = [\
+['Delfi','http://feeds2.feedburner.com/delfiuudised?format=xml'], \
+['Delfi','http://feeds.feedburner.com/delfimaailm?format=xml'], \
+['Delfi','http://feeds.feedburner.com/delfi110-112?format=xml'], \
+['Delfi','http://feeds2.feedburner.com/delfimajandus'], \
 ['Postimees','http://majandus24.postimees.ee/rss'], # majandus \
 ['Postimees','http://www.postimees.ee/rss/'],\
 ['Postimees','http://www.postimees.ee/rss/?r=128'], # kirmi \
@@ -160,92 +164,91 @@ def parse_results_ilmumas(ilmumas_links,querywords):
 def parse_feed(querywords, category, date_algus='2016-01-01'):
     date_algus = datetime_object(date_algus)
     results = []
-    for cat in cat_dict['categories']:
 
-      if category == cat[0]:  # veendume, et võtame õige allika
-        search_from = cat[1]
-        logging.error(search_from)
+    for search_from in category.values.get('rss_sources'):
 
-        if category == u'Riigiteataja ilmumas/ilmunud seadused':  # juhul kui tegi riigiteataja ilumas/ilmunud, toimetame teisiti (neil RSS vana ja ei vasta standarditele)
-          try:
-            src2=urllib2.urlopen(search_from).read(5000) # timeout set (search from, timeout=60) because of default appengine limits (and since riigiteataja ilmumas takes long time to open otherwise too)
-            soup2 = bs4.BeautifulSoup(src2)
-            if soup2: # kui leiame tulemusi
-              limiter=10  # see on vajalik, sest app engine ei saa aru read(5000) limiidist, ning teeb kuni timeout'ini avamist
-              links_collection=[]
-              while limiter>0:
-                for link in soup2.findAll("link"):
-                  if len(link.next)>50:
-                    links_collection.append(link.next)
-                    limiter-=1  # count down until 0 (optimization)
-              results.extend(parse_results_ilmumas(links_collection, querywords))
-          except Exception, e:
-            pass
-            logging.error(e)
+      #logging.error(category.values.get('rss_sources'))
 
-        else:  # Tegu normaalsete RSSidega
-          try:
-            if category == 'Finantsministeerium':
-              search_from = urllib2.urlopen(search_from, timeout=40)  # without timeout doesn't work
-            elif category == u'Kooskõlastamiseks esitatud eelnõud':
-              search_from = urllib2.urlopen(search_from, timeout=40).read(20000)
+      if category.name == u'Riigiteataja ilmumas/ilmunud seadused':  # juhul kui tegi riigiteataja ilumas/ilmunud, toimetame teisiti (neil RSS vana ja ei vasta standarditele)
+        try:
+          src2=urllib2.urlopen(search_from).read(5000) # timeout set (search from, timeout=60) because of default appengine limits (and since riigiteataja ilmumas takes long time to open otherwise too)
+          soup2 = bs4.BeautifulSoup(src2)
+          if soup2: # kui leiame tulemusi
+            limiter=10  # see on vajalik, sest app engine ei saa aru read(5000) limiidist, ning teeb kuni timeout'ini avamist
+            links_collection=[]
+            while limiter>0:
+              for link in soup2.findAll("link"):
+                if len(link.next)>50:
+                  links_collection.append(link.next)
+                  limiter-=1  # count down until 0 (optimization)
+            results.extend(parse_results_ilmumas(links_collection, querywords))
+        except Exception, e:
+          logging.error(e)
+          pass
 
-            d = feedparser.parse(search_from)
-            for a in d.entries:
-              for x in querywords:
-                result_title = None
-                if ' ' in x:
-                  new_x = set(x.split(' '))  # add to a set
-                elif x == '':
-                  new_x = ''
-                else:
-                  new_x = [x]
+      else:  # Tegu normaalsete RSSidega
+        try:
+          if category.name == 'Finantsministeerium':
+            search_from = urllib2.urlopen(search_from, timeout=40)  # without timeout doesn't work
+          elif category.name == u'Kooskõlastamiseks esitatud eelnõud':
+            search_from = urllib2.urlopen(search_from, timeout=40).read(20000)
 
-                result_date = datetime.datetime.now().date()
-                if category in ['eurlex kohtuasjad','eurlex komisjoni ettepanekud',u'eurlex parlament ja nõukogu']:
-                  if result_date >= (date_algus if date_algus else result_date) and (x.lower() in a['title'].lower()):
-                    result_title = a['title']
-                    result_link = a['link']
-                    results.append([result_link, result_title, str(result_date), x, category])
+          d = feedparser.parse(search_from)
+          for a in d.entries:
+            for x in querywords:
+              result_title = None
+              if ' ' in x:
+                new_x = set(x.split(' '))  # add to a set
+              elif x == '':
+                new_x = ''
+              else:
+                new_x = [x]
 
-                else:
-                  """ Tavaline RSS """
+              result_date = datetime.datetime.now().date()
+              if category.name in ['eurlex kohtuasjad','eurlex komisjoni ettepanekud',u'eurlex parlament ja nõukogu']:
+                if result_date >= (date_algus if date_algus else result_date) and (x.lower() in a['title'].lower()):
+                  result_title = a['title']
+                  result_link = a['link']
+                  results.append([result_link, result_title, str(result_date), x, category.name])
+
+              else:
+                """ Tavaline RSS """
+                try:
+                  result_date = dt.fromtimestamp(mktime(a['published_parsed'])).date()
+                except Exception:
+                  pass
+
+                if not result_date:
                   try:
-                    result_date = dt.fromtimestamp(mktime(a['published_parsed'])).date()
+                    result_date = a['published']
                   except Exception:
+                    result_date = a['pubDate']
                     pass
 
-                  if not result_date:
-                    try:
-                      result_date = a['published']
-                    except Exception:
-                      result_date = a['pubDate']
-                      pass
+                # Sometimes we get empty blocks, let's catch them and pass
 
-                  # Sometimes we get empty blocks, let's catch them and pass
+                summary = a.get('summary')
+                title = a.get('title')
+                description = a.get('description')
+                if summary or title or description:
+                  for queryword in new_x:
+                    if queryword.lower() in title.lower():
+                      result_title = title
+                    elif queryword.lower() in description.lower():
+                      result_title = description
+                    elif queryword.lower() in summary.lower():
+                      result_title = summary
 
-                  summary = a.get('summary')
-                  title = a.get('title')
-                  description = a.get('description')
-                  if summary or title or description:
-                    for queryword in new_x:
-                      if queryword.lower() in title.lower():
-                        result_title = title
-                      elif queryword.lower() in description.lower():
-                        result_title = description
-                      elif queryword.lower() in summary.lower():
-                        result_title = summary
-
-                      if result_title:
-                        if 'img ' in result_title:
-                            break
-                        result_title = result_title.replace('<p>','').replace('</p>','')
-                        result_link = a['link']
-                        results.append([result_link, result_title, str(result_date), x, category])
-          except Exception,e:
-            logging.error(e)
-            pass
-        return results  #results if results else None
+                    if result_title:
+                      if 'img ' in result_title:
+                          break
+                      result_title = result_title.replace('<p>','').replace('</p>','')
+                      result_link = a['link']
+                      results.append([result_link, result_title, str(result_date), x, category.name, 0])
+        except Exception,e:
+          logging.error(e)
+          pass
+      return results  #results if results else None
 
 
 # TESTING #####

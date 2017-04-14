@@ -160,7 +160,7 @@ def blogs_handler(link,querywords=None,category=None):
         else:
           new_x=[x]
         if (all([x2.lower() in search_[1].lower()+search_[2][0].get_text().lower() for x2 in new_x]) ):
-          results.append([search_[0],search_[1],'date',x,category])
+          results.append([search_[0],search_[1],'date',x,category.name])
   else:
     if len(resultset)>0:
       results = True
