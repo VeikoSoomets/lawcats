@@ -43,9 +43,11 @@ application = webapp2.WSGIApplication(
         ('/app/request_source', RequestSource),
         ('/sys/generate_categories', GenerateCategories),
         ('/sys/generate_laws', GenerateLaws),
+        ('/sys/generate_laws_metadata', GenerateLawsMetadata),
         ('/sys/generate_all_data', GenerateAllData),
         ('/sys/erase_categories', EraseCategories),
         ('/sys/erase_laws', EraseLaws),
+        ('/sys/erase_laws_metadata', EraseLawsMetadata),
         ('/sys/erase_all_data', EraseAllData),
         ('/app/search', Search),
         #('/sys/create_categories', GenerateCategories),  # generate categories
