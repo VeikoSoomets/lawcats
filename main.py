@@ -9,9 +9,18 @@
 
 
 from handlers import *
-import webapp2
 from base_handler import *
 from secrets import SESSION_KEY
+
+import webapp2
+import sqlalchemy
+from sqlalchemy.orm import sessionmaker
+
+LAWCATS_DATABASE_URI = os.environ['LAWCATS_DATABASE_URI']
+
+engine = sqlalchemy.create_engine(LAWCATS_DATABASE_URI)
+Session = sessionmaker(bind=engine)
+session = Session()
 
 app_config = {
   'webapp2_extras.auth': {

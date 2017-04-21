@@ -1,19 +1,18 @@
-lawcats
+Lawcats
 
 http://www.oi.ut.ee/et/it-oigus/oigusrobootika-konkurss
 
 
-**Dependencies**:<br/>
-google appengine,
-bs4,
-babel,
-pytz  *(use gaepytz, it is faster),
-feedparser
+**Installation instructions:**<br/>
+- [Download and install Google Cloud SDK for Python](https://cloud.google.com/appengine/docs/standard/python/download)
+- Install Python 2.7, PIP
+- Install ez_setup, setup_tools (via PIP)
+- Install other dependencies with PIP to libs/ folder by running: pip install -t libs/ -r requirements.txt'
+- [Install simpleauth](https://github.com/x1ddos/simpleauth) to libs/ folder (you need to manually download it and extract it to libs/ folder)
 <br/><br/>
 **Instructions for running app:**<br/>
 *Running App*
-- Download and install google app engine sdk
-- Navgiate to app folder and run 'dev_appserver.py .'
+- Navigate to app folder and run 'dev_appserver.py .'
 <br/>
 
 *Deploying App*

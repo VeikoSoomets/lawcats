@@ -6,7 +6,8 @@ api_version: 1
 
 env_variables:
     LAWCATS_DATABASE_URI: >-
-      postgresql+psycopg2://lawcats:kalajala123@/lawcats?unix_socket=/cloudsql/directed-cove-374:europe-west1:lawcats
+#      mysql+mysqldb://lawcats:kalajala123@/lawcats?unix_socket=/cloudsql/directed-cove-374:europe-west1:lawcats
+      mysql+mysqldb://lawcats:kalajala123@127.0.0.1:3306/lawcats
 
 beta_settings:
     cloud_sql_instances: directed-cove-374:europe-west1:lawcats

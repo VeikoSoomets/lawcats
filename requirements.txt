@@ -1,6 +1,8 @@
 SQLAlchemy
-psycopg2
 bs4
 Babel
 pytz
 feedparser
+oauth2
+html5lib
+PyMySQL
