@@ -10,7 +10,7 @@ http://www.oi.ut.ee/et/it-oigus/oigusrobootika-konkurss
 <br/><br/>
 **Instructions for running app:**<br/>
 *Running App*
-- Navigate to app folder and run 'dev_appserver.py .'
+- Navigate to app folder and run 'dev_appserver.py . --storage_path=STORAGE_PATH --search_indexes_path=SEARCH_INDEXES_FILE_PATH'
 <br/>
 
 *Deploying App*

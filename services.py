@@ -7,7 +7,7 @@ import bs4
 import functools
 
 import sys
-from google.appengine.api import memcache, urlfetch
+from google.appengine.api import memcache, urlfetch, search
 
 import models
 from google.appengine.ext import ndb
@@ -183,13 +183,15 @@ class LawService():
     return {'message_type': 'success'}
 
   @classmethod
-  def generate_laws_metadata(cls):
-    futures = []
+  def generate_laws_metadata(cls, batch_limit=0, batch_offset=0):
+    meta_data_documents = []
+    batch_max_size = 200
     current_recursion_limit = sys.getrecursionlimit()
     sys.setrecursionlimit(cls.MAX_RECURSION_LIMIT)
+    index = search.Index('law_metadata')
 
-    @ndb.tasklet
     def persist_law_metainfo(law):
+      documents = []
       articles = bs4.BeautifulSoup(law.text, "html5lib", from_encoding='utf8')
       paragraph_elements = articles.find_all('p')
       for paragraph_element in paragraph_elements:
@@ -215,17 +217,30 @@ class LawService():
           'title': paragraph_title,
           'content': paragraph_content
         }
-        yield models.LawMetaInfo(paragraph_number=paragraph.get('number'),
-                                 paragraph_link=paragraph.get('link'),
-                                 paragraph_title=paragraph.get('title'),
-                                 paragraph_content=paragraph.get('content'),
-                                 parent=law.key).put_async()
-      logging.info("Persisted law meta with title %s" % law.title)
+        document = search.Document(
+          fields= [
+            search.NumberField(name='number', value=paragraph.get('number')),
+            search.TextField(name='link', value=paragraph.get('link')),
+            search.TextField(name='title', value=paragraph.get('title')),
+            search.TextField(name='content', value=paragraph.get('content'))
+          ]
+        )
+        documents.append(document)
+      logging.info("Created metadata documents for title %s" % law.title)
+      return documents
 
-    laws = models.Law.query().fetch()
+    if batch_offset > 0:
+      laws = models.Law.query().fetch(offset=batch_offset)
+    elif batch_limit > 0:
+      laws = models.Law.query().fetch(limit=batch_limit)
+    else:
+      laws = models.Law.query().fetch()
     for law_ in laws:
-      futures.append(persist_law_metainfo(law_))
-    ndb.Future.wait_all(futures)
+      meta_data_documents = meta_data_documents + persist_law_metainfo(law_)
+    logging.info("Putting %s documents to index" % len(meta_data_documents))
+    for docs in cls.batch(meta_data_documents, batch_max_size):
+      index.put(docs)
+      logging.info("Batch done")
     logging.info("Batches completed")
     sys.setrecursionlimit(current_recursion_limit)
     return {'message_type': 'success'}

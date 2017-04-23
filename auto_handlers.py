@@ -397,10 +397,17 @@ class GenerateLaws(BaseHandler):
     self.render_template('sys.html', {'message_type': 'success', 'message': 'Data generated'})
 
 
-class GenerateLawsMetadata(BaseHandler):
+class GenerateLawsMetadataFirstBatch(BaseHandler):
   @BaseHandler.logged_in2
   def get(self):
-    LawService.generate_laws_metadata()
+    LawService.generate_laws_metadata(batch_limit=200)
+    self.render_template('sys.html', {'message_type': 'success', 'message': 'Data generated'})
+
+
+class GenerateLawsMetadataSecondBatch(BaseHandler):
+  @BaseHandler.logged_in2
+  def get(self):
+    LawService.generate_laws_metadata(batch_offset=200)
     self.render_template('sys.html', {'message_type': 'success', 'message': 'Data generated'})
 
 
