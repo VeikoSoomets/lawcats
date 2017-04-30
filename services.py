@@ -119,6 +119,7 @@ class LawService():
   RIIGITEATAJA_SRC_URL = 'https://www.riigiteataja.ee/lyhendid.html'
   RIIGITEATAJA_LAW_BASE_URL = 'https://www.riigiteataja.ee/%s?leiaKehtiv'
   MAX_RECURSION_LIMIT = 30000
+  METADATA_INDEX_NAME = 'laws_metadata'
 
   @classmethod
   def batch(cls, iterable, n=1):
@@ -154,8 +155,6 @@ class LawService():
         logging.info("Requested law from URL with title %s" % (url.get('title')))
         yield persist_law(url, result.content)
         logging.info("Persisted law with title %s" % (url.get('title')))
-        # yield persist_law_metainfo({'key': law_model.get('key'), 'title': url['title'], 'link': url['url'], 'text': law_model.get('html')})
-        # logging.info("Persisted law meta with title %s" % (url.get('title')))
 
     @ndb.tasklet
     def fetch_url(url):
@@ -182,12 +181,13 @@ class LawService():
     return {'message_type': 'success'}
 
   @classmethod
-  def generate_laws_metadata(cls, batch_limit=0, batch_offset=0):
+  def generate_laws_metadata(cls, batch_limit=None, batch_offset=None):
     meta_data_documents = []
     batch_max_size = 200
+    nr_of_documents = 0
     current_recursion_limit = sys.getrecursionlimit()
     sys.setrecursionlimit(cls.MAX_RECURSION_LIMIT)
-    index = search.Index('law_metadata')
+    index = search.Index(cls.METADATA_INDEX_NAME)
 
     def persist_law_metainfo(law):
       documents = []
@@ -202,8 +202,7 @@ class LawService():
           paragraph_link = law.link + '#' + paragraph_link
         else:
           continue
-        if paragraph_element.find_previous_sibling('h3') and paragraph_element.find_previous_sibling('h3').find_next(
-                'strong'):
+        if paragraph_element.find_previous_sibling('h3') and paragraph_element.find_previous_sibling('h3').find_next('strong'):
           paragraph = paragraph_element.find_previous_sibling('h3').find_next('strong').contents[0]
           paragraph_title = paragraph_element.find_previous_sibling('h3').get_text()
           paragraph_number = paragraph.split()[1].replace('.', '').replace(' ', '')
@@ -228,23 +227,17 @@ class LawService():
       logging.info("Created metadata documents for title %s" % law.title)
       return documents
 
-    if batch_offset > 0:
-      laws = models.Law.query().fetch(offset=batch_offset)
-    elif batch_limit > 0:
-      laws = models.Law.query().fetch(limit=batch_limit)
-    else:
-      laws = models.Law.query().fetch()
+    laws = models.Law.query().fetch(limit=batch_limit, offset=batch_offset)
     for law_ in laws:
       meta_data_documents = meta_data_documents + persist_law_metainfo(law_)
     logging.info("Putting %s documents to index" % len(meta_data_documents))
     for docs in cls.batch(meta_data_documents, batch_max_size):
       index.put(docs)
-      logging.info("Batch done")
-    logging.info("Batches completed")
+      nr_of_documents += len(docs)
+      logging.info("Batch done. %s documents were put to index" % len(docs))
+    logging.info("Batches COMPLETED. Total of %s were put to index" % (nr_of_documents))
     sys.setrecursionlimit(current_recursion_limit)
     return {'message_type': 'success'}
-
-
 
   @classmethod
   def erase_laws(cls):
@@ -254,8 +247,15 @@ class LawService():
 
   @classmethod
   def erase_metainfo(cls):
-    batch_max_size = 500
-    laws_metainfo = models.LawMetaInfo.query().fetch(keys_only=True)
-    logging.info("Erasing %s law metainfo objects" % len(laws_metainfo))
-    for metainfo_batch in cls.batch(laws_metainfo, batch_max_size):
-      ndb.delete_multi_async(metainfo_batch)
+    index = search.Index(cls.METADATA_INDEX_NAME)
+    nr_of_documents = 0
+    # index.get_range by returns up to 100 documents at a time, so we must loop until we've deleted all items
+    while True:
+      document_ids = [document.doc_id for document in index.get_range(ids_only=True)]
+      # If no IDs were returned, we've deleted everything
+      if not document_ids:
+        break
+      logging.info("Erasing %s documents from index" % len(document_ids))
+      index.delete(document_ids)
+      nr_of_documents += len(document_ids)
+    logging.info("Documents DELETED. Total of %s were deleted" % nr_of_documents)

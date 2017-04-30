@@ -36,7 +36,7 @@ categories_seadused = {
 
 
 def search_seadused(querywords, category, date_algus='2010-01-01'):
-    results = parse_results_seadused2(querywords, category, date_algus)
+    results = parse_laws_results(querywords, category, date_algus)
     return results
 
 
@@ -146,6 +146,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
 
   for law in laws_titles:
     # .replace(u'§','').
+    # remove 'seadus' and '$' from query and make list
     a = [x for x in [e for e in query.encode('utf8').lower().split() if e.encode('utf8').lower() not in paragraph_words + [str(search_para_nbr), 'seadus', u'§']]]
     # if any keyword is in law title or first word of law is in keyword - do tokenize here
     if (any(x in law.title.encode('utf8').lower().replace(' ','') for x in a) \
@@ -156,6 +157,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     # Do a longer search... might take 5-10s
     if len(search_law_names) < 2:  #any(x in query for x in paragraph_words):
 
+      # can ignore
       try:
         # search from law titles
         if any(x in law.title.encode('utf8').lower().replace(' ','') for x in a):
@@ -163,8 +165,9 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
       except Exception, e:
         logging.error(e)
 
+
       try:
-        # get paragraph titles from memcahce - fairy expensive operation if done for each law
+        # get paragraph titles from memcahce - fairly expensive operation if done for each law
         # TODO! add cache in a separate process, not during search
         search_law_title = law.title.encode('ascii', 'ignore').replace(' ','')[:76]
         #logging.error(search_law_title)
@@ -278,7 +281,7 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     final_results = sorted(final_results, key=itemgetter(5), reverse=True)
     return final_results
 
-def parse_results_seadused2(query_words, category=None, date_algus=None):
+def parse_laws_results(query_words, category=None, date_algus=None):
   search_law_names = []
   query_words_joined = ' '.join(query_words)
   query_words = [query_word.upper() for query_word in query_words]
@@ -290,11 +293,11 @@ def parse_results_seadused2(query_words, category=None, date_algus=None):
   if any(paragraph_word in query_words_joined for paragraph_word in paragraph_words) or get_digit(query_words_joined):
     paragraph_number = get_digit(query_words_joined)
 
-  laws_titles = memcache.get('law_titles')
+  laws_titles = memcache.get('laws_titles')
   if not laws_titles:
-    laws_query = models.RiigiTeatajaURLs.query().fetch(projection=[models.RiigiTeatajaURLs.title])
+    laws_query = models.Law.query().fetch(projection=[models.Law.title])
     laws_titles = [law.title for law in laws_query]
-    memcache.set('law_titles', laws_titles)
+    memcache.set('laws_titles', laws_titles)
 
   for law_title in laws_titles:
     law_title = law_title.encode('utf-8')

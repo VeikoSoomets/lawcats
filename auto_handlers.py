@@ -411,15 +411,6 @@ class GenerateLawsMetadataSecondBatch(BaseHandler):
     self.render_template('sys.html', {'message_type': 'success', 'message': 'Data generated'})
 
 
-class GenerateAllData(BaseHandler):
-  @BaseHandler.logged_in2
-  def get(self):
-    CategoryService.generate()
-    LawService.generate_laws()
-    LawService.generate_laws_metadata()
-    self.render_template('sys.html', {'message_type': 'success', 'message': 'Data generated'})
-
-
 class EraseCategories(BaseHandler):
   @BaseHandler.logged_in2
   def get(self):
@@ -437,13 +428,5 @@ class EraseLaws(BaseHandler):
 class EraseLawsMetadata(BaseHandler):
   @BaseHandler.logged_in2
   def get(self):
-    LawService.erase_metainfo()
-    self.render_template('sys.html', {'message_type': 'success', 'message': 'Data erased'})
-
-class EraseAllData(BaseHandler):
-  @BaseHandler.logged_in2
-  def get(self):
-    CategoryService.erase()
-    LawService.erase_laws()
     LawService.erase_metainfo()
     self.render_template('sys.html', {'message_type': 'success', 'message': 'Data erased'})

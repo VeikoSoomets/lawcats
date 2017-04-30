@@ -216,7 +216,6 @@ class Search(BaseHandler):
   @BaseHandler.logged_in2
   def post(self):
     email = self.get_user_email()
-
     json_data = json.loads(self.request.body)
     query = json_data.get('queryword')
     category = json_data.get('category')
@@ -225,11 +224,8 @@ class Search(BaseHandler):
     if not query or len(query) == 0 or not category:
       return
     query_words = SearchService.get_querywords(query)
-    # search_results1 = []
-    #
     if action == 'search':
       search_results = SearchService.search(query_words, category, '2014-01-01')
-
 
     if search_results:
       logging.error(search_results)

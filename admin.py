@@ -43,23 +43,15 @@ application = webapp2.WSGIApplication(
         ('/app/request_source', RequestSource),
         ('/sys/generate_categories', GenerateCategories),
         ('/sys/generate_laws', GenerateLaws),
-        ('/sys/generate_laws_metadata_firstbatch', GenerateLawsMetadataFirstBatch),
-        ('/sys/generate_laws_metadata_secondbatch', GenerateLawsMetadataSecondBatch),
-        ('/sys/generate_all_data', GenerateAllData),
+        ('/sys/generate_laws_metadata/first_batch', GenerateLawsMetadataFirstBatch),
+        ('/sys/generate_laws_metadata/second_batch', GenerateLawsMetadataSecondBatch),
         ('/sys/erase_categories', EraseCategories),
         ('/sys/erase_laws', EraseLaws),
         ('/sys/erase_laws_metadata', EraseLawsMetadata),
-        ('/sys/erase_all_data', EraseAllData),
         ('/app/search', Search),
-        #('/sys/create_categories', GenerateCategories),  # generate categories
-        ('/sys/delete_categories', DeleteCategories),  # generate categories
         ('/app/admin', SiteAdmin),
         ('/app/change_lang', SetLangCookie),
         ('/sys/download_riigihtml', DataGatherer),
         ('/sys/reindex_law', DataIndexer)
-        #('/sys/download_riigihtml2', DataGatherer2),
-        #('/sys/reindex_law', DataIndexer),
-        #('/sys/reindex_law2', DataIndexer2)
-        #('/sys/delete_data', DataDeleter)
     ],
     debug=True, config=app_config)
