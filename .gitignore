@@ -2,6 +2,7 @@
 *.pyc
 parsers/*.pyc
 rudimentaries/*.pyc
+config.py
 
 #Ignore list preparations related stuff
 list_preparations.py
@@ -16,3 +17,4 @@ static/lists/EU_sanctions.csv
 .idea/
 libs/
 node_modules/
+

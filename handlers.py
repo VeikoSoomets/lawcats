@@ -230,36 +230,20 @@ class Search(BaseHandler):
     if action == 'search':
       search_results = SearchService.search(query_words, category, '2014-01-01')
 
-    # elif action == 'custom_search':
-    #   date_algus = '2014-01-01'
-    #   logging.error(email)
-    #   search_results1 = custom_search(querywords, category, date_algus, email)
-    #
-    # # There are different result set structures for different search types
-    # if search_results1:  # we don't want to add empty values to our final search list
-    #   for result in search_results1:
-    #     params = {'result_link': result[0],
-    #               'result_title': result[1],
-    #               'result_date': result[2],
-    #               'queryword': result[3],
-    #               'categories': result[4]
-    #               }
-    #     search_results.append(params)
-    #
-    # if search_results:
-    #   message = _('Got %s results') % str(len(search_results))
-    #   message_type = 'success'
-    # else:
-    #   message = _('Did not find any results - try changing your query or add more sources')
-    #   message_type = 'danger'
-    #
-    # resultsdict = {'search_results': search_results, 'message': message, 'message_type': message_type}
-    # data = JSONEncoder().encode(resultsdict)
-    #
-    # if not data:
-    #   logging.error('did not get data')
-    #
-    # self.response.out.write(data)
+
+    if search_results:
+      logging.error(search_results)
+      message = _('Got %s results') % str(len(search_results))
+      message_type = 'success'
+      resultsdict = {'search_results': [
+                    {'result_link': result[0],
+                    'result_title': result[1],
+                    'result_date': result[2],
+                    'queryword': result[3],
+                    'categories': result[4]
+                    } for result in search_results], 'message': message, 'message_type': message_type}
+      data = JSONEncoder().encode(resultsdict)
+      self.response.out.write(data)
 
 
 def custom_search(querywords, category, date_algus, email=None):

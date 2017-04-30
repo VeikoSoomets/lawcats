@@ -100,13 +100,12 @@ class SearchService():
           try:
             search_results.extend(category.values.get('search_function')(query_words, category, date_start))
           except Exception, e:
-            logging.error("Search from category %s failed with error % " (category.name, e.message))
+            logging.error("Search from category %s failed with error %s " % (category.name, e.message))
             pass
 
     search_results = [list(x) for x in set(tuple(x) for x in search_results)]
 
     # TODO! Sort results by date
-
     # Sort results by rank (if there is rank)
     try:
       search_results = sorted(search_results, key=itemgetter(5), reverse=True)  # TODO! fix
