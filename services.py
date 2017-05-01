@@ -192,50 +192,42 @@ class LawService():
     def persist_law_metainfo(law):
       documents = []
       articles = bs4.BeautifulSoup(law.text, "html5lib", from_encoding='utf8')
-      paragraph_elements = articles.find_all('p')
-      for paragraph_element in paragraph_elements:
-        link_element = paragraph_element.find_next('a')
-        if not link_element:
-          continue
-        paragraph_link = link_element.get('name')
-        if paragraph_link:
-          paragraph_link = law.link + '#' + paragraph_link
-        else:
-          continue
-        if paragraph_element.find_previous_sibling('h3') and paragraph_element.find_previous_sibling('h3').find_next('strong'):
-          paragraph = paragraph_element.find_previous_sibling('h3').find_next('strong').contents[0]
-          paragraph_title = paragraph_element.find_previous_sibling('h3').get_text()
-          paragraph_number = paragraph.split()[1].replace('.', '').replace(' ', '')
-        else:
-          continue
-        paragraph_content = paragraph_element.get_text().encode('utf-8')
-        paragraph = {
-          'number': int(paragraph_number),
-          'link': paragraph_link,
-          'title': paragraph_title,
-          'content': paragraph_content
-        }
-        document = search.Document(
-          fields= [
-            search.NumberField(name='number', value=paragraph.get('number')),
-            search.TextField(name='link', value=paragraph.get('link')),
-            search.TextField(name='title', value=paragraph.get('title')),
-            search.TextField(name='content', value=paragraph.get('content'))
-          ]
-        )
-        documents.append(document)
+      paragraph_title_elements = articles.find_all('h3')
+      for paragraph_title_element in paragraph_title_elements:
+        paragraph_title, paragraph_number, paragraph_link, paragraph_content =  '',  '',  '',  ''
+        document_fields = [search.TextField(name='law_title', value=law.title)]
+        try:
+          paragraph_number = paragraph_title_element.find('strong').contents[0]
+          # Remove paragraph sign from beginning of string and replace dots and spaces. Make number int as well.
+          paragraph_number = paragraph_number.split()[1].replace('.', '').replace(' ', '')
+          paragraph_number = int(paragraph_number)
+          paragraph_title = paragraph_title_element.get_text()
+          paragraph_link = law.link + '#' + paragraph_title_element.find('a').get('name')
+          document_fields += [search.TextField(name='title', value=paragraph_title.encode('utf-8')),
+                              search.TextField(name='link', value=paragraph_link.encode('utf-8')),
+                              search.NumberField(name='number', value=int(paragraph_number))]
+
+          next_sibling = paragraph_title_element.nextSibling
+          while next_sibling and next_sibling.name != 'h3' and hasattr(next_sibling, 'get_text'):
+            paragraph_content = next_sibling.get_text()
+            document_fields.append(search.TextField(name='content', value=paragraph_content.encode('utf-8')))
+            next_sibling = next_sibling.nextSibling
+          document = search.Document(fields=document_fields)
+          documents.append(document)
+        except Exception as e:
+          logging.info(e)
       logging.info("Created metadata documents for title %s" % law.title)
       return documents
 
     laws = models.Law.query().fetch(limit=batch_limit, offset=batch_offset)
     for law_ in laws:
       meta_data_documents = meta_data_documents + persist_law_metainfo(law_)
-    logging.info("Putting %s documents to index" % len(meta_data_documents))
+    logging.info("Putting documents to index...")
     for docs in cls.batch(meta_data_documents, batch_max_size):
       index.put(docs)
       nr_of_documents += len(docs)
-      logging.info("Batch done. %s documents were put to index" % len(docs))
-    logging.info("Batches COMPLETED. Total of %s were put to index" % (nr_of_documents))
+      logging.info("Batch done. %s of %s documents were put to index" % (nr_of_documents, len(meta_data_documents)))
+    logging.info("Batches COMPLETED. Total of %s were put to index" % nr_of_documents)
     sys.setrecursionlimit(current_recursion_limit)
     return {'message_type': 'success'}
 
