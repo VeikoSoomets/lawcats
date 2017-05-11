@@ -17,4 +17,5 @@ static/lists/EU_sanctions.csv
 .idea/
 libs/
 node_modules/
+storage/
 

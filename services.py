@@ -224,6 +224,7 @@ class LawService():
       meta_data_documents = meta_data_documents + persist_law_metainfo(law_)
     logging.info("Putting documents to index...")
     for docs in cls.batch(meta_data_documents, batch_max_size):
+      # TODO: Make several indexes, so we could implement async search on several indexes at once
       index.put(docs)
       nr_of_documents += len(docs)
       logging.info("Batch done. %s of %s documents were put to index" % (nr_of_documents, len(meta_data_documents)))

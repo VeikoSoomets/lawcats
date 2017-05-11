@@ -306,6 +306,7 @@ def parse_laws_results(query_words, category=None, date_algus=None):
         rank += 1
       else:
         rank += 3
+      # Lets list comprehend over field.name since there can be several fields with same name 'content' for document
       content_fields = [field for field in result.fields if field.name == 'content' and query_word in field.value.lower()]
       for content_field in content_fields:
         final_results.append([result.field('link').value, content_field.value, result.field('number').value,
