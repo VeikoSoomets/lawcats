@@ -289,7 +289,7 @@ def parse_laws_results(query_words, category=None, date_algus=None):
   get_digit = lambda string: filter(str.isdigit, string)
   paragraph_number = None
   final_results = []
-  index = search.Index('laws_metadata')
+  futures = []
 
   # PUT titles to memcache
   # laws_titles = memcache.get('law_titles')
@@ -298,19 +298,25 @@ def parse_laws_results(query_words, category=None, date_algus=None):
   #   memcache.set('law_titles', laws_titles)  # no expiration
 
   for query_word in query_words:
-    query_string = 'content: ~"%s" OR title: ~"%s"' % (query_word, query_word)
-    results = index.search(query_string)
-    for result in results:
-      rank = 0
-      if query_word in result.field('title').value.lower():
-        rank += 1
-      else:
-        rank += 3
-      # Lets list comprehend over field.name since there can be several fields with same name 'content' for document
-      content_fields = [field for field in result.fields if field.name == 'content' and query_word in field.value.lower()]
-      for content_field in content_fields:
-        final_results.append([result.field('link').value, content_field.value, result.field('number').value,
-                              result.field('title').value, result.field('law_title').value, rank])
+    query_string = 'content: ~"%s"' % query_word
+    futures = [index.search_async(query_string) for index in search.get_indexes()]
+  search_results = [future.get_result() for future in futures]
+  for search_result in search_results:
+    if len(search_result.results) > 0:
+      for result in search_result.results:
+        rank = 0
+        if query_word in result.field('title').value.lower():
+          rank += 1
+        else:
+          rank += 3
+        # Lets list comprehend over field.name since there can be several fields with same name 'content' for document
+        content_fields = [field for field in result.fields if
+                          field.name == 'content' and query_word in field.value.lower()]
+        for content_field in content_fields:
+          final_results.append([result.field('link').value, content_field.value, result.field('number').value,
+                                result.field('title').value, result.field('law_title').value, rank])
+    else:
+      continue
   # Sort by rank
   final_results = sorted(final_results, key=itemgetter(5), reverse=True)
   return final_results

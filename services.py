@@ -120,6 +120,7 @@ class LawService():
   RIIGITEATAJA_LAW_BASE_URL = 'https://www.riigiteataja.ee/%s?leiaKehtiv'
   MAX_RECURSION_LIMIT = 30000
   METADATA_INDEX_NAME = 'laws_metadata'
+  MAX_NO_OF_DOCUMENTS_IN_INDEX = 600
 
   @classmethod
   def batch(cls, iterable, n=1):
@@ -182,19 +183,19 @@ class LawService():
 
   @classmethod
   def generate_laws_metadata(cls, batch_limit=None, batch_offset=None):
-    meta_data_documents = []
+    metadata_documents = []
     batch_max_size = 200
-    nr_of_documents = 0
+    nr_of_metadata_documents = 0
+    documents_put_into_index = 0
     current_recursion_limit = sys.getrecursionlimit()
     sys.setrecursionlimit(cls.MAX_RECURSION_LIMIT)
-    index = search.Index(cls.METADATA_INDEX_NAME)
 
-    def persist_law_metainfo(law):
+    def generate_law_metadata_documents(law):
       documents = []
       articles = bs4.BeautifulSoup(law.text, "html5lib", from_encoding='utf8')
       paragraph_title_elements = articles.find_all('h3')
+      # Create document for each heading h3 element and append it to documents[]
       for paragraph_title_element in paragraph_title_elements:
-        paragraph_title, paragraph_number, paragraph_link, paragraph_content =  '',  '',  '',  ''
         document_fields = [search.TextField(name='law_title', value=law.title)]
         try:
           paragraph_number = paragraph_title_element.find('strong').contents[0]
@@ -221,14 +222,18 @@ class LawService():
 
     laws = models.Law.query().fetch(limit=batch_limit, offset=batch_offset)
     for law_ in laws:
-      meta_data_documents = meta_data_documents + persist_law_metainfo(law_)
+      metadata_documents = metadata_documents + generate_law_metadata_documents(law_)
     logging.info("Putting documents to index...")
-    for docs in cls.batch(meta_data_documents, batch_max_size):
-      # TODO: Make several indexes, so we could implement async search on several indexes at once
+    index = search.Index('%s_%s_%s' % (cls.METADATA_INDEX_NAME, batch_offset if batch_offset else 0, nr_of_metadata_documents))
+    for docs in cls.batch(metadata_documents, batch_max_size):
+      if documents_put_into_index >= cls.MAX_NO_OF_DOCUMENTS_IN_INDEX:
+        index = search.Index('%s_%s_%s' % (cls.METADATA_INDEX_NAME, batch_offset if batch_offset else 0, nr_of_metadata_documents))
+        documents_put_into_index = 0
       index.put(docs)
-      nr_of_documents += len(docs)
-      logging.info("Batch done. %s of %s documents were put to index" % (nr_of_documents, len(meta_data_documents)))
-    logging.info("Batches COMPLETED. Total of %s were put to index" % nr_of_documents)
+      documents_put_into_index += len(docs)
+      nr_of_metadata_documents += len(docs)
+      logging.info("Batch done. %s of %s documents were put to index %s" % (nr_of_metadata_documents, len(metadata_documents), index.name))
+    logging.info("All the batches COMPLETED. Total of %s were put to indexes" % nr_of_metadata_documents)
     sys.setrecursionlimit(current_recursion_limit)
     return {'message_type': 'success'}
 
@@ -241,7 +246,7 @@ class LawService():
   @classmethod
   def erase_metainfo(cls):
     index = search.Index(cls.METADATA_INDEX_NAME)
-    nr_of_documents = 0
+    nr_of_metadata_documents = 0
     # index.get_range by returns up to 100 documents at a time, so we must loop until we've deleted all items
     while True:
       document_ids = [document.doc_id for document in index.get_range(ids_only=True)]
@@ -250,5 +255,5 @@ class LawService():
         break
       logging.info("Erasing %s documents from index" % len(document_ids))
       index.delete(document_ids)
-      nr_of_documents += len(document_ids)
-    logging.info("Documents DELETED. Total of %s were deleted" % nr_of_documents)
+      nr_of_metadata_documents += len(document_ids)
+    logging.info("Documents DELETED. Total of %s were deleted" % nr_of_metadata_documents)
