@@ -10,6 +10,7 @@ http://www.oi.ut.ee/et/it-oigus/oigusrobootika-konkurss
 <br/><br/>
 **Instructions for running app:**<br/>
 *Running App*
+- set environment variables for STORAGE_PATH and SEARCH_INDEXES_FILE_PATH
 - Navigate to app folder and run 'dev_appserver.py . --storage_path=STORAGE_PATH --search_indexes_path=SEARCH_INDEXES_FILE_PATH'
 <br/>
 
