@@ -309,7 +309,8 @@ def parse_laws_results(query_words, category=None, date_algus=None):
   query_string = 'content: ~"%s"' % query_words[0]
   for query_word in query_words[1:]:
     query_string += ' OR "%s"' % query_word
-  for index in search.get_indexes(limit=200):
+  indexes = search.get_indexes(limit=200)
+  for index in indexes:
     futures.append(get_results(query_string, index))
   ndb.Future.wait_all(futures)
   for future in futures:
