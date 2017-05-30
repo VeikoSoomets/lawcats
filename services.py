@@ -79,7 +79,9 @@ class SearchService():
   @classmethod
   def get_querywords(cls, query):
     query = query.encode('utf-8')
-    querywords = set(query.split(' '))
+    querywords = set()
+    querywords.update([query]) # lets add the full queryword also to the search strings
+    querywords.update(query.split(' '))
     query = query.upper()
     for abbrevation in Abbreviations.get_constants():
       long_name = abbrevation.values.get('long_name')

@@ -169,7 +169,7 @@ def parse_feed(querywords, category, date_algus='2016-01-01'):
 
       #logging.error(category.values.get('rss_sources'))
 
-      if category.name == u'Riigiteataja ilmumas/ilmunud seadused':  # juhul kui tegi riigiteataja ilumas/ilmunud, toimetame teisiti (neil RSS vana ja ei vasta standarditele)
+      if unicode(category.name) == u'Riigiteataja ilmumas/ilmunud seadused':  # juhul kui tegi riigiteataja ilumas/ilmunud, toimetame teisiti (neil RSS vana ja ei vasta standarditele)
         try:
           src2=urllib2.urlopen(search_from).read(5000) # timeout set (search from, timeout=60) because of default appengine limits (and since riigiteataja ilmumas takes long time to open otherwise too)
           soup2 = bs4.BeautifulSoup(src2)
@@ -190,8 +190,8 @@ def parse_feed(querywords, category, date_algus='2016-01-01'):
         try:
           if category.name == 'Finantsministeerium':
             search_from = urllib2.urlopen(search_from, timeout=40)  # without timeout doesn't work
-          elif category.name == u'Kooskõlastamiseks esitatud eelnõud':
-            search_from = urllib2.urlopen(search_from, timeout=40).read(20000)
+          elif unicode(category.name) == u'Kooskõlastamiseks esitatud eelnõud':
+            search_from = urllib2.urlopen(search_from, timeout=40).read(5000)
 
           d = feedparser.parse(search_from)
           for a in d.entries:
@@ -204,10 +204,16 @@ def parse_feed(querywords, category, date_algus='2016-01-01'):
               else:
                 new_x = [x]
 
+              try:
+                tiitel = a['title']
+              except Exception:
+                tiitel = ' '
+                pass
+
               result_date = datetime.datetime.now().date()
-              if category.name in ['eurlex kohtuasjad','eurlex komisjoni ettepanekud',u'eurlex parlament ja nõukogu']:
-                if result_date >= (date_algus if date_algus else result_date) and (x.lower() in a['title'].lower()):
-                  result_title = a['title']
+              if unicode(category.name) in ['eurlex kohtuasjad','eurlex komisjoni ettepanekud',u'eurlex parlament ja nõukogu']:
+                if result_date >= (date_algus if date_algus else result_date) and (x.lower() in tiitel.lower()):
+                  result_title = tiitel
                   result_link = a['link']
                   results.append([result_link, result_title, str(result_date), x, category.name])
 
@@ -227,27 +233,38 @@ def parse_feed(querywords, category, date_algus='2016-01-01'):
 
                 # Sometimes we get empty blocks, let's catch them and pass
 
-                summary = a.get('summary')
-                title = a.get('title')
-                description = a.get('description')
-                if summary or title or description:
+                try:
+                    summary = a.get('summary')
+                except Exception:
+                    summary = ' '
+                    pass
+                try:
+                    title = a.get('title')
+                except Exception:
+                    title = ' '
+                    pass
+                try:
+                    description = a.get('description')
+                except Exception:
+                    description = ' '
+                    pass
 
-                  for queryword in new_x:
+                for queryword in new_x:
 
-                    if queryword.decode('utf-8').lower() in title.lower():
-                      result_title = title
-                    elif queryword.decode('utf-8').lower() in description.lower():
-                      result_title = description
-                    elif queryword.decode('utf-8').lower() in summary.lower():
-                      result_title = summary
+                  if queryword.decode('utf-8').lower() in title.lower():
+                    result_title = title
+                  elif queryword.decode('utf-8').lower() in description.lower():
+                    result_title = description
+                  elif queryword.decode('utf-8').lower() in summary.lower():
+                    result_title = summary
 
-                    if result_title:
-                      if 'img ' in result_title:
-                          break
-                      result_title = result_title.replace('<p>','').replace('</p>','')
-                      result_link = a['link']
+                  if result_title:
+                    if 'img ' in result_title:
+                        break
+                    result_title = result_title.replace('<p>','').replace('</p>','')
+                    result_link = a['link']
 
-                      results.append([result_link, result_title, str(result_date), x, category.name, 0])
+                    results.append([result_link, result_title, str(result_date), x, category.name, 0])
         except Exception,e:
           logging.error(e)
           pass
