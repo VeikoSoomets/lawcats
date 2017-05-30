@@ -5,7 +5,9 @@ from operator import itemgetter
 
 import bs4
 import functools
-from google.appengine.api import memcache, urlfetch
+
+import sys
+from google.appengine.api import memcache, urlfetch, search
 
 import models
 from google.appengine.ext import ndb
@@ -116,10 +118,22 @@ class SearchService():
 class LawService():
   RIIGITEATAJA_SRC_URL = 'https://www.riigiteataja.ee/lyhendid.html'
   RIIGITEATAJA_LAW_BASE_URL = 'https://www.riigiteataja.ee/%s?leiaKehtiv'
+  MAX_RECURSION_LIMIT = 30000
+  METADATA_INDEX_NAME = 'laws_metadata'
+  MAX_NO_OF_DOCUMENTS_IN_INDEX = 50
+
+  @classmethod
+  def batch(cls, iterable, n=1):
+    l = len(iterable)
+    for ndx in range(0, l, n):
+      yield iterable[ndx:min(ndx + n, l)]
 
   @classmethod
   def generate_laws(cls):
     batch_max_size = 50
+    futures = []
+    current_recursion_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(cls.MAX_RECURSION_LIMIT)
 
     def get_urls():
       urllist = []
@@ -135,10 +149,13 @@ class LawService():
       src.close()
       return urllist
 
-    def batch(iterable, n=1):
-      l = len(iterable)
-      for ndx in range(0, l, n):
-        yield iterable[ndx:min(ndx + n, l)]
+    @ndb.tasklet
+    def generate_law(url):
+      result = yield ndb.get_context().urlfetch(url['url'])
+      if result.status_code == 200:
+        logging.info("Requested law from URL with title %s" % (url.get('title')))
+        yield persist_law(url, result.content)
+        logging.info("Persisted law with title %s" % (url.get('title')))
 
     @ndb.tasklet
     def fetch_url(url):
@@ -147,81 +164,96 @@ class LawService():
         raise ndb.Return({'url':url, 'response':result.content})
 
     @ndb.tasklet
-    def generate_law(url, url_response):
+    def persist_law(url, url_response):
       soup = bs4.BeautifulSoup(url_response, "html5lib")
       law_html = soup.find('div', attrs={'id': 'article-content'}).encode('utf-8')
       law_id = ndb.Model.allocate_ids(size=1)[0]
       law_key = ndb.Key('Law', law_id)
-      law_model_key = yield models.Law(title=url['title'], link=url['url'], text=law_html, key=law_key).put_async()
-      raise ndb.Return({'key': law_model_key, 'title': url['title'], 'link': url['url'], 'text': law_html})
-
-    @ndb.tasklet
-    def persist_law_metainfo(law, paragraph):
-      law_metainfo_key = yield models.LawMetaInfo(paragraph_number=paragraph.get('number'), paragraph_link=paragraph.get('link'),
-                               paragraph_title=paragraph.get('title'), paragraph_content=paragraph.get('content'),
-                               parent=law.get('key')).put_async()
-      raise ndb.Return(law_metainfo_key)
-
-    def generate_law_metainfo(law):
-      articles = bs4.BeautifulSoup(law.get('text'), "html5lib", from_encoding='utf8')
-      paragraph_elements = articles.find_all('p')
-      futures = []
-      for paragraph_element in paragraph_elements:
-        link_element = paragraph_element.find_next('a')
-        if not link_element:
-          continue
-        paragraph_link = link_element.get('name')
-        if paragraph_link:
-          paragraph_link = law.get('link') + '#' + paragraph_link
-        else:
-          continue
-        if paragraph_element.find_previous_sibling('h3') and paragraph_element.find_previous_sibling('h3').find_next(
-                'strong'):
-          paragraph = paragraph_element.find_previous_sibling('h3').find_next('strong').contents[0]
-          paragraph_title = paragraph_element.find_previous_sibling('h3').get_text()
-          paragraph_number = paragraph.split()[1].replace('.', '').replace(' ', '')
-        else:
-          continue
-        paragraph_content = paragraph_element.get_text().encode('utf-8')
-        paragraph = {
-          'number': int(paragraph_number),
-          'link': paragraph_link,
-          'title': paragraph_title,
-          'content': paragraph_content
-        }
-        futures.append(persist_law_metainfo(law, paragraph))
-      return futures
+      yield models.Law(title=url['title'], link=url['url'], text=law_html, key=law_key).put_async()
+      raise ndb.Return()
 
     urls = get_urls()
-    for url_batch in batch(urls, batch_max_size):
-      fetch_futures = []
-      law_futures = []
-      law_metainfo_futures = []
+    for url_batch in cls.batch(urls, batch_max_size):
       for url in url_batch:
-        logging.info("Requesting source from URL with title %s" % (url.get('title')))
-        fetch_future = fetch_url(url)
-        fetch_futures.append(fetch_future)
-      ndb.Future.wait_all(fetch_futures)
-      for fetch_future in fetch_futures:
-        future_result = fetch_future.get_result()
-        logging.info("Generating new law for title %s" % (future_result.get('url').get('title')))
-        law_future = generate_law(future_result.get('url'), future_result.get('response'))
-        law_futures.append(law_future)
-      ndb.Future.wait_all(law_futures)
-      for law_future in law_futures:
-        law_future_result = law_future.get_result()
-        logging.info("Generating new metainfo for law %s" % (law_future_result.get('title')))
-        law_metainfo_futures += generate_law_metainfo(law_future_result)
-      ndb.Future.wait_all(law_metainfo_futures)
+        futures.append(generate_law(url))
+    ndb.Future.wait_all(futures)
     logging.info("Batches completed")
-    return {'message_type': 'success', 'nr_of_generated_instances': len(urls)}
+    sys.setrecursionlimit(current_recursion_limit)
+    return {'message_type': 'success'}
+
+  @classmethod
+  def generate_laws_metadata(cls, batch_limit=None, batch_offset=None):
+    metadata_documents = []
+    batch_max_size = 200 if cls.MAX_NO_OF_DOCUMENTS_IN_INDEX >= 200 else cls.MAX_NO_OF_DOCUMENTS_IN_INDEX
+    nr_of_metadata_documents = 0
+    documents_put_into_index = 0
+    current_recursion_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(cls.MAX_RECURSION_LIMIT)
+
+    def generate_law_metadata_documents(law):
+      documents = []
+      articles = bs4.BeautifulSoup(law.text, "html5lib", from_encoding='utf8')
+      paragraph_title_elements = articles.find_all('h3')
+      # Create document for each heading h3 element and append it to documents[]
+      for paragraph_title_element in paragraph_title_elements:
+        document_fields = [search.TextField(name='law_title', value=law.title)]
+        try:
+          paragraph_number = paragraph_title_element.find('strong').contents[0]
+          # Remove paragraph sign from beginning of string and replace dots and spaces. Make number int as well.
+          paragraph_number = paragraph_number.split()[1].replace('.', '').replace(' ', '')
+          paragraph_number = int(paragraph_number)
+          paragraph_title = paragraph_title_element.get_text()
+          paragraph_link = law.link + '#' + paragraph_title_element.find('a').get('name')
+          document_fields += [search.TextField(name='title', value=paragraph_title.encode('utf-8')),
+                              search.TextField(name='link', value=paragraph_link.encode('utf-8')),
+                              search.NumberField(name='number', value=int(paragraph_number))]
+
+          next_sibling = paragraph_title_element.nextSibling
+          while next_sibling and next_sibling.name != 'h3' and hasattr(next_sibling, 'get_text'):
+            paragraph_content = next_sibling.get_text()
+            document_fields.append(search.TextField(name='content', value=paragraph_content.encode('utf-8')))
+            next_sibling = next_sibling.nextSibling
+          document = search.Document(fields=document_fields)
+          documents.append(document)
+        except Exception as e:
+          logging.info(e)
+      logging.info("Created metadata documents for title %s" % law.title)
+      return documents
+
+    laws = models.Law.query().fetch(limit=batch_limit, offset=batch_offset)
+    for law_ in laws:
+      metadata_documents = metadata_documents + generate_law_metadata_documents(law_)
+    logging.info("Putting documents to index...")
+    index = search.Index('%s_%s_%s' % (cls.METADATA_INDEX_NAME, batch_offset if batch_offset else 0, nr_of_metadata_documents))
+    for docs in cls.batch(metadata_documents, batch_max_size):
+      if documents_put_into_index >= cls.MAX_NO_OF_DOCUMENTS_IN_INDEX:
+        index = search.Index('%s_%s_%s' % (cls.METADATA_INDEX_NAME, batch_offset if batch_offset else 0, nr_of_metadata_documents))
+        documents_put_into_index = 0
+      index.put(docs)
+      documents_put_into_index += len(docs)
+      nr_of_metadata_documents += len(docs)
+      logging.info("Batch done. %s of %s documents were put to index %s" % (nr_of_metadata_documents, len(metadata_documents), index.name))
+    logging.info("All the batches COMPLETED. Total of %s were put to indexes" % nr_of_metadata_documents)
+    sys.setrecursionlimit(current_recursion_limit)
+    return {'message_type': 'success'}
 
   @classmethod
   def erase_laws(cls):
     laws = models.Law.query().fetch(keys_only=True)
+    logging.info("Erasing %s laws" % len(laws))
     ndb.delete_multi(laws)
 
   @classmethod
   def erase_metainfo(cls):
-    laws_metainfo = models.LawMetaInfo.query().fetch(keys_only=True)
-    ndb.delete_multi_async(laws_metainfo)
+    index = search.Index(cls.METADATA_INDEX_NAME)
+    nr_of_metadata_documents = 0
+    # index.get_range by returns up to 100 documents at a time, so we must loop until we've deleted all items
+    while True:
+      document_ids = [document.doc_id for document in index.get_range(ids_only=True)]
+      # If no IDs were returned, we've deleted everything
+      if not document_ids:
+        break
+      logging.info("Erasing %s documents from index" % len(document_ids))
+      index.delete(document_ids)
+      nr_of_metadata_documents += len(document_ids)
+    logging.info("Documents DELETED. Total of %s were deleted" % nr_of_metadata_documents)

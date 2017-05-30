@@ -231,12 +231,14 @@ def parse_feed(querywords, category, date_algus='2016-01-01'):
                 title = a.get('title')
                 description = a.get('description')
                 if summary or title or description:
+
                   for queryword in new_x:
-                    if queryword.lower() in title.lower():
+
+                    if queryword.decode('utf-8').lower() in title.lower():
                       result_title = title
-                    elif queryword.lower() in description.lower():
+                    elif queryword.decode('utf-8').lower() in description.lower():
                       result_title = description
-                    elif queryword.lower() in summary.lower():
+                    elif queryword.decode('utf-8').lower() in summary.lower():
                       result_title = summary
 
                     if result_title:
@@ -244,6 +246,7 @@ def parse_feed(querywords, category, date_algus='2016-01-01'):
                           break
                       result_title = result_title.replace('<p>','').replace('</p>','')
                       result_link = a['link']
+
                       results.append([result_link, result_title, str(result_date), x, category.name, 0])
         except Exception,e:
           logging.error(e)
