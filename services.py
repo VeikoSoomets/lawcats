@@ -184,7 +184,7 @@ class LawService():
   @classmethod
   def generate_laws_metadata(cls, batch_limit=None, batch_offset=None):
     metadata_documents = []
-    batch_max_size = 200
+    batch_max_size = 200 if cls.MAX_NO_OF_DOCUMENTS_IN_INDEX >= 200 else cls.MAX_NO_OF_DOCUMENTS_IN_INDEX
     nr_of_metadata_documents = 0
     documents_put_into_index = 0
     current_recursion_limit = sys.getrecursionlimit()
