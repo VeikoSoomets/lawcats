@@ -120,7 +120,7 @@ class LawService():
   RIIGITEATAJA_LAW_BASE_URL = 'https://www.riigiteataja.ee/%s?leiaKehtiv'
   MAX_RECURSION_LIMIT = 30000
   METADATA_INDEX_NAME = 'laws_metadata'
-  MAX_NO_OF_DOCUMENTS_IN_INDEX = 600
+  MAX_NO_OF_DOCUMENTS_IN_INDEX = 200
 
   @classmethod
   def batch(cls, iterable, n=1):

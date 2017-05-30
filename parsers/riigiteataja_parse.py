@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import sys
+
+from google.appengine.ext import ndb
+
 sys.path.insert(0, 'libs')
 import bs4
 import urllib2
@@ -282,14 +285,19 @@ def parse_results_seadused(query=None, category=None, date_algus=None):
     return final_results
 
 def parse_laws_results(query_words, category=None, date_algus=None):
-  search_law_names = []
-  query_words_joined = ' '.join(query_words)
   query_words = [query_word.lower() for query_word in query_words]
   paragraph_words =  ['paragraaf','paragrahv','§','para', 'seadus']
   get_digit = lambda string: filter(str.isdigit, string)
   paragraph_number = None
+  search_results = []
   final_results = []
   futures = []
+
+  @ndb.tasklet
+  def get_results(query, index):
+    result = index.search_async(query)
+    yield result._rpc
+    raise ndb.Return(result._get_result_hook())
 
   # PUT titles to memcache
   # laws_titles = memcache.get('law_titles')
@@ -297,26 +305,29 @@ def parse_laws_results(query_words, category=None, date_algus=None):
   #   laws_titles = models.RiigiTeatajaURLs.query().fetch(projection=[models.RiigiTeatajaURLs.title])
   #   memcache.set('law_titles', laws_titles)  # no expiration
 
-  for query_word in query_words:
-    query_string = 'content: ~"%s"' % query_word
-    futures = [index.search_async(query_string) for index in search.get_indexes()]
-  search_results = [future.get_result() for future in futures]
-  for search_result in search_results:
+  # Build query based on query_words
+  query_string = 'content: ~"%s"' % query_words[0]
+  for query_word in query_words[1:]:
+    query_string += ' OR "%s"' % query_word
+  for index in search.get_indexes(limit=200):
+    futures.append(get_results(query_string, index))
+  ndb.Future.wait_all(futures)
+  for future in futures:
+    search_result = future._result
     if len(search_result.results) > 0:
       for result in search_result.results:
-        rank = 0
-        if query_word in result.field('title').value.lower():
-          rank += 1
-        else:
-          rank += 3
-        # Lets list comprehend over field.name since there can be several fields with same name 'content' for document
-        content_fields = [field for field in result.fields if
-                          field.name == 'content' and query_word in field.value.lower()]
-        for content_field in content_fields:
-          final_results.append([result.field('link').value, content_field.value, result.field('number').value,
-                                result.field('title').value, result.field('law_title').value, rank])
-    else:
-      continue
+        for query_word in query_words:
+          rank = 0
+          if query_word in result.field('title').value.lower():
+            rank += 1
+          else:
+            rank += 3
+          # Lets list comprehend over field.name since there can be several fields with same name 'content' for document
+          content_fields = [field for field in result.fields if
+                            field.name == 'content' and query_word in field.value.lower()]
+          for content_field in content_fields:
+            final_results.append([result.field('link').value, content_field.value, result.field('number').value,
+                                  result.field('title').value, result.field('law_title').value, rank])
   # Sort by rank
   final_results = sorted(final_results, key=itemgetter(5), reverse=True)
   return final_results
