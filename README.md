@@ -1,19 +1,17 @@
-lawcats
+Lawcats
 
 http://www.oi.ut.ee/et/it-oigus/oigusrobootika-konkurss
 
 
-**Dependencies**:<br/>
-google appengine,
-bs4,
-babel,
-pytz  *(use gaepytz, it is faster),
-feedparser
+**Installation instructions:**<br/>
+- [Download and install Google Cloud SDK for Python](https://cloud.google.com/appengine/docs/standard/python/download)
+- Install Python 2.7, PIP
+- Install dependencies with PIP to libs/ folder by running: pip install -t libs/ -r requirements.txt'
 <br/><br/>
 **Instructions for running app:**<br/>
 *Running App*
-- Download and install google app engine sdk
-- Navgiate to app folder and run 'dev_appserver.py .'
+- set environment variables for STORAGE_PATH and SEARCH_INDEXES_FILE_PATH
+- Navigate to app folder and run 'dev_appserver.py . --storage_path=STORAGE_PATH --search_indexes_path=SEARCH_INDEXES_FILE_PATH'
 <br/>
 
 *Deploying App*

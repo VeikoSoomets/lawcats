@@ -1,14 +1,14 @@
 # Translations template for PROJECT.
-# Copyright (C) 2015 ORGANIZATION
+# Copyright (C) 2016 ORGANIZATION
 # This file is distributed under the same license as the PROJECT project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2015.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2016.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-11-27 01:23+0200\n"
+"POT-Creation-Date: 2016-10-22 22:54+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,12 +16,6 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
-
-#: admin_handlers.py:113
-msgid ""
-"Cannot request sources at this time. Extend your date limit to unlock "
-"this feature!"
-msgstr ""
 
 #: admin_handlers.py:120
 msgid "Please fill both fields!"
@@ -48,77 +42,71 @@ msgid ""
 "page right now!"
 msgstr ""
 
-#: admin_handlers.py:310
+#: admin_handlers.py:312
 msgid "Agreed to terms!"
 msgstr ""
 
-#: admin_handlers.py:313
+#: admin_handlers.py:315
 msgid "Did not agree to terms!"
 msgstr ""
 
-#: admin_handlers.py:348
+#: admin_handlers.py:401
 msgid "Main category created!"
 msgstr ""
 
-#: admin_handlers.py:352
+#: admin_handlers.py:405
 msgid "Sub category created!"
 msgstr ""
 
-#: admin_handlers.py:356
+#: admin_handlers.py:409
 msgid "Category created!"
 msgstr ""
 
-#: admin_handlers.py:361
+#: admin_handlers.py:414
 msgid "Main category deleted!"
 msgstr ""
 
-#: admin_handlers.py:365
+#: admin_handlers.py:418
 msgid "Sub category deleted!"
 msgstr ""
 
-#: admin_handlers.py:369
+#: admin_handlers.py:422
 msgid "Category deleted!"
 msgstr ""
 
-#: admin_handlers.py:483
+#: admin_handlers.py:535
 #, python-format
 msgid "Tag %s added."
 msgstr ""
 
-#: admin_handlers.py:494
+#: admin_handlers.py:546
 #, python-format
 msgid "Tag '%s' removed."
 msgstr ""
 
-#: admin_handlers.py:512
+#: admin_handlers.py:564
 msgid "Result removed."
 msgstr ""
 
-#: admin_handlers.py:534
+#: admin_handlers.py:586
 msgid "Result archived."
 msgstr ""
 
-#: admin_handlers.py:537
+#: admin_handlers.py:589
 msgid "Result un-archived."
 msgstr ""
 
-#: admin_handlers.py:578
-msgid ""
-"Changes will not be applied. If you want to use service without "
-"restriction, choose a paid package!"
-msgstr ""
-
-#: admin_handlers.py:603
+#: admin_handlers.py:655
 msgid ""
 "Querywords limit is exceeded. Change search frequencies, remove "
 "categories or querywords, or extend limit."
 msgstr ""
 
-#: admin_handlers.py:609
+#: admin_handlers.py:661
 msgid "Please choose atleast one source!"
 msgstr ""
 
-#: admin_handlers.py:616
+#: admin_handlers.py:668
 #, python-format
 msgid ""
 "Number of querywords to add in one batch exceeds %s! If you would like to"
@@ -126,182 +114,162 @@ msgid ""
 "frequently asked questions!"
 msgstr ""
 
-#: admin_handlers.py:636
+#: admin_handlers.py:688
 msgid "New querywords added!"
 msgstr ""
 
-#: admin_handlers.py:650
+#: admin_handlers.py:702
 #, python-format
 msgid "Frequency changed for '%s'"
 msgstr ""
 
-#: admin_handlers.py:661
+#: admin_handlers.py:713
 #, python-format
 msgid "Request '%s' removed!"
 msgstr ""
 
-#: admin_handlers.py:674
+#: admin_handlers.py:726
 #, python-format
 msgid "Category '%s' removed!"
 msgstr ""
 
-#: admin_handlers.py:689
+#: admin_handlers.py:741
 msgid "Added categories"
 msgstr ""
 
-#: admin_handlers.py:747 templates/querywords.html:91
-#: templates/querywords.html:217 templates/results.html:127
-#: templates/results.html:259 templates/results.html:324
-#: templates/search.html:391
-msgid "All updates"
-msgstr ""
-
-#: admin_handlers.py:938
+#: admin_handlers.py:979
 msgid "Payment processed and usage limit extended"
 msgstr ""
 
-#: admin_handlers.py:955
+#: admin_handlers.py:996
 msgid "Please type both passwords!"
 msgstr ""
 
-#: admin_handlers.py:967
+#: admin_handlers.py:1008
 msgid "Password successfully changed!"
 msgstr ""
 
-#: admin_handlers.py:973
+#: admin_handlers.py:1014
 msgid "Old password is wrong!"
 msgstr ""
 
-#: admin_handlers.py:986
+#: admin_handlers.py:1027
 #, python-format
 msgid "Congratulations! You are now member of %s group."
 msgstr ""
 
-#: admin_handlers.py:988
+#: admin_handlers.py:1029
 #, python-format
 msgid "Declined joining group %s."
 msgstr ""
 
-#: admin_handlers.py:1012
+#: admin_handlers.py:1053
 msgid "User removed from usergroup"
 msgstr ""
 
-#: admin_handlers.py:1016
+#: admin_handlers.py:1057
 #, python-format
 msgid "You successfully left from usergroup %s"
 msgstr ""
 
-#: admin_handlers.py:1024
-msgid ""
-"Cannot apply changes at this time. Extend your date limit to unlock this "
-"feature!"
-msgstr ""
-
-#: admin_handlers.py:1049
+#: admin_handlers.py:1084
 msgid "User group created"
 msgstr ""
 
-#: admin_handlers.py:1062
+#: admin_handlers.py:1097
 msgid "User is already in your group!"
 msgstr ""
 
-#: admin_handlers.py:1074
+#: admin_handlers.py:1109
 msgid "User invitation sent - user needs to accept invitation."
 msgstr ""
 
-#: admin_handlers.py:1084
+#: admin_handlers.py:1119
 #, python-format
 msgid "lawcats - Invitation by %s!"
 msgstr ""
 
-#: admin_handlers.py:1086
+#: admin_handlers.py:1121
 msgid "Invitation sent to this e-mail."
 msgstr ""
 
-#: base_handler.py:220
+#: base_handler.py:224
 msgid "You have not verified your account yet! Please check your e-mail!"
 msgstr ""
 
-#: base_handler.py:378
-msgid ""
-"Your time limit has been exceeded! Automatic searches disabled! You can "
-"extend your limit on your account <a href=\"/app/settings\" class"
-"=\"alert-link\">settings</a> page!"
-msgstr ""
-
-#: base_handler.py:641
+#: base_handler.py:666
 msgid "This email is already using lawcats :) You can simply login."
 msgstr ""
 
-#: base_handler.py:646
+#: base_handler.py:671
 msgid "Please fill all fields!"
 msgstr ""
 
-#: base_handler.py:651
+#: base_handler.py:676
 msgid "You have to agree to terms of use before using the service."
 msgstr ""
 
-#: base_handler.py:665
+#: base_handler.py:690
 msgid "e-mail address"
 msgstr ""
 
-#: base_handler.py:667
+#: base_handler.py:692
 msgid "username"
 msgstr ""
 
-#: base_handler.py:668
+#: base_handler.py:693
 #, python-format
 msgid ""
 "Unable to create user for user \"%s\" because there is already a user "
 "with same %s"
 msgstr ""
 
-#: base_handler.py:681
+#: base_handler.py:706
 #, python-format
 msgid "%s - New user activation!"
 msgstr ""
 
-#: base_handler.py:686
+#: base_handler.py:711
 msgid ""
 "We sent your e-mail address a link to activate your user account. When "
 "you have activated your account, you can login :)"
 msgstr ""
 
-#: base_handler.py:699
+#: base_handler.py:724
 msgid "Please enter email address"
 msgstr ""
 
-#: base_handler.py:705
+#: base_handler.py:730
 #, python-format
 msgid "Could not find any user entry for email %s"
 msgstr ""
 
-#: base_handler.py:718
+#: base_handler.py:743
 msgid "Login with google sign in button"
 msgstr ""
 
-#: base_handler.py:731
+#: base_handler.py:756
 #, python-format
 msgid "%s password recovery"
 msgstr ""
 
-#: base_handler.py:736
+#: base_handler.py:761
 msgid "We sent you an e-mail with instructions how to reset your password."
 msgstr ""
 
-#: base_handler.py:784
+#: base_handler.py:809
 msgid "User account has been verified"
 msgstr ""
 
-#: base_handler.py:816 base_handler.py:835
+#: base_handler.py:841 base_handler.py:860
 msgid "Passwords do not match!"
 msgstr ""
 
-#: base_handler.py:852
+#: base_handler.py:877
 msgid "Password changed"
 msgstr ""
 
-#: base_handler.py:894
+#: base_handler.py:919
 msgid "Login failed! Wrong username or password."
 msgstr ""
 
@@ -358,35 +326,39 @@ msgstr ""
 msgid "Delete Category"
 msgstr ""
 
-#: templates/base.html:58 templates/dashboard.html:2 templates/landing.html:53
+#: templates/base.html:49 templates/dashboard.html:2 templates/landing.html:53
 msgid "Dashboard"
 msgstr ""
 
-#: templates/base.html:61 templates/landing.html:56 templates/querywords.html:2
-msgid "Notifications"
+#: templates/base.html:52 templates/querywords.html:2
+msgid "Search Requests"
 msgstr ""
 
-#: templates/base.html:64 templates/landing.html:59 templates/results.html:2
+#: templates/base.html:55 templates/landing.html:59 templates/results.html:2
 #: templates/results.html:3 templates/results.html:19
 msgid "Results"
 msgstr ""
 
-#: templates/base.html:67 templates/landing.html:62 templates/landing.html:465
-#: templates/search.html:2 templates/search.html:123 templates/search.html:232
+#: templates/base.html:58 templates/landing.html:62 templates/search.html:2
+#: templates/search.html:123 templates/search.html:232
 #: templates/search.html:294 templates/search.html:341
 msgid "Search"
 msgstr ""
 
-#: templates/base.html:93 templates/settings.html:2 templates/settings.html:3
+#: templates/base.html:62
+msgid "Admin"
+msgstr ""
+
+#: templates/base.html:89 templates/settings.html:2 templates/settings.html:3
 msgid "Settings"
 msgstr ""
 
-#: templates/base.html:94 templates/landing.html:71 templates/landing.html:74
+#: templates/base.html:90 templates/landing.html:71 templates/landing.html:74
 msgid "Logout"
 msgstr ""
 
-#: templates/base.html:109
-msgid "You have disabled javascript. lawcats requires javascript to use."
+#: templates/base.html:105
+msgid "You have disabled javascript. Lawcats require javascript to use."
 msgstr ""
 
 #: templates/dashboard.html:10 templates/dashboard.html:154
@@ -420,9 +392,9 @@ msgstr ""
 msgid "See more"
 msgstr ""
 
-#: templates/dashboard.html:106 templates/landing.html:427
-#: templates/querywords.html:19 templates/querywords.html:125
-#: templates/search.html:74 templates/search.html:137 templates/search.html:183
+#: templates/dashboard.html:106 templates/querywords.html:19
+#: templates/querywords.html:125 templates/search.html:74
+#: templates/search.html:137 templates/search.html:183
 #: templates/search.html:245 templates/search.html:308
 msgid "Querywords"
 msgstr ""
@@ -474,6 +446,10 @@ msgstr ""
 msgid "Toggle navigation"
 msgstr ""
 
+#: templates/landing.html:56
+msgid "Requests"
+msgstr ""
+
 #: templates/landing.html:83 templates/landing.html:249
 #: templates/landing.html:296 templates/login.html:35 templates/login.html:81
 msgid "Login"
@@ -514,11 +490,10 @@ msgstr ""
 msgid "Last Name"
 msgstr ""
 
-#: templates/landing.html:223 templates/signup.html:56
+#: templates/landing.html:223
 msgid ""
-"I have read and agree to the <a href=\"https://docs.google.com/document/d"
-"/1UxuB6EgzQf0G7tiUY_pzlha3e9_okw-fz4KKmXohOrc/edit?usp=sharing\" "
-"target=\"_blank\">terms of use</a>"
+"I have read and agree to the <a href=\"#\" target=\"_blank\">terms of "
+"use</a>"
 msgstr ""
 
 #: templates/landing.html:231
@@ -534,131 +509,19 @@ msgid "Don't remember password?"
 msgstr ""
 
 #: templates/landing.html:311
-msgid "Automated Search & Topic Tracking"
+msgid "lawcats"
 msgstr ""
 
 #: templates/landing.html:312
-msgid "Real-time & automated data mining and topic tracking"
+msgid "cats"
 msgstr ""
 
 #: templates/landing.html:319
-msgid "Sign up for a free trial"
+msgid "Sign up"
 msgstr ""
 
 #: templates/landing.html:323
 msgid "Continue"
-msgstr ""
-
-#: templates/landing.html:332
-msgid "Real-time data mining and topic tracking"
-msgstr ""
-
-#: templates/landing.html:333
-msgid ""
-"Utilizing amazing modern technologies, our robots can handle heavy "
-"workloads of user requests for scraping the web. It is all automated - "
-"you'd only have to schedule the search, and the platform does the rest."
-msgstr ""
-
-#: templates/landing.html:354
-msgid "Set up a scheduled search"
-msgstr ""
-
-#: templates/landing.html:355
-msgid ""
-"Set up search words, search frequencies and sources. You can also add "
-"your own sources. Custom sources will be added within seconds."
-msgstr ""
-
-#: templates/landing.html:366
-msgid "Manage your results"
-msgstr ""
-
-#: templates/landing.html:367
-msgid ""
-"Your results are stored for you to explore, sort, archive and search from"
-" stored results. You can also tag your results to be easily found later."
-msgstr ""
-
-#: templates/landing.html:378
-msgid "Stay informed"
-msgstr ""
-
-#: templates/landing.html:379
-msgid ""
-"Track and analyze your results and search results statistics in the "
-"dashboard, desktop or mobile."
-msgstr ""
-
-#: templates/landing.html:406
-msgid "Use Cases"
-msgstr ""
-
-#: templates/landing.html:418
-msgid "Try a sample search!"
-msgstr ""
-
-#: templates/landing.html:419
-msgid "Registered members have access to over 100 pre-existing sources."
-msgstr ""
-
-#: templates/landing.html:435
-msgid "A comma-separated list of topics"
-msgstr ""
-
-#: templates/landing.html:442 templates/querywords.html:81
-#: templates/querywords.html:145 templates/querywords.html:234
-#: templates/search.html:106 templates/search.html:153
-#: templates/search.html:215 templates/search.html:277
-#: templates/search.html:324
-msgid "Sources"
-msgstr ""
-
-#: templates/landing.html:497
-msgid "No results found."
-msgstr ""
-
-#: templates/landing.html:511
-msgid "Pricing"
-msgstr ""
-
-#: templates/landing.html:519 templates/landing.html:535
-#: templates/settings.html:148 templates/settings.html:164
-msgid "per month"
-msgstr ""
-
-#: templates/landing.html:523 templates/settings.html:152
-msgid "Translates to days worth of manual search"
-msgstr ""
-
-#: templates/landing.html:525
-msgid "automatic searches per month"
-msgstr ""
-
-#: templates/landing.html:526 templates/landing.html:542
-#: templates/settings.html:155 templates/settings.html:171
-msgid "unlimited sources"
-msgstr ""
-
-#: templates/landing.html:527 templates/landing.html:543
-#: templates/settings.html:156 templates/settings.html:172
-msgid "dashboard alerts"
-msgstr ""
-
-#: templates/landing.html:539 templates/settings.html:168
-msgid "No need to worry about limits"
-msgstr ""
-
-#: templates/landing.html:541 templates/settings.html:170
-msgid "unlimited automatic searches"
-msgstr ""
-
-#: templates/landing.html:544 templates/settings.html:173
-msgid "e-mail reports"
-msgstr ""
-
-#: templates/landing.html:545 templates/settings.html:174
-msgid "view a sample report"
 msgstr ""
 
 #: templates/message.html:12
@@ -723,9 +586,22 @@ msgstr ""
 msgid "Search Frequency"
 msgstr ""
 
+#: templates/querywords.html:81 templates/querywords.html:145
+#: templates/querywords.html:234 templates/search.html:106
+#: templates/search.html:153 templates/search.html:215
+#: templates/search.html:277 templates/search.html:324
+msgid "Sources"
+msgstr ""
+
 #: templates/querywords.html:84 templates/results.html:114
 #: templates/results.html:246
 msgid "Actions"
+msgstr ""
+
+#: templates/querywords.html:91 templates/querywords.html:217
+#: templates/results.html:127 templates/results.html:259
+#: templates/results.html:324 templates/search.html:391
+msgid "All updates"
 msgstr ""
 
 #: templates/querywords.html:98 templates/results.html:155
@@ -768,7 +644,7 @@ msgid "Choose how often you'd like our robots to search for your request."
 msgstr ""
 
 #: templates/querywords.html:195 templates/results.html:376
-#: templates/settings.html:271 templates/settings.html:366
+#: templates/settings.html:272 templates/settings.html:367
 msgid "Add"
 msgstr ""
 
@@ -808,15 +684,15 @@ msgstr ""
 msgid "URL for source"
 msgstr ""
 
-#: templates/querywords.html:286 templates/settings.html:390
+#: templates/querywords.html:286 templates/settings.html:392
 msgid "Make sure it begins with http or www"
 msgstr ""
 
-#: templates/querywords.html:303 templates/settings.html:402
+#: templates/querywords.html:303 templates/settings.html:404
 msgid "Brief description"
 msgstr ""
 
-#: templates/querywords.html:305 templates/settings.html:404
+#: templates/querywords.html:305 templates/settings.html:406
 msgid ""
 "If our engine fails to implement your source automatically, this helps us"
 " understand what were you trying to search."
@@ -914,7 +790,7 @@ msgid "Archives"
 msgstr ""
 
 #: templates/search.html:42
-msgid "Monitoring"
+msgid "Media & Government"
 msgstr ""
 
 #: templates/search.html:51
@@ -985,7 +861,7 @@ msgid ""
 "your limit to unlock automated searches."
 msgstr ""
 
-#: templates/settings.html:79 templates/settings.html:187
+#: templates/settings.html:79 templates/settings.html:188
 msgid "Packet"
 msgstr ""
 
@@ -998,59 +874,91 @@ msgid "Manage usergroups"
 msgstr ""
 
 #: templates/settings.html:97
-msgid "E-mail alerts"
+msgid "Account Settings"
 msgstr ""
 
 #: templates/settings.html:104
 msgid "Change password"
 msgstr ""
 
-#: templates/settings.html:122
+#: templates/settings.html:123
 msgid ""
 "Your paid package is managed by the creator of your group. To be able to "
 "manage your personal package, you must leave from usergroup "
 msgstr ""
 
-#: templates/settings.html:127 templates/settings.html:318
+#: templates/settings.html:128 templates/settings.html:319
 msgid "Leave"
 msgstr ""
 
-#: templates/settings.html:136
+#: templates/settings.html:137
 #, python-format
 msgid ""
 "You are a groupmaster for usergroup <b>%(user_group)s</b>. You will be "
 "billed for each user"
 msgstr ""
 
-#: templates/settings.html:141
+#: templates/settings.html:142
 msgid "Your estimated charges for the month will be "
 msgstr ""
 
-#: templates/settings.html:154
+#: templates/settings.html:149 templates/settings.html:165
+msgid "per month"
+msgstr ""
+
+#: templates/settings.html:153
+msgid "Translates to days worth of manual search"
+msgstr ""
+
+#: templates/settings.html:155
 msgid "automatic searches"
 msgstr ""
 
-#: templates/settings.html:195
+#: templates/settings.html:156 templates/settings.html:172
+msgid "unlimited sources"
+msgstr ""
+
+#: templates/settings.html:157 templates/settings.html:173
+msgid "dashboard alerts"
+msgstr ""
+
+#: templates/settings.html:169
+msgid "No need to worry about limits"
+msgstr ""
+
+#: templates/settings.html:171
+msgid "unlimited automatic searches"
+msgstr ""
+
+#: templates/settings.html:174
+msgid "e-mail reports"
+msgstr ""
+
+#: templates/settings.html:175
+msgid "view a sample report"
+msgstr ""
+
+#: templates/settings.html:196
 msgid "Basic"
 msgstr ""
 
-#: templates/settings.html:202
+#: templates/settings.html:203
 msgid "Premium"
 msgstr ""
 
-#: templates/settings.html:212
+#: templates/settings.html:213
 msgid "Months"
 msgstr ""
 
-#: templates/settings.html:222
+#: templates/settings.html:223
 msgid "Estimated price"
 msgstr ""
 
-#: templates/settings.html:228
+#: templates/settings.html:229
 msgid "Extend"
 msgstr ""
 
-#: templates/settings.html:236
+#: templates/settings.html:237
 msgid ""
 "You can set up e-mail reports. E-mail reports are good for staying "
 "informed of recent activity and statistics. You can set up multiple "
@@ -1058,47 +966,47 @@ msgid ""
 "addresses with a comma). View a sample report <a href=\"#\">here</a>"
 msgstr ""
 
-#: templates/settings.html:239
+#: templates/settings.html:240
 #, python-format
 msgid ""
 "You are receiving reports to %(email_reports_mails)s every "
 "%(email_reports_frequency)s days"
 msgstr ""
 
-#: templates/settings.html:241
+#: templates/settings.html:242
 msgid "You are currently not receiving e-mail reports"
 msgstr ""
 
-#: templates/settings.html:249
+#: templates/settings.html:250
 msgid "E-mail addresses"
 msgstr ""
 
-#: templates/settings.html:261
+#: templates/settings.html:262
 msgid "Frequency"
 msgstr ""
 
-#: templates/settings.html:281
+#: templates/settings.html:282
 msgid ""
 "You can create a usergroup to share same limits as you. If created, you "
 "can either invite existing users of the service, or invite new users by "
 "email."
 msgstr ""
 
-#: templates/settings.html:288
+#: templates/settings.html:289
 msgid "Usergroup name"
 msgstr ""
 
-#: templates/settings.html:300
+#: templates/settings.html:301
 msgid "Create"
 msgstr ""
 
-#: templates/settings.html:313
+#: templates/settings.html:314
 msgid ""
 "You are a member of a paid group. You can only be in one group at a time."
 " You can leave from"
 msgstr ""
 
-#: templates/settings.html:340
+#: templates/settings.html:341
 #, python-format
 msgid ""
 "Determine which users belong to your group \"%(group_master)s\". Those "
@@ -1106,54 +1014,66 @@ msgid ""
 "for all group members."
 msgstr ""
 
-#: templates/settings.html:344
+#: templates/settings.html:345
 msgid ""
 "If a new user is not already using the service, we will send an "
 "invitation email!"
 msgstr ""
 
-#: templates/settings.html:350
+#: templates/settings.html:351
 msgid "User"
 msgstr ""
 
-#: templates/settings.html:379
+#: templates/settings.html:380
 msgid ""
-"You can request a source free of charge.\n"
-"            Sources will be implemented into the service within seconds "
-"to a few business days.\n"
-"            Just give us the link and a short description of what do you "
-"want our robots to look for."
+"You can add your own sources.\n"
+"            They will be tried to be implemented into the system "
+"automatically, and if that should succeed, it shouldn't take more\n"
+"            than a couple of seconds. Just give us the link and a short "
+"description of what do you want our robots to look for.\n"
+"            "
 msgstr ""
 
-#: templates/settings.html:388
+#: templates/settings.html:390
 msgid "Link to Source"
 msgstr ""
 
-#: templates/settings.html:419
+#: templates/settings.html:421
 msgid "Request"
 msgstr ""
 
-#: templates/settings.html:427
+#: templates/settings.html:429
 msgid "Implemented Sources"
 msgstr ""
 
-#: templates/settings.html:450
+#: templates/settings.html:452
 msgid "Old password"
 msgstr ""
 
-#: templates/settings.html:465
+#: templates/settings.html:467
 msgid "New password once"
 msgstr ""
 
-#: templates/settings.html:480
+#: templates/settings.html:482
 msgid "New password twice"
 msgstr ""
 
-#: templates/settings.html:493
+#: templates/settings.html:495
 msgid "Change"
 msgstr ""
 
 #: templates/signup.html:15
 msgid "Register a new user"
+msgstr ""
+
+#: templates/signup.html:56
+msgid ""
+"I have read and agree to the <a href=\"https://docs.google.com/document/d"
+"/1UxuB6EgzQf0G7tiUY_pzlha3e9_okw-fz4KKmXohOrc/edit?usp=sharing\" "
+"target=\"_blank\">terms of use</a>"
+msgstr ""
+
+#: templates/sys.html:3 templates/sys.html:6
+msgid "Sysadmin"
 msgstr ""
 

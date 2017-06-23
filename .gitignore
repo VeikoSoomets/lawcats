@@ -15,4 +15,7 @@ static/lists/EU_sanctions.csv
 
 #Ignore IDE stuff
 .idea/
+libs/
+node_modules/
+storage/
 
